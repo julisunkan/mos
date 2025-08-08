@@ -1,0 +1,69 @@
+{% extends "base.html" %}
+{% set active_page = 'admin' %}
+
+{% block title %}Audit Logs{% endblock %}
+
+{% block content %}
+<div class="container-fluid mt-3">
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="mb-1">Audit Logs</h2>
+            <p class="text-muted mb-0">System activity and security audit trail</p>
+        </div>
+    </div>
+
+    <!-- Audit Logs -->
+    <div class="card">
+        <div class="card-header">
+            <h5 class="card-title mb-0">
+                <i class="fas fa-history"></i> Recent Activity
+                <span class="badge bg-primary ms-2">{{ logs|length if logs else 0 }}</span>
+            </h5>
+        </div>
+        <div class="card-body">
+            {% if logs %}
+                <div class="table-responsive">
+                    <table class="table table-striped">
+                        <thead>
+                            <tr>
+                                <th>Date/Time</th>
+                                <th>User</th>
+                                <th>Action</th>
+                                <th>Entity</th>
+                                <th>IP Address</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for log in logs %}
+                            <tr>
+                                <td>{{ log.created_at.strftime('%Y-%m-%d %H:%M:%S') }}</td>
+                                <td>{{ log.user.full_name if log.user else 'System' }}</td>
+                                <td>
+                                    <span class="badge bg-{{ 'success' if 'create' in log.action.lower() else 'warning' if 'update' in log.action.lower() else 'danger' if 'delete' in log.action.lower() else 'secondary' }}">
+                                        {{ log.action }}
+                                    </span>
+                                </td>
+                                <td>
+                                    {{ log.entity_type }}
+                                    {% if log.entity_id %}#{{ log.entity_id }}{% endif %}
+                                </td>
+                                <td>
+                                    <code>{{ log.ip_address or 'N/A' }}</code>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <div class="text-center py-5">
+                    <i class="fas fa-history fa-3x text-muted mb-3"></i>
+                    <h4>No Audit Logs</h4>
+                    <p class="text-muted">No system activity recorded yet.</p>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

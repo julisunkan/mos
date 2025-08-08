@@ -105,10 +105,8 @@ def new_supplier():
 @login_required
 def purchase_orders():
     page = request.args.get('page', 1, type=int)
-    pos = PurchaseOrder.query.order_by(PurchaseOrder.created_at.desc()).paginate(
-        page=page, per_page=20, error_out=False
-    )
-    return render_template('stores/purchase_orders.html', pos=pos)
+    purchase_orders = PurchaseOrder.query.order_by(PurchaseOrder.created_at.desc()).all()
+    return render_template('stores/purchase_orders.html', purchase_orders=purchase_orders)
 
 @stores_bp.route('/stock-transfers')
 @login_required

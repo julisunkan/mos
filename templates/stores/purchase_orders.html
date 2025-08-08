@@ -1,0 +1,99 @@
+{% extends "base.html" %}
+{% set active_page = 'stores' %}
+
+{% block title %}Purchase Orders{% endblock %}
+
+{% block content %}
+<div class="container-fluid mt-3">
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="mb-1">Purchase Orders</h2>
+            <p class="text-muted mb-0">Manage purchase orders from suppliers</p>
+        </div>
+        <div>
+            <a href="{{ url_for('stores.new_purchase_order') }}" class="btn btn-primary">
+                <i class="fas fa-plus"></i> New Purchase Order
+            </a>
+        </div>
+    </div>
+
+    <!-- Purchase Orders List -->
+    <div class="card">
+        <div class="card-header">
+            <h5 class="card-title mb-0">
+                <i class="fas fa-shopping-cart"></i> All Purchase Orders
+                <span class="badge bg-primary ms-2">{{ purchase_orders|length }}</span>
+            </h5>
+        </div>
+        <div class="card-body">
+            {% if purchase_orders %}
+                <div class="table-responsive">
+                    <table class="table table-striped">
+                        <thead>
+                            <tr>
+                                <th>PO Number</th>
+                                <th>Supplier</th>
+                                <th>Store</th>
+                                <th>Status</th>
+                                <th>Total Amount</th>
+                                <th>Expected Date</th>
+                                <th>Created</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for po in purchase_orders %}
+                            <tr>
+                                <td>
+                                    <strong>{{ po.po_number }}</strong>
+                                </td>
+                                <td>{{ po.supplier.name }}</td>
+                                <td>{{ po.store.name }}</td>
+                                <td>
+                                    <span class="badge bg-{{ 'success' if po.status == 'Received' else 'warning' if po.status == 'Sent' else 'secondary' if po.status == 'Draft' else 'danger' }}">
+                                        {{ po.status }}
+                                    </span>
+                                </td>
+                                <td>${{ "%.2f"|format(po.total_amount or 0) }}</td>
+                                <td>
+                                    {% if po.expected_date %}
+                                        {{ po.expected_date.strftime('%Y-%m-%d') }}
+                                    {% else %}
+                                        <span class="text-muted">Not set</span>
+                                    {% endif %}
+                                </td>
+                                <td>{{ po.created_at.strftime('%Y-%m-%d') }}</td>
+                                <td>
+                                    <div class="btn-group btn-group-sm" role="group">
+                                        <a href="{{ url_for('stores.view_purchase_order', id=po.id) }}" 
+                                           class="btn btn-outline-primary" title="View">
+                                            <i class="fas fa-eye"></i>
+                                        </a>
+                                        {% if po.status == 'Draft' %}
+                                            <a href="{{ url_for('stores.edit_purchase_order', id=po.id) }}" 
+                                               class="btn btn-outline-secondary" title="Edit">
+                                                <i class="fas fa-edit"></i>
+                                            </a>
+                                        {% endif %}
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <div class="text-center py-5">
+                    <i class="fas fa-shopping-cart fa-3x text-muted mb-3"></i>
+                    <h4>No Purchase Orders</h4>
+                    <p class="text-muted">You haven't created any purchase orders yet.</p>
+                    <a href="{{ url_for('stores.new_purchase_order') }}" class="btn btn-primary">
+                        <i class="fas fa-plus"></i> Create First Purchase Order
+                    </a>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

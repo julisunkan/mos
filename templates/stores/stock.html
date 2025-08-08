@@ -1,0 +1,141 @@
+{% extends "base.html" %}
+{% set active_page = 'stores' %}
+
+{% block title %}{{ store.name }} Stock{% endblock %}
+
+{% block content %}
+<div class="container-fluid mt-3">
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="mb-1">{{ store.name }} Stock</h2>
+            <p class="text-muted mb-0">Inventory levels for this store location</p>
+        </div>
+        <div>
+            <a href="{{ url_for('stores.index') }}" class="btn btn-secondary">
+                <i class="fas fa-arrow-left"></i> Back to Stores
+            </a>
+            <a href="{{ url_for('inventory.products') }}" class="btn btn-primary">
+                <i class="fas fa-plus"></i> Add Product
+            </a>
+        </div>
+    </div>
+
+    <!-- Store Info Card -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-3">
+                    <h6 class="text-muted">Store Name</h6>
+                    <p class="mb-0">{{ store.name }}</p>
+                </div>
+                <div class="col-md-3">
+                    <h6 class="text-muted">Phone</h6>
+                    <p class="mb-0">{{ store.phone or 'N/A' }}</p>
+                </div>
+                <div class="col-md-3">
+                    <h6 class="text-muted">Email</h6>
+                    <p class="mb-0">{{ store.email or 'N/A' }}</p>
+                </div>
+                <div class="col-md-3">
+                    <h6 class="text-muted">Status</h6>
+                    <span class="badge bg-{{ 'success' if store.is_active else 'secondary' }}">
+                        {{ 'Active' if store.is_active else 'Inactive' }}
+                    </span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Stock Items -->
+    <div class="card">
+        <div class="card-header">
+            <h5 class="card-title mb-0">
+                <i class="fas fa-boxes"></i> Stock Items
+                <span class="badge bg-primary ms-2">{{ stock_items|length }}</span>
+            </h5>
+        </div>
+        <div class="card-body">
+            {% if stock_items %}
+                <div class="table-responsive">
+                    <table class="table table-striped">
+                        <thead>
+                            <tr>
+                                <th>Product</th>
+                                <th>SKU</th>
+                                <th>Category</th>
+                                <th>Quantity</th>
+                                <th>Min Stock</th>
+                                <th>Max Stock</th>
+                                <th>Status</th>
+                                <th>Last Updated</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for stock_item, product in stock_items %}
+                            <tr>
+                                <td>
+                                    <strong>{{ product.name }}</strong>
+                                    {% if product.description %}
+                                        <br><small class="text-muted">{{ product.description[:50] }}{% if product.description|length > 50 %}...{% endif %}</small>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <code>{{ product.sku }}</code>
+                                </td>
+                                <td>{{ product.category.name if product.category else 'N/A' }}</td>
+                                <td>
+                                    <span class="fw-bold {{ 'text-danger' if stock_item.quantity <= (stock_item.min_stock or 0) else 'text-success' if stock_item.quantity >= (stock_item.max_stock or 100) else '' }}">
+                                        {{ stock_item.quantity }}
+                                    </span>
+                                </td>
+                                <td>{{ stock_item.min_stock or 0 }}</td>
+                                <td>{{ stock_item.max_stock or 100 }}</td>
+                                <td>
+                                    {% if stock_item.quantity <= (stock_item.min_stock or 0) %}
+                                        <span class="badge bg-danger">Low Stock</span>
+                                    {% elif stock_item.quantity >= (stock_item.max_stock or 100) %}
+                                        <span class="badge bg-warning">Overstock</span>
+                                    {% else %}
+                                        <span class="badge bg-success">Normal</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if stock_item.last_updated %}
+                                        {{ stock_item.last_updated.strftime('%Y-%m-%d %H:%M') }}
+                                    {% else %}
+                                        <span class="text-muted">Never</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <div class="btn-group btn-group-sm" role="group">
+                                        <a href="{{ url_for('inventory.view_product', id=product.id) }}" 
+                                           class="btn btn-outline-primary" title="View Product">
+                                            <i class="fas fa-eye"></i>
+                                        </a>
+                                        <a href="{{ url_for('inventory.edit_product', id=product.id) }}" 
+                                           class="btn btn-outline-secondary" title="Edit Product">
+                                            <i class="fas fa-edit"></i>
+                                        </a>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <div class="text-center py-5">
+                    <i class="fas fa-boxes fa-3x text-muted mb-3"></i>
+                    <h4>No Stock Items</h4>
+                    <p class="text-muted">This store doesn't have any products in stock yet.</p>
+                    <a href="{{ url_for('inventory.products') }}" class="btn btn-primary">
+                        <i class="fas fa-plus"></i> Add Products
+                    </a>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

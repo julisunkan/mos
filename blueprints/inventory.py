@@ -130,6 +130,12 @@ def delete_product(id):
     
     return redirect(url_for('inventory.products'))
 
+@inventory_bp.route('/products/<int:id>')
+@login_required
+def view_product(id):
+    product = Product.query.get_or_404(id)
+    return render_template('inventory/view_product.html', product=product)
+
 @inventory_bp.route('/low-stock')
 @login_required
 def low_stock():

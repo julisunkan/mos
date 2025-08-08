@@ -125,6 +125,37 @@ class StoreForm(FlaskForm):
     address = TextAreaField('Address')
     phone = StringField('Phone', validators=[Optional(), Length(1, 20)])
     email = StringField('Email', validators=[Optional(), Email(), Length(1, 120)])
+
+class SupplierForm(FlaskForm):
+    name = StringField('Supplier Name', validators=[DataRequired(), Length(1, 200)])
+    contact_person = StringField('Contact Person', validators=[Optional(), Length(1, 100)])
+    email = StringField('Email', validators=[Optional(), Email(), Length(1, 120)])
+    phone = StringField('Phone', validators=[Optional(), Length(1, 20)])
+    address = TextAreaField('Address')
+
+class StockTransferForm(FlaskForm):
+    from_store_id = SelectField('From Store', coerce=int, validators=[DataRequired()])
+    to_store_id = SelectField('To Store', coerce=int, validators=[DataRequired()])
+    notes = TextAreaField('Notes')
+    
+    def __init__(self, *args, **kwargs):
+        super(StockTransferForm, self).__init__(*args, **kwargs)
+        from models import Store
+        stores = Store.query.filter_by(is_active=True).all()
+        self.from_store_id.choices = [(s.id, s.name) for s in stores]
+        self.to_store_id.choices = [(s.id, s.name) for s in stores]
+
+class PurchaseOrderForm(FlaskForm):
+    supplier_id = SelectField('Supplier', coerce=int, validators=[DataRequired()])
+    expected_date = StringField('Expected Date')
+    notes = TextAreaField('Notes')
+    
+    def __init__(self, *args, **kwargs):
+        super(PurchaseOrderForm, self).__init__(*args, **kwargs)
+        from models import Supplier
+        suppliers = Supplier.query.filter_by(is_active=True).all()
+        self.supplier_id.choices = [(s.id, s.name) for s in suppliers]
+    email = StringField('Email', validators=[Optional(), Email(), Length(1, 120)])
     is_active = BooleanField('Active', default=True)
 
 class SupplierForm(FlaskForm):

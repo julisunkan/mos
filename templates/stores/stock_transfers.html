@@ -1,0 +1,130 @@
+{% extends "base.html" %}
+{% set active_page = 'stores' %}
+
+{% block title %}Stock Transfers{% endblock %}
+
+{% block content %}
+<div class="container-fluid mt-3">
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="mb-1">Stock Transfers</h2>
+            <p class="text-muted mb-0">Transfer inventory between store locations</p>
+        </div>
+        <div>
+            <a href="{{ url_for('stores.new_stock_transfer') }}" class="btn btn-primary">
+                <i class="fas fa-plus"></i> New Transfer
+            </a>
+        </div>
+    </div>
+
+    <!-- Stock Transfers List -->
+    <div class="card">
+        <div class="card-header">
+            <h5 class="card-title mb-0">
+                <i class="fas fa-exchange-alt"></i> All Stock Transfers
+                <span class="badge bg-primary ms-2">{{ transfers.total if transfers else 0 }}</span>
+            </h5>
+        </div>
+        <div class="card-body">
+            {% if transfers and transfers.items %}
+                <div class="table-responsive">
+                    <table class="table table-striped">
+                        <thead>
+                            <tr>
+                                <th>Transfer #</th>
+                                <th>From Store</th>
+                                <th>To Store</th>
+                                <th>Status</th>
+                                <th>Items</th>
+                                <th>Created</th>
+                                <th>User</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for transfer in transfers.items %}
+                            <tr>
+                                <td>
+                                    <strong>{{ transfer.transfer_number }}</strong>
+                                </td>
+                                <td>{{ transfer.from_store.name }}</td>
+                                <td>{{ transfer.to_store.name }}</td>
+                                <td>
+                                    <span class="badge bg-{{ 'success' if transfer.status == 'Completed' else 'warning' if transfer.status == 'In Transit' else 'secondary' if transfer.status == 'Pending' else 'danger' }}">
+                                        {{ transfer.status }}
+                                    </span>
+                                </td>
+                                <td>{{ transfer.transfer_items|length }} items</td>
+                                <td>{{ transfer.created_at.strftime('%Y-%m-%d %H:%M') }}</td>
+                                <td>{{ transfer.user.full_name }}</td>
+                                <td>
+                                    <div class="btn-group btn-group-sm" role="group">
+                                        <a href="{{ url_for('stores.view_stock_transfer', id=transfer.id) }}" 
+                                           class="btn btn-outline-primary" title="View">
+                                            <i class="fas fa-eye"></i>
+                                        </a>
+                                        {% if transfer.status == 'Pending' %}
+                                            <a href="{{ url_for('stores.edit_stock_transfer', id=transfer.id) }}" 
+                                               class="btn btn-outline-secondary" title="Edit">
+                                                <i class="fas fa-edit"></i>
+                                            </a>
+                                        {% endif %}
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                
+                <!-- Pagination -->
+                {% if transfers.pages > 1 %}
+                <nav aria-label="Stock transfers pagination">
+                    <ul class="pagination justify-content-center">
+                        {% if transfers.has_prev %}
+                            <li class="page-item">
+                                <a class="page-link" href="{{ url_for('stores.stock_transfers', page=transfers.prev_num) }}">Previous</a>
+                            </li>
+                        {% endif %}
+                        
+                        {% for page_num in transfers.iter_pages() %}
+                            {% if page_num %}
+                                {% if page_num != transfers.page %}
+                                    <li class="page-item">
+                                        <a class="page-link" href="{{ url_for('stores.stock_transfers', page=page_num) }}">{{ page_num }}</a>
+                                    </li>
+                                {% else %}
+                                    <li class="page-item active">
+                                        <span class="page-link">{{ page_num }}</span>
+                                    </li>
+                                {% endif %}
+                            {% else %}
+                                <li class="page-item disabled">
+                                    <span class="page-link">…</span>
+                                </li>
+                            {% endif %}
+                        {% endfor %}
+                        
+                        {% if transfers.has_next %}
+                            <li class="page-item">
+                                <a class="page-link" href="{{ url_for('stores.stock_transfers', page=transfers.next_num) }}">Next</a>
+                            </li>
+                        {% endif %}
+                    </ul>
+                </nav>
+                {% endif %}
+            {% else %}
+                <div class="text-center py-5">
+                    <i class="fas fa-exchange-alt fa-3x text-muted mb-3"></i>
+                    <h4>No Stock Transfers</h4>
+                    <p class="text-muted">You haven't created any stock transfers yet.</p>
+                    <a href="{{ url_for('stores.new_stock_transfer') }}" class="btn btn-primary">
+                        <i class="fas fa-plus"></i> Create First Transfer
+                    </a>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
