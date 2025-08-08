@@ -54,17 +54,16 @@ def open_register():
             return redirect(url_for('dashboard'))
         
         # Create new cash register
-        register = CashRegister(
-            user_id=current_user.id,
-            store_id=user_store.store_id,
-            opening_balance=opening_balance,
-            closing_balance=0,
-            total_sales=0,
-            cash_in=0,
-            cash_out=0,
-            is_open=True,
-            opened_at=datetime.utcnow()
-        )
+        register = CashRegister()
+        register.user_id = current_user.id
+        register.store_id = user_store.store_id
+        register.opening_balance = opening_balance
+        register.closing_balance = 0
+        register.total_sales = 0
+        register.cash_in = 0
+        register.cash_out = 0
+        register.is_open = True
+        register.opened_at = datetime.utcnow()
         
         try:
             db.session.add(register)
@@ -163,17 +162,16 @@ def process_sale():
             return jsonify({'error': 'No open cash register'}), 400
         
         # Create the sale with default currency
-        sale = Sale(
-            receipt_number=generate_receipt_number(),
-            user_id=current_user.id,
-            store_id=register.store_id,
-            customer_id=data.get('customer_id') if data.get('customer_id') else None,
-            payment_method=data.get('payment_method', 'Cash'),
-            discount_amount=float(data.get('discount', 0)),
-            notes=data.get('notes', ''),
-            currency=get_default_currency(),
-            exchange_rate=1.0
-        )
+        sale = Sale()
+        sale.receipt_number = generate_receipt_number()
+        sale.user_id = current_user.id
+        sale.store_id = register.store_id
+        sale.customer_id = data.get('customer_id') if data.get('customer_id') else None
+        sale.payment_method = data.get('payment_method', 'Cash')
+        sale.discount_amount = float(data.get('discount', 0))
+        sale.notes = data.get('notes', '')
+        sale.currency = get_default_currency()
+        sale.exchange_rate = 1.0
         
         db.session.add(sale)
         db.session.flush()  # Get the sale ID
@@ -195,13 +193,12 @@ def process_sale():
             total_price = unit_price * quantity
             
             # Create sale item
-            sale_item = SaleItem(
-                sale_id=sale.id,
-                product_id=product.id,
-                quantity=quantity,
-                unit_price=unit_price,
-                total_price=total_price
-            )
+            sale_item = SaleItem()
+            sale_item.sale_id = sale.id
+            sale_item.product_id = product.id
+            sale_item.quantity = quantity
+            sale_item.unit_price = unit_price
+            sale_item.total_price = total_price
             
             db.session.add(sale_item)
             
@@ -256,31 +253,29 @@ def process_refund():
         
         # Create refund entry (negative sale)
         refund_receipt = f"REF-{generate_receipt_number()}"
-        refund_sale = Sale(
-            receipt_number=refund_receipt,
-            user_id=current_user.id,
-            store_id=original_sale.store_id,
-            customer_id=original_sale.customer_id,
-            payment_method=original_sale.payment_method,
-            subtotal=-original_sale.subtotal,
-            tax_amount=-original_sale.tax_amount,
-            discount_amount=-original_sale.discount_amount,
-            total_amount=-original_sale.total_amount,
-            notes=f'REFUND:{receipt_number} - {reason}'
-        )
+        refund_sale = Sale()
+        refund_sale.receipt_number = refund_receipt
+        refund_sale.user_id = current_user.id
+        refund_sale.store_id = original_sale.store_id
+        refund_sale.customer_id = original_sale.customer_id
+        refund_sale.payment_method = original_sale.payment_method
+        refund_sale.subtotal = -original_sale.subtotal
+        refund_sale.tax_amount = -original_sale.tax_amount
+        refund_sale.discount_amount = -original_sale.discount_amount
+        refund_sale.total_amount = -original_sale.total_amount
+        refund_sale.notes = f'REFUND:{receipt_number} - {reason}'
         
         db.session.add(refund_sale)
         db.session.flush()  # Get the refund sale ID
         
         # Create refund items (restore stock)
         for original_item in original_sale.sale_items:
-            refund_item = SaleItem(
-                sale_id=refund_sale.id,
-                product_id=original_item.product_id,
-                quantity=-original_item.quantity,  # Negative quantity for refund
-                unit_price=original_item.unit_price,
-                total_price=-original_item.total_price
-            )
+            refund_item = SaleItem()
+            refund_item.sale_id = refund_sale.id
+            refund_item.product_id = original_item.product_id
+            refund_item.quantity = -original_item.quantity  # Negative quantity for refund
+            refund_item.unit_price = original_item.unit_price
+            refund_item.total_price = -original_item.total_price
             db.session.add(refund_item)
             
             # Restore stock

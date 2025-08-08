@@ -120,7 +120,7 @@ class POSSystem {
         }
 
         try {
-            const response = await fetch(`/pos/product/search?q=${encodeURIComponent(query)}`);
+            const response = await fetch(`/pos/api/products/search?q=${encodeURIComponent(query)}`);
             const products = await response.json();
             this.displaySearchResults(products);
         } catch (error) {
@@ -311,7 +311,7 @@ class POSSystem {
         };
 
         try {
-            const response = await fetch('/pos/sale/process', {
+            const response = await fetch('/pos/api/sale/process', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
