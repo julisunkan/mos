@@ -292,8 +292,7 @@ class POSSystem {
             const response = await fetch('/pos/sale/process', {
                 method: 'POST',
                 headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRFToken': this.getCSRFToken()
+                    'Content-Type': 'application/json'
                 },
                 body: JSON.stringify(saleData)
             });
@@ -362,7 +361,8 @@ class POSSystem {
     }
 
     getCSRFToken() {
-        return document.querySelector('meta[name=csrf-token]')?.getAttribute('content') || '';
+        // CSRF disabled for API endpoints
+        return '';
     }
 
     showAlert(message, type) {

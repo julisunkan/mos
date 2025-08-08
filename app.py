@@ -28,7 +28,7 @@ app.config["SQLALCHEMY_ENGINE_OPTIONS"] = {
     "pool_pre_ping": True,
 }
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
-app.config["WTF_CSRF_ENABLED"] = True
+app.config["WTF_CSRF_ENABLED"] = False  # Disable CSRF for API endpoints
 
 # Middleware
 app.wsgi_app = ProxyFix(app.wsgi_app, x_proto=1, x_host=1)
