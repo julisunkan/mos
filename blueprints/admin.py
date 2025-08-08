@@ -1,7 +1,7 @@
 from flask import Blueprint, render_template, request, redirect, url_for, flash
 from flask_login import login_required, current_user
-from models import User, Category, CompanyProfile, AuditLog
-from forms import UserForm, CategoryForm, CompanyProfileForm
+from models import User, Category, CompanyProfile, AuditLog, Store, UserStore
+from forms import UserForm, CategoryForm, CompanyProfileForm, UserStoreAssignmentForm
 from app import db
 from utils import admin_required
 
@@ -140,3 +140,91 @@ def audit_logs():
         page=page, per_page=50, error_out=False
     )
     return render_template('admin/audit_logs.html', logs=logs)
+
+@admin_bp.route('/user-stores')
+@login_required
+@admin_required
+def user_stores():
+    """List all user-store assignments"""
+    # Get all users with their store assignments
+    user_store_data = {}
+    
+    for user in User.query.all():
+        user_stores = db.session.query(Store).join(UserStore).filter(UserStore.user_id == user.id).all()
+        user_store_data[user.id] = {
+            'user': user,
+            'stores': user_stores
+        }
+    
+    return render_template('admin/user_stores.html', user_store_data=user_store_data)
+
+@admin_bp.route('/user-stores/assign', methods=['GET', 'POST'])
+@login_required
+@admin_required
+def assign_user_stores():
+    """Assign or reassign user to stores"""
+    form = UserStoreAssignmentForm()
+    
+    if form.validate_on_submit():
+        user_id = form.user_id.data
+        store_ids = form.store_ids.data
+        
+        try:
+            # Remove existing assignments for this user
+            UserStore.query.filter_by(user_id=user_id).delete()
+            
+            # Add new assignments
+            for store_id in store_ids:
+                user_store = UserStore(user_id=user_id, store_id=store_id)
+                db.session.add(user_store)
+            
+            db.session.commit()
+            
+            user = User.query.get(user_id)
+            store_names = [Store.query.get(sid).name for sid in store_ids]
+            flash(f'User {user.username} assigned to stores: {", ".join(store_names)}', 'success')
+            return redirect(url_for('admin.user_stores'))
+            
+        except Exception as e:
+            db.session.rollback()
+            flash(f'Error assigning user to stores: {str(e)}', 'error')
+    
+    return render_template('admin/user_store_assignment.html', form=form, title='Assign User to Stores')
+
+@admin_bp.route('/user-stores/edit/<int:user_id>', methods=['GET', 'POST'])
+@login_required
+@admin_required
+def edit_user_stores(user_id):
+    """Edit store assignments for a specific user"""
+    user = User.query.get_or_404(user_id)
+    form = UserStoreAssignmentForm()
+    
+    if request.method == 'GET':
+        # Pre-populate form with current assignments
+        current_store_ids = [us.store_id for us in UserStore.query.filter_by(user_id=user_id).all()]
+        form.user_id.data = user_id
+        form.store_ids.data = current_store_ids
+    
+    if form.validate_on_submit():
+        store_ids = form.store_ids.data
+        
+        try:
+            # Remove existing assignments for this user
+            UserStore.query.filter_by(user_id=user_id).delete()
+            
+            # Add new assignments
+            for store_id in store_ids:
+                user_store = UserStore(user_id=user_id, store_id=store_id)
+                db.session.add(user_store)
+            
+            db.session.commit()
+            
+            store_names = [Store.query.get(sid).name for sid in store_ids] if store_ids else ['None']
+            flash(f'Store assignments updated for {user.username}: {", ".join(store_names)}', 'success')
+            return redirect(url_for('admin.user_stores'))
+            
+        except Exception as e:
+            db.session.rollback()
+            flash(f'Error updating store assignments: {str(e)}', 'error')
+    
+    return render_template('admin/user_store_assignment.html', form=form, title=f'Edit Store Assignments - {user.username}', user=user)

@@ -1,6 +1,6 @@
 from flask_wtf import FlaskForm
 from flask_wtf.file import FileField, FileRequired
-from wtforms import StringField, TextAreaField, SelectField, DecimalField, IntegerField, BooleanField, PasswordField, HiddenField, SubmitField
+from wtforms import StringField, TextAreaField, SelectField, SelectMultipleField, DecimalField, IntegerField, BooleanField, PasswordField, HiddenField, SubmitField
 from wtforms.validators import DataRequired, Email, Length, NumberRange, Optional, ValidationError
 from models import User, Product, Category, Customer
 
@@ -200,6 +200,18 @@ class ReturnForm(FlaskForm):
 
 class ProductImageForm(FlaskForm):
     image = FileField('Product Image', validators=[FileRequired()])
-    alt_text = StringField('Image Description', validators=[Optional(), Length(max=200)])
-    is_primary = BooleanField('Set as Primary Image')
-    submit = SubmitField('Upload Image')
+
+class UserStoreAssignmentForm(FlaskForm):
+    user_id = SelectField('User', coerce=int, validators=[DataRequired()])
+    store_ids = SelectMultipleField('Assign to Stores', coerce=int, validators=[DataRequired()])
+    
+    def __init__(self, *args, **kwargs):
+        super(UserStoreAssignmentForm, self).__init__(*args, **kwargs)
+        from models import User, Store
+        # Get all users except admin (or include admin if needed)
+        users = User.query.all()
+        self.user_id.choices = [(u.id, f"{u.username} ({u.email})") for u in users]
+        
+        # Get all active stores
+        stores = Store.query.filter_by(is_active=True).all()
+        self.store_ids.choices = [(s.id, s.name) for s in stores]

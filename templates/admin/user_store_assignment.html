@@ -1,0 +1,145 @@
+{% extends "base.html" %}
+{% set active_page = 'admin' %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid mt-3">
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="mb-1">{{ title }}</h2>
+            <p class="text-muted mb-0">
+                {% if user %}Edit store access for {{ user.username }}{% else %}Assign a user to stores{% endif %}
+            </p>
+        </div>
+        <div>
+            <a href="{{ url_for('admin.user_stores') }}" class="btn btn-secondary">
+                <i class="fas fa-arrow-left"></i> Back to User Stores
+            </a>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-lg-8">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-user-cog"></i> Store Assignment
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <form method="POST" novalidate>
+                        {{ form.hidden_tag() }}
+                        
+                        <div class="mb-3">
+                            {{ form.user_id.label(class="form-label") }}
+                            {% if user %}
+                                <!-- Show user info when editing specific user -->
+                                <input type="hidden" name="user_id" value="{{ user.id }}">
+                                <div class="form-control-plaintext">
+                                    <strong>{{ user.username }}</strong> ({{ user.email }})
+                                    <span class="badge bg-info ms-2">{{ user.role }}</span>
+                                </div>
+                            {% else %}
+                                {{ form.user_id(class="form-select" + (" is-invalid" if form.user_id.errors else "")) }}
+                                {% if form.user_id.errors %}
+                                    <div class="invalid-feedback">
+                                        {% for error in form.user_id.errors %}{{ error }}{% endfor %}
+                                    </div>
+                                {% endif %}
+                            {% endif %}
+                        </div>
+
+                        <div class="mb-4">
+                            {{ form.store_ids.label(class="form-label") }}
+                            <div class="row">
+                                {% for store_choice in form.store_ids.choices %}
+                                <div class="col-md-4 mb-2">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" 
+                                               name="store_ids" value="{{ store_choice[0] }}" 
+                                               id="store_{{ store_choice[0] }}"
+                                               {% if store_choice[0] in (form.store_ids.data or []) %}checked{% endif %}>
+                                        <label class="form-check-label" for="store_{{ store_choice[0] }}">
+                                            {{ store_choice[1] }}
+                                        </label>
+                                    </div>
+                                </div>
+                                {% endfor %}
+                            </div>
+                            {% if form.store_ids.errors %}
+                                <div class="text-danger mt-1">
+                                    {% for error in form.store_ids.errors %}{{ error }}{% endfor %}
+                                </div>
+                            {% endif %}
+                            <small class="form-text text-muted">
+                                Select one or more stores this user can access. Users need store access to use POS and inventory features.
+                            </small>
+                        </div>
+
+                        <div class="d-flex justify-content-end gap-2">
+                            <a href="{{ url_for('admin.user_stores') }}" class="btn btn-secondary">Cancel</a>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save"></i> 
+                                {% if user %}Update Assignments{% else %}Assign to Stores{% endif %}
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-lg-4">
+            <div class="card">
+                <div class="card-header">
+                    <h6 class="card-title mb-0">
+                        <i class="fas fa-info-circle"></i> Store Assignment Info
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <ul class="list-unstyled mb-0">
+                        <li class="mb-2">
+                            <i class="fas fa-check-circle text-success me-2"></i>
+                            Users must be assigned to at least one store
+                        </li>
+                        <li class="mb-2">
+                            <i class="fas fa-check-circle text-success me-2"></i>
+                            Store access controls inventory and POS features
+                        </li>
+                        <li class="mb-2">
+                            <i class="fas fa-check-circle text-success me-2"></i>
+                            Users can be assigned to multiple stores
+                        </li>
+                        <li class="mb-0">
+                            <i class="fas fa-check-circle text-success me-2"></i>
+                            Changes take effect immediately
+                        </li>
+                    </ul>
+                </div>
+            </div>
+            
+            {% if user %}
+            <div class="card mt-3">
+                <div class="card-header">
+                    <h6 class="card-title mb-0">Current User Info</h6>
+                </div>
+                <div class="card-body">
+                    <p><strong>Username:</strong> {{ user.username }}</p>
+                    <p><strong>Email:</strong> {{ user.email }}</p>
+                    <p><strong>Name:</strong> {{ user.first_name }} {{ user.last_name }}</p>
+                    <p><strong>Role:</strong> <span class="badge bg-info">{{ user.role }}</span></p>
+                    <p><strong>Status:</strong> 
+                        {% if user.is_active %}
+                            <span class="badge bg-success">Active</span>
+                        {% else %}
+                            <span class="badge bg-danger">Inactive</span>
+                        {% endif %}
+                    </p>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

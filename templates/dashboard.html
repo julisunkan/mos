@@ -55,8 +55,14 @@
         {% if current_user.has_permission('all') %}
         <div class="col-6 col-md-3">
             <a href="{{ url_for('admin.users') }}" class="btn btn-outline-primary w-100 py-3">
-                <i class="fas fa-user-cog fa-2x d-block mb-2"></i>
+                <i class="fas fa-users fa-2x d-block mb-2"></i>
                 <span>Users</span>
+            </a>
+        </div>
+        <div class="col-6 col-md-3">
+            <a href="{{ url_for('admin.user_stores') }}" class="btn btn-outline-success w-100 py-3">
+                <i class="fas fa-user-cog fa-2x d-block mb-2"></i>
+                <span>User Stores</span>
             </a>
         </div>
         <div class="col-6 col-md-3">

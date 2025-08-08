@@ -1,0 +1,98 @@
+{% extends "base.html" %}
+{% set active_page = 'admin' %}
+
+{% block title %}User Store Assignments{% endblock %}
+
+{% block content %}
+<div class="container-fluid mt-3">
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="mb-1">User Store Assignments</h2>
+            <p class="text-muted mb-0">Manage which stores each user can access</p>
+        </div>
+        <div>
+            <a href="{{ url_for('admin.assign_user_stores') }}" class="btn btn-primary">
+                <i class="fas fa-plus"></i> Assign User to Store
+            </a>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-users"></i> User Store Access
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {% if user_store_data %}
+                        <div class="table-responsive">
+                            <table class="table table-striped">
+                                <thead>
+                                    <tr>
+                                        <th>User</th>
+                                        <th>Email</th>
+                                        <th>Role</th>
+                                        <th>Assigned Stores</th>
+                                        <th>Status</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for user_id, data in user_store_data.items() %}
+                                    <tr>
+                                        <td>
+                                            <strong>{{ data.user.username }}</strong><br>
+                                            <small class="text-muted">{{ data.user.first_name }} {{ data.user.last_name }}</small>
+                                        </td>
+                                        <td>{{ data.user.email }}</td>
+                                        <td>
+                                            <span class="badge bg-info">{{ data.user.role }}</span>
+                                        </td>
+                                        <td>
+                                            {% if data.stores %}
+                                                {% for store in data.stores %}
+                                                    <span class="badge bg-success me-1">{{ store.name }}</span>
+                                                {% endfor %}
+                                            {% else %}
+                                                <span class="text-muted">No stores assigned</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            {% if data.user.is_active %}
+                                                <span class="badge bg-success">Active</span>
+                                            {% else %}
+                                                <span class="badge bg-danger">Inactive</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            <div class="btn-group btn-group-sm">
+                                                <a href="{{ url_for('admin.edit_user_stores', user_id=data.user.id) }}" 
+                                                   class="btn btn-outline-primary">
+                                                    <i class="fas fa-edit"></i> Edit
+                                                </a>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        <div class="text-center py-5">
+                            <i class="fas fa-users fa-3x text-muted mb-3"></i>
+                            <h5>No Users Found</h5>
+                            <p class="text-muted">Create users first to assign them to stores.</p>
+                            <a href="{{ url_for('admin.new_user') }}" class="btn btn-primary">
+                                <i class="fas fa-plus"></i> Add New User
+                            </a>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
