@@ -3,6 +3,13 @@
 {% block title %}Returns & Refunds{% endblock %}
 
 {% block content %}
+<!-- Inline Message Area -->
+<div id="messageArea" class="container-fluid d-none mt-2">
+    <div id="messageContent" class="alert alert-dismissible fade show" role="alert">
+        <span id="messageText"></span>
+        <button type="button" class="btn-close" onclick="hideMessage()"></button>
+    </div>
+</div>
 <div class="container-fluid">
     <div class="row">
         <div class="col-12">
@@ -111,7 +118,34 @@
 <script>
 function initiateReturn(saleId) {
     // This would open a modal to select items for return
-    alert('Return functionality will be implemented here for sale ID: ' + saleId);
+    showInlineMessage('Return functionality will be implemented here for sale ID: ' + saleId, 'info');
+}
+
+// Inline message functions
+function showInlineMessage(message, type) {
+    const messageArea = document.getElementById('messageArea');
+    const messageContent = document.getElementById('messageContent');
+    const messageText = document.getElementById('messageText');
+    
+    if (!messageArea || !messageContent || !messageText) {
+        console.log(`${type.toUpperCase()}: ${message}`);
+        return;
+    }
+    
+    messageText.textContent = message;
+    messageContent.className = `alert alert-${type} alert-dismissible fade show`;
+    messageArea.classList.remove('d-none');
+    
+    setTimeout(() => {
+        hideMessage();
+    }, 5000);
+}
+
+function hideMessage() {
+    const messageArea = document.getElementById('messageArea');
+    if (messageArea) {
+        messageArea.classList.add('d-none');
+    }
 }
 </script>
 {% endblock %}

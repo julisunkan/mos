@@ -7,6 +7,14 @@
 {% endblock %}
 
 {% block content %}
+<!-- Inline Message Area -->
+<div id="messageArea" class="container-fluid d-none mt-2">
+    <div id="messageContent" class="alert alert-dismissible fade show" role="alert">
+        <span id="messageText"></span>
+        <button type="button" class="btn-close" onclick="hideMessage()"></button>
+    </div>
+</div>
+
 <div class="container-fluid mt-4">
     <!-- POS Header -->
     <div class="row mb-4">
@@ -250,7 +258,7 @@ async function searchProducts() {
         resultsContainer.innerHTML = html;
     } catch (error) {
         console.error('Search error:', error);
-        showAlert('Search failed', 'danger');
+        showInlineMessage('Search failed', 'danger');
     }
 }
 
@@ -263,7 +271,7 @@ function addToCart(productCard) {
     const productTax = parseFloat(productCard.dataset.tax || 0);
     
     if (productStock <= 0) {
-        showAlert('Product is out of stock!', 'warning');
+        showInlineMessage('Product is out of stock!', 'warning');
         return;
     }
     
@@ -272,7 +280,7 @@ function addToCart(productCard) {
     
     if (existingItem) {
         if (existingItem.quantity >= productStock) {
-            showAlert('Cannot add more items than available in stock!', 'warning');
+            showInlineMessage('Cannot add more items than available in stock!', 'warning');
             return;
         }
         existingItem.quantity++;
@@ -342,7 +350,7 @@ function updateQuantity(index, newQuantity) {
     }
     
     if (quantity > item.max_stock) {
-        showAlert('Cannot exceed available stock!', 'warning');
+        showInlineMessage('Cannot exceed available stock!', 'warning');
         updateCartDisplay(); // Reset display
         return;
     }
@@ -392,7 +400,7 @@ function clearCart() {
 // Process sale
 async function processSale() {
     if (cart.length === 0) {
-        showAlert('Cart is empty!', 'warning');
+        showInlineMessage('Cart is empty!', 'warning');
         return;
     }
     
@@ -429,33 +437,33 @@ async function processSale() {
             modal.show();
             
             clearCart();
-            showAlert('Sale processed successfully!', 'success');
+            showInlineMessage('Sale processed successfully!', 'success');
         } else {
-            showAlert(result.error || 'Sale processing failed!', 'danger');
+            showInlineMessage(result.error || 'Sale processing failed!', 'danger');
         }
     } catch (error) {
         console.error('Sale processing error:', error);
-        showAlert('Network error occurred!', 'danger');
+        showInlineMessage('Network error occurred!', 'danger');
     }
 }
 
 // Print receipt (opens in new window for printing)
 function printReceipt() {
     if (!lastReceiptNumber) {
-        showAlert('No receipt available!', 'warning');
+        showInlineMessage('No receipt available!', 'warning');
         return;
     }
     
     const printWindow = window.open(`/pos/receipt/${lastReceiptNumber}/print`, '_blank', 'width=400,height=600');
     if (!printWindow) {
-        showAlert('Please allow popups to print receipts', 'warning');
+        showInlineMessage('Please allow popups to print receipts', 'warning');
     }
 }
 
 // Download receipt PDF
 function downloadReceipt() {
     if (!lastReceiptNumber) {
-        showAlert('No receipt available!', 'warning');
+        showInlineMessage('No receipt available!', 'warning');
         return;
     }
     
@@ -466,7 +474,7 @@ function downloadReceipt() {
     link.click();
     document.body.removeChild(link);
     
-    showAlert('Receipt PDF download started!', 'success');
+    showInlineMessage('Receipt PDF download started!', 'success');
 }
 
 // Close register
@@ -476,23 +484,31 @@ function closeRegister() {
     }
 }
 
-// Show alert
-function showAlert(message, type) {
-    const alert = document.createElement('div');
-    alert.className = `alert alert-${type} alert-dismissible fade show`;
-    alert.innerHTML = `
-        ${message}
-        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-    `;
+// Show inline message
+function showInlineMessage(message, type) {
+    const messageArea = document.getElementById('messageArea');
+    const messageContent = document.getElementById('messageContent');
+    const messageText = document.getElementById('messageText');
     
-    const container = document.querySelector('.container-fluid');
-    container.insertBefore(alert, container.firstChild);
+    if (!messageArea || !messageContent || !messageText) {
+        console.log(`${type.toUpperCase()}: ${message}`);
+        return;
+    }
+    
+    messageText.textContent = message;
+    messageContent.className = `alert alert-${type} alert-dismissible fade show`;
+    messageArea.classList.remove('d-none');
     
     setTimeout(() => {
-        if (alert.parentNode) {
-            alert.remove();
-        }
-    }, 3000);
+        hideMessage();
+    }, 5000);
+}
+
+function hideMessage() {
+    const messageArea = document.getElementById('messageArea');
+    if (messageArea) {
+        messageArea.classList.add('d-none');
+    }
 }
 
 // Get CSRF token
@@ -527,13 +543,13 @@ async function processRefund() {
         const result = await response.json();
         
         if (response.ok && result.success) {
-            showAlert(`Refund processed successfully! Refund ID: ${result.refund_id}`, 'success');
+            showInlineMessage(`Refund processed successfully! Refund ID: ${result.refund_id}`, 'success');
         } else {
-            showAlert(result.error || 'Refund processing failed!', 'danger');
+            showInlineMessage(result.error || 'Refund processing failed!', 'danger');
         }
     } catch (error) {
         console.error('Refund processing error:', error);
-        showAlert('Network error occurred during refund!', 'danger');
+        showInlineMessage('Network error occurred during refund!', 'danger');
     }
 }
 </script>

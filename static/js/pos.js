@@ -420,24 +420,34 @@ class POSSystem {
     }
 
     showAlert(message, type) {
-        // Create alert element
-        const alert = document.createElement('div');
-        alert.className = `alert alert-${type} alert-dismissible fade show`;
-        alert.innerHTML = `
-            ${message}
-            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-        `;
+        const messageArea = document.getElementById('messageArea');
+        const messageContent = document.getElementById('messageContent');
+        const messageText = document.getElementById('messageText');
         
-        // Insert at top of container
-        const container = document.querySelector('.container-fluid');
-        container.insertBefore(alert, container.firstChild);
+        if (!messageArea || !messageContent || !messageText) {
+            // Fallback to console if message area doesn't exist
+            console.log(`${type.toUpperCase()}: ${message}`);
+            return;
+        }
         
-        // Auto-dismiss after 3 seconds
+        // Set message content and type
+        messageText.textContent = message;
+        messageContent.className = `alert alert-${type} alert-dismissible fade show`;
+        
+        // Show message area
+        messageArea.classList.remove('d-none');
+        
+        // Auto-hide after 5 seconds
         setTimeout(() => {
-            if (alert.parentNode) {
-                alert.remove();
-            }
-        }, 3000);
+            this.hideMessage();
+        }, 5000);
+    }
+
+    hideMessage() {
+        const messageArea = document.getElementById('messageArea');
+        if (messageArea) {
+            messageArea.classList.add('d-none');
+        }
     }
 }
 
