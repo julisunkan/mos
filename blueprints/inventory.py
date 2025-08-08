@@ -1,6 +1,6 @@
 from flask import Blueprint, render_template, redirect, url_for, flash, request
 from flask_login import login_required, current_user
-from forms import ProductForm
+from forms import ProductForm, CategoryForm
 from models import Product, Category
 from app import db
 from utils import generate_sku
@@ -138,3 +138,55 @@ def low_stock():
     ).all()
     
     return render_template('inventory/low_stock.html', products=products)
+
+@inventory_bp.route('/categories')
+@login_required
+def categories():
+    page = request.args.get('page', 1, type=int)
+    categories = Category.query.paginate(
+        page=page, per_page=20, error_out=False
+    )
+    return render_template('inventory/categories.html', categories=categories)
+
+@inventory_bp.route('/categories/new', methods=['GET', 'POST'])
+@login_required
+def new_category():
+    form = CategoryForm()
+    if form.validate_on_submit():
+        category = Category(
+            name=form.name.data,
+            description=form.description.data,
+            is_active=form.is_active.data
+        )
+        
+        try:
+            db.session.add(category)
+            db.session.commit()
+            flash(f'Category {category.name} created successfully!', 'success')
+            return redirect(url_for('inventory.categories'))
+        except Exception as e:
+            db.session.rollback()
+            flash(f'Error creating category: {str(e)}', 'error')
+    
+    return render_template('inventory/category_form.html', form=form, title='New Category')
+
+@inventory_bp.route('/categories/<int:id>/edit', methods=['GET', 'POST'])
+@login_required
+def edit_category(id):
+    category = Category.query.get_or_404(id)
+    form = CategoryForm(obj=category)
+    
+    if form.validate_on_submit():
+        category.name = form.name.data
+        category.description = form.description.data
+        category.is_active = form.is_active.data
+        
+        try:
+            db.session.commit()
+            flash(f'Category {category.name} updated successfully!', 'success')
+            return redirect(url_for('inventory.categories'))
+        except Exception as e:
+            db.session.rollback()
+            flash(f'Error updating category: {str(e)}', 'error')
+    
+    return render_template('inventory/category_form.html', form=form, title='Edit Category', category=category)
