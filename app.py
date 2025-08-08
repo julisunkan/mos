@@ -23,13 +23,30 @@ app = Flask(__name__)
 
 # Configuration
 app.secret_key = os.environ.get("SESSION_SECRET", "dev-secret-key-change-in-production")
-app.config["SQLALCHEMY_DATABASE_URI"] = os.environ.get("DATABASE_URL", "postgresql://localhost/cloudpos")
+
+# Handle PostgreSQL URL format for Render
+database_url = os.environ.get("DATABASE_URL", "postgresql://localhost/cloudpos")
+if database_url.startswith("postgres://"):
+    database_url = database_url.replace("postgres://", "postgresql://", 1)
+
+app.config["SQLALCHEMY_DATABASE_URI"] = database_url
 app.config["SQLALCHEMY_ENGINE_OPTIONS"] = {
     "pool_recycle": 300,
     "pool_pre_ping": True,
+    "pool_timeout": 20,
+    "pool_size": 10,
+    "max_overflow": 20
 }
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 app.config["WTF_CSRF_ENABLED"] = False  # Disable CSRF for API endpoints
+
+# Production settings
+if os.environ.get("FLASK_ENV") == "production":
+    app.config["DEBUG"] = False
+    app.config["TESTING"] = False
+    logging.getLogger().setLevel(logging.INFO)
+else:
+    app.config["DEBUG"] = True
 
 # Middleware
 app.wsgi_app = ProxyFix(app.wsgi_app, x_proto=1, x_host=1)
