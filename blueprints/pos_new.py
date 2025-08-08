@@ -324,11 +324,15 @@ def download_receipt(receipt_number):
         from reportlab.lib.pagesizes import letter
         from reportlab.pdfgen import canvas
         from reportlab.lib.units import inch
+        from utils import get_currency_symbol
         
         # Find the sale by receipt number
         sale = Sale.query.filter_by(receipt_number=receipt_number).first()
         if not sale:
             return jsonify({'error': 'Receipt not found'}), 404
+        
+        # Get currency symbol
+        currency_symbol = get_currency_symbol()
         
         # Create PDF in memory
         buffer = io.BytesIO()
@@ -362,7 +366,7 @@ def download_receipt(receipt_number):
         p.setFont("Helvetica", 10)
         for item in sale.sale_items:
             p.drawString(50, y_pos, f"{item.product.name} x{item.quantity}")
-            p.drawString(450, y_pos, f"${item.total_price:.2f}")
+            p.drawString(450, y_pos, f"{currency_symbol}{item.total_price:.2f}")
             y_pos -= 15
         
         # Totals
@@ -371,7 +375,7 @@ def download_receipt(receipt_number):
         y_pos -= 20
         
         p.setFont("Helvetica-Bold", 12)
-        p.drawString(350, y_pos, f"Total: ${sale.total_amount:.2f}")
+        p.drawString(350, y_pos, f"Total: {currency_symbol}{sale.total_amount:.2f}")
         
         # Footer
         p.setFont("Helvetica", 8)
@@ -396,10 +400,15 @@ def download_receipt(receipt_number):
 @login_required
 def print_receipt(receipt_number):
     """Generate HTML receipt for printing"""
+    from utils import get_currency_symbol
+    
     # Find the sale by receipt number
     sale = Sale.query.filter_by(receipt_number=receipt_number).first()
     if not sale:
         return jsonify({'error': 'Receipt not found'}), 404
+    
+    # Get currency symbol
+    currency_symbol = get_currency_symbol()
     
     # Generate HTML receipt content
     html_content = f"""
@@ -495,7 +504,7 @@ def print_receipt(receipt_number):
             <div class="item">
                 <div class="item-name">{item.product.name}</div>
                 <div class="item-qty">{item.quantity}</div>
-                <div class="item-price">${item.total_price:.2f}</div>
+                <div class="item-price">{currency_symbol}{item.total_price:.2f}</div>
             </div>"""
     
     html_content += f"""
@@ -504,24 +513,24 @@ def print_receipt(receipt_number):
         <div class="total-section">
             <div class="total-line">
                 <span>Subtotal:</span>
-                <span>${sale.subtotal:.2f}</span>
+                <span>{currency_symbol}{sale.subtotal:.2f}</span>
             </div>
             <div class="total-line">
                 <span>Tax:</span>
-                <span>${sale.tax_amount:.2f}</span>
+                <span>{currency_symbol}{sale.tax_amount:.2f}</span>
             </div>"""
     
     if sale.discount_amount > 0:
         html_content += f"""
             <div class="total-line">
                 <span>Discount:</span>
-                <span>-${sale.discount_amount:.2f}</span>
+                <span>-{currency_symbol}{sale.discount_amount:.2f}</span>
             </div>"""
     
     html_content += f"""
             <div class="total-line" style="font-size: 16px; border-top: 1px solid #000; padding-top: 5px;">
                 <span>TOTAL:</span>
-                <span>${sale.total_amount:.2f}</span>
+                <span>{currency_symbol}{sale.total_amount:.2f}</span>
             </div>
             <div class="total-line">
                 <span>Payment:</span>

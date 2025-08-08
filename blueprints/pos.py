@@ -361,12 +361,16 @@ def print_receipt(receipt_number):
     from reportlab.pdfgen import canvas
     from reportlab.lib.units import inch
     from flask import make_response
+    from utils import get_currency_symbol
     import io
     
     # Find the sale by receipt number
     sale = Sale.query.filter_by(receipt_number=receipt_number).first()
     if not sale:
         return jsonify({'error': 'Receipt not found'}), 404
+    
+    # Get currency symbol
+    currency_symbol = get_currency_symbol()
     
     # Create PDF in memory
     buffer = io.BytesIO()
@@ -406,8 +410,8 @@ def print_receipt(receipt_number):
     for item in sale.items:
         p.drawString(50, y_pos, item.product.name[:30])  # Truncate long names
         p.drawString(300, y_pos, str(item.quantity))
-        p.drawString(350, y_pos, f"${item.unit_price:.2f}")
-        p.drawString(450, y_pos, f"${item.total_price:.2f}")
+        p.drawString(350, y_pos, f"{currency_symbol}{item.unit_price:.2f}")
+        p.drawString(450, y_pos, f"{currency_symbol}{item.total_price:.2f}")
         y_pos -= 15
     
     # Totals section
@@ -417,21 +421,21 @@ def print_receipt(receipt_number):
     
     p.setFont("Helvetica", 10)
     p.drawString(350, y_pos, f"Subtotal:")
-    p.drawString(450, y_pos, f"${sale.subtotal:.2f}")
+    p.drawString(450, y_pos, f"{currency_symbol}{sale.subtotal:.2f}")
     y_pos -= 15
     
     p.drawString(350, y_pos, f"Tax:")
-    p.drawString(450, y_pos, f"${sale.tax_amount:.2f}")
+    p.drawString(450, y_pos, f"{currency_symbol}{sale.tax_amount:.2f}")
     y_pos -= 15
     
     if sale.discount_amount > 0:
         p.drawString(350, y_pos, f"Discount:")
-        p.drawString(450, y_pos, f"-${sale.discount_amount:.2f}")
+        p.drawString(450, y_pos, f"-{currency_symbol}{sale.discount_amount:.2f}")
         y_pos -= 15
     
     p.setFont("Helvetica-Bold", 12)
     p.drawString(350, y_pos, f"Total:")
-    p.drawString(450, y_pos, f"${sale.total_amount:.2f}")
+    p.drawString(450, y_pos, f"{currency_symbol}{sale.total_amount:.2f}")
     y_pos -= 20
     
     p.setFont("Helvetica", 10)
