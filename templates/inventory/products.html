@@ -90,7 +90,7 @@
                                         <td>{{ product.category.name }}</td>
                                         <td>
                                             <span class="badge bg-{{ 'warning' if product.is_low_stock else 'success' }}">
-                                                {{ product.stock_quantity }}
+                                                {{ product.stock_quantity | format_number }}
                                             </span>
                                         </td>
                                         <td>{{ format_currency(product.cost_price) }}</td>

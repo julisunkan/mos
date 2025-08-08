@@ -22,6 +22,11 @@
     
     <!-- Custom CSS -->
     <link href="{{ url_for('static', filename='css/custom.css') }}?v={{ range(1, 10000) | random }}" rel="stylesheet">
+    
+    <!-- Global JavaScript Variables -->
+    <script>
+        window.currencySymbol = '{{ get_currency_symbol() }}';
+    </script>
 </head>
 <body>
     <div class="app-container">

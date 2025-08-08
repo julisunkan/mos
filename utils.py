@@ -88,7 +88,7 @@ def get_currency_symbol(currency_code=None):
     return currency_symbols.get(currency_code, currency_code + ' ')
 
 def format_currency(amount, currency_code=None):
-    """Format amount with appropriate currency symbol"""
+    """Format amount with appropriate currency symbol and comma separators"""
     if amount is None:
         amount = 0
     
@@ -97,8 +97,14 @@ def format_currency(amount, currency_code=None):
     
     symbol = get_currency_symbol(currency_code)
     
-    # Format with 2 decimal places
-    return f"{symbol}{amount:.2f}"
+    # Format with 2 decimal places and comma separators
+    return f"{symbol}{amount:,.2f}"
+
+def format_number(number):
+    """Format number with comma separators"""
+    if number is None:
+        number = 0
+    return f"{number:,}"
 
 def log_audit_action(action, entity_type, entity_id=None, old_values=None, new_values=None):
     """Log an audit action"""

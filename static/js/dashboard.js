@@ -1,4 +1,22 @@
 // Dashboard JavaScript functionality
+
+// Utility function to format numbers with comma separators
+function formatNumber(number) {
+    if (typeof number === 'string') {
+        number = parseFloat(number);
+    }
+    return number.toLocaleString('en-US');
+}
+
+// Utility function to format currency with comma separators
+function formatCurrency(amount) {
+    if (typeof amount === 'string') {
+        amount = parseFloat(amount);
+    }
+    const symbol = window.currencySymbol || '$';
+    return symbol + amount.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+}
+
 document.addEventListener('DOMContentLoaded', function() {
     // Initialize tooltips
     var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));

@@ -6,7 +6,7 @@ from flask_login import LoginManager, login_required
 from flask_wtf.csrf import CSRFProtect
 from sqlalchemy.orm import DeclarativeBase
 from werkzeug.middleware.proxy_fix import ProxyFix
-from utils import format_currency, get_default_currency, get_currency_symbol
+from utils import format_currency, format_number, get_default_currency, get_currency_symbol
 
 # Configure logging
 logging.basicConfig(level=logging.DEBUG)
@@ -88,6 +88,7 @@ app.register_blueprint(stores_bp, url_prefix='/stores')
 
 # Register template filters
 app.jinja_env.filters['format_currency'] = format_currency
+app.jinja_env.filters['format_number'] = format_number
 app.jinja_env.globals['get_currency_symbol'] = get_currency_symbol
 
 # Main dashboard route
@@ -139,7 +140,7 @@ with app.app_context():
 # Make utility functions available in templates
 @app.context_processor
 def utility_processor():
-    return dict(format_currency=format_currency, get_default_currency=get_default_currency)
+    return dict(format_currency=format_currency, format_number=format_number, get_default_currency=get_default_currency)
     
     # Create default roles and admin user if they don't exist
     from utils import create_default_data
