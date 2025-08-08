@@ -54,7 +54,7 @@ import models
 # Register blueprints
 from blueprints.auth import auth_bp
 from blueprints.admin import admin_bp
-from blueprints.pos import pos_bp
+from blueprints.pos_new import pos_bp
 from blueprints.stores import stores_bp
 from blueprints.inventory import inventory_bp
 from blueprints.customers import customers_bp
