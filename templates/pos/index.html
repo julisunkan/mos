@@ -59,15 +59,16 @@
                     <div class="row" id="quickProducts">
                         {% for product in products[:12] %}
                         <div class="col-md-3 col-sm-4 col-6 mb-3">
-                            <div class="card product-card h-100" data-product-id="{{ product.id }}" 
+                            <div class="card product-card h-100 bg-dark text-light border-secondary" data-product-id="{{ product.id }}" 
                                  data-product-name="{{ product.name }}" 
                                  data-product-price="{{ product.selling_price }}"
                                  data-product-stock="{{ product.stock_quantity }}"
-                                 data-product-tax="{{ product.tax_rate }}">
+                                 data-product-tax="{{ product.tax_rate }}"
+                                 style="cursor: pointer;">
                                 <div class="card-body text-center p-2">
-                                    <h6 class="card-title mb-1">{{ product.name }}</h6>
+                                    <h6 class="card-title mb-1 text-light">{{ product.name }}</h6>
                                     <p class="card-text mb-1">
-                                        <strong>${{ "%.2f"|format(product.selling_price) }}</strong>
+                                        <strong class="text-success">${{ "%.2f"|format(product.selling_price) }}</strong>
                                     </p>
                                     <small class="text-muted">Stock: {{ product.stock_quantity }}</small>
                                 </div>
