@@ -106,16 +106,15 @@ def log_audit_action(action, entity_type, entity_id=None, old_values=None, new_v
     from app import db
     from flask import request
     
-    audit_log = AuditLog(
-        user_id=current_user.id if current_user.is_authenticated else None,
-        action=action,
-        entity_type=entity_type,
-        entity_id=entity_id,
-        old_values=old_values,
-        new_values=new_values,
-        ip_address=request.remote_addr,
-        user_agent=request.user_agent.string
-    )
+    audit_log = AuditLog()
+    audit_log.user_id = current_user.id if current_user.is_authenticated else None
+    audit_log.action = action
+    audit_log.entity_type = entity_type
+    audit_log.entity_id = entity_id
+    audit_log.old_values = old_values
+    audit_log.new_values = new_values
+    audit_log.ip_address = request.remote_addr
+    audit_log.user_agent = request.user_agent.string
     
     try:
         db.session.add(audit_log)
@@ -135,28 +134,7 @@ def calculate_loyalty_points(amount, customer_type='Retail'):
     rate = rates.get(customer_type, 1.0)
     return int(float(amount) * rate)
 
-def get_default_currency():
-    """Get the default currency from company profile"""
-    from models import CompanyProfile
-    profile = CompanyProfile.query.first()
-    return profile.default_currency if profile else 'USD'
-
-def format_currency(amount, currency=None):
-    """Format currency amount using default currency if not specified"""
-    if currency is None:
-        currency = get_default_currency()
-        
-    symbols = {
-        'USD': '$',
-        'EUR': '€',
-        'GBP': '£',
-        'NGN': '₦',
-        'KES': 'KSh',
-        'GHS': '₵'
-    }
-    
-    symbol = symbols.get(currency, currency + ' ')
-    return f"{symbol}{amount:,.2f}"
+# Removed duplicate format_currency function
 
 def get_exchange_rate(from_currency, to_currency):
     """Get exchange rate between currencies (placeholder - would integrate with real API)"""
@@ -212,36 +190,33 @@ def create_default_data():
         # Create default store
         default_store = Store.query.first()
         if not default_store:
-            default_store = Store(
-                name='Main Store',
-                address='123 Main Street, City, Country',
-                phone='+1-234-567-8900',
-                email='store@company.com'
-            )
+            default_store = Store()
+            default_store.name = 'Main Store'
+            default_store.address = '123 Main Street, City, Country'
+            default_store.phone = '+1-234-567-8900'
+            default_store.email = 'store@company.com'
             db.session.add(default_store)
             db.session.commit()
         
         # Create admin user if doesn't exist
         admin_user = User.query.filter_by(username='admin').first()
         if not admin_user:
-            admin_user = User(
-                username='admin',
-                email='admin@company.com',
-                first_name='System',
-                last_name='Administrator',
-                role='Admin',
-                store_id=default_store.id
-            )
+            admin_user = User()
+            admin_user.username = 'admin'
+            admin_user.email = 'admin@company.com'
+            admin_user.first_name = 'System'
+            admin_user.last_name = 'Administrator'
+            admin_user.role = 'Admin'
+            admin_user.store_id = default_store.id
             admin_user.set_password('admin123')
             db.session.add(admin_user)
             db.session.commit()
             
             # Assign admin to default store
-            user_store = UserStore(
-                user_id=admin_user.id,
-                store_id=default_store.id,
-                is_default=True
-            )
+            user_store = UserStore()
+            user_store.user_id = admin_user.id
+            user_store.store_id = default_store.id
+            user_store.is_default = True
             db.session.add(user_store)
         
         # Create default categories
@@ -255,7 +230,9 @@ def create_default_data():
         
         for cat_name, cat_desc in categories_data:
             if not Category.query.filter_by(name=cat_name).first():
-                category = Category(name=cat_name, description=cat_desc)
+                category = Category()
+                category.name = cat_name
+                category.description = cat_desc
                 db.session.add(category)
         
         # Create default customers
@@ -268,48 +245,44 @@ def create_default_data():
         
         for cust_name, cust_email, cust_phone, cust_type in customers_data:
             if not Customer.query.filter_by(name=cust_name).first():
-                customer = Customer(
-                    name=cust_name,
-                    email=cust_email,
-                    phone=cust_phone,
-                    customer_type=cust_type,
-                    credit_limit=1000.00 if cust_type == 'VIP' else 500.00 if cust_type == 'Wholesale' else 0.00
-                )
+                customer = Customer()
+                customer.name = cust_name
+                customer.email = cust_email
+                customer.phone = cust_phone
+                customer.customer_type = cust_type
+                customer.credit_limit = 1000.00 if cust_type == 'VIP' else 500.00 if cust_type == 'Wholesale' else 0.00
                 db.session.add(customer)
                 
                 # Create loyalty program for non-walk-in customers
                 if cust_name != 'Walk-in Customer':
                     db.session.flush()  # Get customer ID
-                    loyalty = LoyaltyProgram(
-                        customer_id=customer.id,
-                        points_balance=0,
-                        membership_level='Bronze'
-                    )
+                    loyalty = LoyaltyProgram()
+                    loyalty.customer_id = customer.id
+                    loyalty.points_balance = 0
+                    loyalty.membership_level = 'Bronze'
                     db.session.add(loyalty)
         
         # Create sample supplier
         if not Supplier.query.first():
-            supplier = Supplier(
-                name='Tech Supplies Inc.',
-                contact_person='Sarah Johnson',
-                email='orders@techsupplies.com',
-                phone='+1-555-0200',
-                address='456 Industrial Blvd, Tech City, TC 12345'
-            )
+            supplier = Supplier()
+            supplier.name = 'Tech Supplies Inc.'
+            supplier.contact_person = 'Sarah Johnson'
+            supplier.email = 'orders@techsupplies.com'
+            supplier.phone = '+1-555-0200'
+            supplier.address = '456 Industrial Blvd, Tech City, TC 12345'
             db.session.add(supplier)
         
         # Create company profile
         if not CompanyProfile.query.first():
-            company = CompanyProfile(
-                company_name='Cloud POS & Inventory Manager',
-                address='123 Business Ave, Suite 100, Business City, BC 12345',
-                phone='+1-555-CLOUD',
-                email='info@cloudpos.com',
-                website='www.cloudpos.com',
-                default_currency='USD',
-                default_tax_rate=8.25,
-                receipt_footer='Thank you for your business!'
-            )
+            company = CompanyProfile()
+            company.company_name = 'Cloud POS & Inventory Manager'
+            company.address = '123 Business Ave, Suite 100, Business City, BC 12345'
+            company.phone = '+1-555-CLOUD'
+            company.email = 'info@cloudpos.com'
+            company.website = 'www.cloudpos.com'
+            company.default_currency = 'USD'
+            company.default_tax_rate = 8.25
+            company.receipt_footer = 'Thank you for your business!'
             db.session.add(company)
         
         # Create sample products
@@ -324,18 +297,17 @@ def create_default_data():
             ]
             
             for prod_name, prod_desc, prod_sku, prod_barcode, cost, price, stock, threshold in products_data:
-                product = Product(
-                    name=prod_name,
-                    description=prod_desc,
-                    sku=prod_sku,
-                    barcode=prod_barcode,
-                    category_id=electronics_cat.id,
-                    cost_price=cost,
-                    selling_price=price,
-                    stock_quantity=stock,
-                    low_stock_threshold=threshold,
-                    tax_rate=8.25
-                )
+                product = Product()
+                product.name = prod_name
+                product.description = prod_desc
+                product.sku = prod_sku
+                product.barcode = prod_barcode
+                product.category_id = electronics_cat.id
+                product.cost_price = cost
+                product.selling_price = price
+                product.stock_quantity = stock
+                product.low_stock_threshold = threshold
+                product.tax_rate = 8.25
                 db.session.add(product)
         
         db.session.commit()

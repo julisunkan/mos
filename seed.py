@@ -89,13 +89,13 @@ def create_sample_sales():
     for i in range(10):
         sale_date = datetime.now() - timedelta(days=random.randint(0, 7))
         
-        sale = Sale(
-            receipt_number=generate_receipt_number(),
-            user_id=cashier.id,
-            customer_id=random.choice(customers).id if customers and random.choice([True, False]) else None,
-            payment_method=random.choice(['Cash', 'Card', 'Bank Transfer']),
-            created_at=sale_date
-        )
+        sale = Sale()
+        sale.receipt_number = generate_receipt_number()
+        sale.user_id = cashier.id
+        sale.customer_id = random.choice(customers).id if customers and random.random() > 0.5 else None
+        sale.payment_method = random.choice(['Cash', 'Card', 'Bank Transfer'])
+        sale.created_at = sale_date
+        sale.store_id = 1  # Default store
         
         db.session.add(sale)
         db.session.flush()  # Get the sale ID
@@ -111,13 +111,12 @@ def create_sample_sales():
             unit_price = product.selling_price
             total_price = unit_price * quantity
             
-            sale_item = SaleItem(
-                sale_id=sale.id,
-                product_id=product.id,
-                quantity=quantity,
-                unit_price=unit_price,
-                total_price=total_price
-            )
+            sale_item = SaleItem()
+            sale_item.sale_id = sale.id
+            sale_item.product_id = product.id
+            sale_item.quantity = quantity
+            sale_item.unit_price = unit_price
+            sale_item.total_price = total_price
             
             db.session.add(sale_item)
             subtotal += total_price

@@ -155,7 +155,7 @@ class SaleItem(db.Model):
     total_price = db.Column(db.Numeric(10, 2), nullable=False)
     
     def __repr__(self):
-        return f'<SaleItem {self.product.name} x{self.quantity}>'
+        return f'<SaleItem Product ID:{self.product_id} x{self.quantity}>'
 
 class Store(db.Model):
     __tablename__ = 'stores'

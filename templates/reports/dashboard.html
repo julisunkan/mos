@@ -180,8 +180,9 @@
 document.addEventListener('DOMContentLoaded', function() {
     const ctx = document.getElementById('salesChart').getContext('2d');
     
-    const dailySalesData = {{ daily_sales | map(attribute='total') | list | tojson }};
-    const dailySalesLabels = {{ daily_sales | map(attribute='date') | map('string') | list | tojson }};
+    // Chart data from server
+    const dailySalesData = JSON.parse('{{ daily_sales | map(attribute="total") | list | tojson | safe | replace("'", "\\'") }}');
+    const dailySalesLabels = JSON.parse('{{ daily_sales | map(attribute="date") | map("string") | list | tojson | safe | replace("'", "\\'") }}');
     
     new Chart(ctx, {
         type: 'line',
@@ -207,7 +208,8 @@ document.addEventListener('DOMContentLoaded', function() {
                     beginAtZero: true,
                     ticks: {
                         callback: function(value) {
-                            return '{{ get_currency_symbol() }}' + value.toFixed(2);
+                            const symbol = '{{ get_currency_symbol() }}';
+                            return symbol + value.toFixed(2);
                         }
                     }
                 }
