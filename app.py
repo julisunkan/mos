@@ -55,6 +55,7 @@ import models
 from blueprints.auth import auth_bp
 from blueprints.admin import admin_bp
 from blueprints.pos import pos_bp
+from blueprints.stores import stores_bp
 from blueprints.inventory import inventory_bp
 from blueprints.customers import customers_bp
 from blueprints.reports import reports_bp
@@ -65,6 +66,7 @@ app.register_blueprint(pos_bp, url_prefix='/pos')
 app.register_blueprint(inventory_bp, url_prefix='/inventory')
 app.register_blueprint(customers_bp, url_prefix='/customers')
 app.register_blueprint(reports_bp, url_prefix='/reports')
+app.register_blueprint(stores_bp, url_prefix='/stores')
 
 # Main dashboard route
 @app.route('/')

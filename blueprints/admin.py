@@ -1,20 +1,13 @@
 from flask import Blueprint, render_template, redirect, url_for, flash, request, abort
 from flask_login import login_required, current_user
-from forms import UserForm, CategoryForm
-from models import User, Category
+from forms import UserForm, CategoryForm, CompanyProfileForm
+from models import User, Category, CompanyProfile, AuditLog
 from app import db
-from utils import generate_sku
+from utils import generate_sku, admin_required, log_audit_action
 
 admin_bp = Blueprint('admin', __name__)
 
-def admin_required(f):
-    """Decorator to require admin role"""
-    def decorated_function(*args, **kwargs):
-        if not current_user.is_authenticated or not current_user.has_permission('all'):
-            abort(403)
-        return f(*args, **kwargs)
-    decorated_function.__name__ = f.__name__
-    return decorated_function
+# admin_required decorator is now imported from utils
 
 @admin_bp.route('/users')
 @login_required
