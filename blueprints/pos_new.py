@@ -227,6 +227,78 @@ def process_sale():
         db.session.rollback()
         return jsonify({'error': str(e)}), 500
 
+@pos_bp.route('/api/refund/process', methods=['POST'])
+@login_required
+def process_refund():
+    """Process a refund"""
+    try:
+        data = request.get_json()
+        
+        if not data or 'receipt_number' not in data:
+            return jsonify({'error': 'Receipt number is required'}), 400
+            
+        receipt_number = data['receipt_number']
+        reason = data.get('reason', 'Customer request')
+        
+        # Find the original sale
+        original_sale = Sale.query.filter_by(receipt_number=receipt_number).first()
+        if not original_sale:
+            return jsonify({'error': 'Sale not found'}), 404
+            
+        # Check if already refunded
+        existing_refund = Sale.query.filter(
+            Sale.notes.ilike(f'%REFUND:{receipt_number}%')
+        ).first()
+        if existing_refund:
+            return jsonify({'error': 'This sale has already been refunded'}), 400
+        
+        # Create refund entry (negative sale)
+        refund_receipt = f"REF-{generate_receipt_number()}"
+        refund_sale = Sale(
+            receipt_number=refund_receipt,
+            user_id=current_user.id,
+            store_id=original_sale.store_id,
+            customer_id=original_sale.customer_id,
+            payment_method=original_sale.payment_method,
+            subtotal=-original_sale.subtotal,
+            tax_amount=-original_sale.tax_amount,
+            discount_amount=-original_sale.discount_amount,
+            total_amount=-original_sale.total_amount,
+            notes=f'REFUND:{receipt_number} - {reason}'
+        )
+        
+        db.session.add(refund_sale)
+        db.session.flush()  # Get the refund sale ID
+        
+        # Create refund items (restore stock)
+        for original_item in original_sale.sale_items:
+            refund_item = SaleItem(
+                sale_id=refund_sale.id,
+                product_id=original_item.product_id,
+                quantity=-original_item.quantity,  # Negative quantity for refund
+                unit_price=original_item.unit_price,
+                total_price=-original_item.total_price
+            )
+            db.session.add(refund_item)
+            
+            # Restore stock
+            product = Product.query.get(original_item.product_id)
+            if product:
+                product.stock_quantity += original_item.quantity
+        
+        db.session.commit()
+        
+        return jsonify({
+            'success': True,
+            'refund_id': refund_sale.id,
+            'refund_receipt': refund_receipt,
+            'refund_amount': float(original_sale.total_amount)
+        })
+        
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'error': str(e)}), 500
+
 @pos_bp.route('/receipt/<receipt_number>/download')
 @login_required
 def download_receipt(receipt_number):

@@ -2,6 +2,10 @@
 
 {% block title %}Point of Sale - Cloud POS{% endblock %}
 
+{% block head %}
+<meta name="csrf-token" content="{{ csrf_token() }}">
+{% endblock %}
+
 {% block content %}
 <div class="container-fluid mt-4">
     <!-- POS Header -->
@@ -11,6 +15,9 @@
                 <h2><i class="fas fa-cash-register me-2"></i>Point of Sale</h2>
                 <div>
                     <span class="badge bg-success me-2">Register Open: ${{ register.opening_balance }}</span>
+                    <button class="btn btn-warning btn-sm me-2" onclick="processRefund()">
+                        <i class="fas fa-undo me-1"></i>Refund
+                    </button>
                     <button class="btn btn-danger btn-sm" onclick="closeRegister()">
                         <i class="fas fa-times me-1"></i>Close Register
                     </button>
@@ -404,7 +411,8 @@ async function processSale() {
         const response = await fetch('/pos/api/sale/process', {
             method: 'POST',
             headers: {
-                'Content-Type': 'application/json'
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCsrfToken()
             },
             body: JSON.stringify(saleData)
         });
@@ -484,6 +492,48 @@ function showAlert(message, type) {
             alert.remove();
         }
     }, 3000);
+}
+
+// Get CSRF token
+function getCsrfToken() {
+    const token = document.querySelector('meta[name="csrf-token"]');
+    return token ? token.getAttribute('content') : '';
+}
+
+// Process refund
+async function processRefund() {
+    const receiptNumber = prompt('Enter receipt number to refund:');
+    if (!receiptNumber) return;
+    
+    const reason = prompt('Enter refund reason:');
+    if (!reason) return;
+    
+    if (!confirm(`Confirm refund for receipt ${receiptNumber}?`)) return;
+    
+    try {
+        const response = await fetch('/pos/api/refund/process', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCsrfToken()
+            },
+            body: JSON.stringify({
+                receipt_number: receiptNumber,
+                reason: reason
+            })
+        });
+        
+        const result = await response.json();
+        
+        if (response.ok && result.success) {
+            showAlert(`Refund processed successfully! Refund ID: ${result.refund_id}`, 'success');
+        } else {
+            showAlert(result.error || 'Refund processing failed!', 'danger');
+        }
+    } catch (error) {
+        console.error('Refund processing error:', error);
+        showAlert('Network error occurred during refund!', 'danger');
+    }
 }
 </script>
 {% endblock %}

@@ -28,21 +28,14 @@
                     </div>
 
                     <form method="POST">
-                        {{ form.hidden_tag() }}
-                        
                         <div class="mb-4">
-                            {{ form.opening_balance.label(class="form-label") }}
+                            <label for="opening_balance" class="form-label">Opening Balance</label>
                             <div class="input-group">
                                 <span class="input-group-text">$</span>
-                                {{ form.opening_balance(class="form-control form-control-lg text-center" + (" is-invalid" if form.opening_balance.errors else ""), step="0.01") }}
+                                <input type="number" name="opening_balance" id="opening_balance" 
+                                       class="form-control form-control-lg text-center" 
+                                       step="0.01" min="0" value="0.00" required>
                             </div>
-                            {% if form.opening_balance.errors %}
-                                <div class="invalid-feedback">
-                                    {% for error in form.opening_balance.errors %}
-                                        {{ error }}
-                                    {% endfor %}
-                                </div>
-                            {% endif %}
                             <div class="form-text">Count all cash in your drawer and enter the total amount</div>
                         </div>
                         
