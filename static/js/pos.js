@@ -31,6 +31,13 @@ class POSSystem {
                 this.updateCartItemQuantity(e.target);
             }
         });
+        
+        // Also listen for input events for real-time updates
+        document.addEventListener('input', (e) => {
+            if (e.target.classList.contains('cart-quantity')) {
+                this.updateCartItemQuantity(e.target);
+            }
+        });
 
         // Remove cart item
         document.addEventListener('click', (e) => {
@@ -278,7 +285,7 @@ class POSSystem {
             customer_id: this.currentCustomer,
             payment_method: document.getElementById('paymentMethod').value,
             discount: parseFloat(document.getElementById('discount').value) || 0,
-            notes: document.getElementById('saleNotes').value
+            notes: document.getElementById('saleNotes') ? document.getElementById('saleNotes').value : ''
         };
 
         try {
@@ -318,7 +325,8 @@ class POSSystem {
         this.currentCustomer = null;
         document.getElementById('customerSelect').value = '';
         document.getElementById('discount').value = '0';
-        document.getElementById('saleNotes').value = '';
+        const notesField = document.getElementById('saleNotes');
+        if (notesField) notesField.value = '';
         document.getElementById('paymentMethod').value = 'Cash';
         this.updateCartDisplay();
         this.updateTotals();

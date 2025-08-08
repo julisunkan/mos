@@ -195,31 +195,7 @@ def process_sale():
         db.session.rollback()
         return jsonify({'error': str(e)}), 500
 
-@pos_bp.route('/product/search')
-@login_required
-def search_products():
-    query = request.args.get('q', '').strip()
-    if len(query) < 2:
-        return jsonify([])
-    
-    products = Product.query.filter(
-        Product.is_active == True,
-        db.or_(
-            Product.name.ilike(f'%{query}%'),
-            Product.sku.ilike(f'%{query}%'),
-            Product.barcode.ilike(f'%{query}%')
-        )
-    ).limit(10).all()
-    
-    return jsonify([{
-        'id': p.id,
-        'name': p.name,
-        'sku': p.sku,
-        'barcode': p.barcode,
-        'price': float(p.selling_price),
-        'stock': p.stock_quantity,
-        'tax_rate': float(p.tax_rate)
-    } for p in products])
+
 
 # Enhanced POS Features: Hold/Resume Sales and Returns
 @pos_bp.route('/hold-sale', methods=['POST'])
@@ -346,3 +322,33 @@ def returns():
     return render_template('pos/returns.html', 
                          form=form, 
                          recent_sales=recent_sales)
+
+@pos_bp.route('/product/search')
+@login_required
+def search_products():
+    """Search products for POS"""
+    query = request.args.get('q', '').strip()
+    
+    if len(query) < 2:
+        return jsonify([])
+    
+    # Search by name, SKU, or barcode
+    products = Product.query.filter(
+        db.or_(
+            Product.name.ilike(f'%{query}%'),
+            Product.sku.ilike(f'%{query}%'),
+            Product.barcode.ilike(f'%{query}%')
+        )
+    ).filter(Product.is_active == True).limit(20).all()
+    
+    results = []
+    for product in products:
+        results.append({
+            'id': product.id,
+            'name': product.name,
+            'price': float(product.selling_price),
+            'stock': product.stock_quantity,
+            'tax_rate': float(product.tax_rate)
+        })
+    
+    return jsonify(results)

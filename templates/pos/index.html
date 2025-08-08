@@ -2,6 +2,10 @@
 
 {% block title %}Point of Sale - Cloud POS{% endblock %}
 
+{% block head %}
+<meta name="csrf-token" content="{{ csrf_token() }}">
+{% endblock %}
+
 {% block content %}
 <div class="container-fluid mt-4">
     <div class="row">
@@ -141,6 +145,12 @@
                             <option value="Bank Transfer">Bank Transfer</option>
                             <option value="Mobile Money">Mobile Money</option>
                         </select>
+                    </div>
+
+                    <!-- Notes -->
+                    <div class="mb-3">
+                        <label class="form-label">Notes (Optional)</label>
+                        <textarea id="saleNotes" class="form-control" rows="2" placeholder="Add any notes for this sale..."></textarea>
                     </div>
 
                     <!-- Notes -->
