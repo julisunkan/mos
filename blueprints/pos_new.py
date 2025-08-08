@@ -2,7 +2,7 @@ from flask import Blueprint, render_template, redirect, url_for, flash, request,
 from flask_login import login_required, current_user
 from models import Product, Customer, Sale, SaleItem, CashRegister, UserStore
 from app import db
-from utils import generate_receipt_number, calculate_tax
+from utils import generate_receipt_number, get_default_currency, format_currency, calculate_tax
 from datetime import datetime
 import io
 
@@ -69,7 +69,7 @@ def open_register():
         try:
             db.session.add(register)
             db.session.commit()
-            flash(f'Cash register opened with ${opening_balance:.2f}', 'success')
+            flash(f'Cash register opened with {format_currency(opening_balance)}', 'success')
             return redirect(url_for('pos.index'))
         except Exception as e:
             db.session.rollback()
@@ -104,7 +104,7 @@ def close_register():
     
     try:
         db.session.commit()
-        flash(f'Cash register closed. Closing balance: ${register.closing_balance:.2f}', 'success')
+        flash(f'Cash register closed. Closing balance: {format_currency(register.closing_balance)}', 'success')
     except Exception as e:
         db.session.rollback()
         flash(f'Error closing register: {str(e)}', 'error')
@@ -162,7 +162,7 @@ def process_sale():
         if not register:
             return jsonify({'error': 'No open cash register'}), 400
         
-        # Create the sale
+        # Create the sale with default currency
         sale = Sale(
             receipt_number=generate_receipt_number(),
             user_id=current_user.id,
@@ -170,7 +170,9 @@ def process_sale():
             customer_id=data.get('customer_id') if data.get('customer_id') else None,
             payment_method=data.get('payment_method', 'Cash'),
             discount_amount=float(data.get('discount', 0)),
-            notes=data.get('notes', '')
+            notes=data.get('notes', ''),
+            currency=get_default_currency(),
+            exchange_rate=1.0
         )
         
         db.session.add(sale)

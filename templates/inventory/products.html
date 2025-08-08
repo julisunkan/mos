@@ -93,8 +93,8 @@
                                                 {{ product.stock_quantity }}
                                             </span>
                                         </td>
-                                        <td>${{ "%.2f"|format(product.cost_price) }}</td>
-                                        <td>${{ "%.2f"|format(product.selling_price) }}</td>
+                                        <td>{{ format_currency(product.cost_price) }}</td>
+                                        <td>{{ format_currency(product.selling_price) }}</td>
                                         <td>
                                             <span class="badge bg-{{ 'success' if product.is_active else 'secondary' }}">
                                                 {{ 'Active' if product.is_active else 'Inactive' }}

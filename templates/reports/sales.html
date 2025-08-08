@@ -128,16 +128,16 @@
                                         <td>
                                             <span class="badge bg-secondary">{{ sale.payment_method }}</span>
                                         </td>
-                                        <td>${{ "%.2f"|format(sale.subtotal) }}</td>
-                                        <td>${{ "%.2f"|format(sale.tax_amount) }}</td>
+                                        <td>{{ format_currency(sale.subtotal) }}</td>
+                                        <td>{{ format_currency(sale.tax_amount) }}</td>
                                         <td>
                                             {% if sale.discount_amount > 0 %}
-                                                -${{ "%.2f"|format(sale.discount_amount) }}
+                                                -{{ format_currency(sale.discount_amount) }}
                                             {% else %}
                                                 -
                                             {% endif %}
                                         </td>
-                                        <td><strong>${{ "%.2f"|format(sale.total_amount) }}</strong></td>
+                                        <td><strong>{{ format_currency(sale.total_amount) }}</strong></td>
                                         <td>
                                             <span class="badge bg-{{ 'success' if sale.payment_status == 'Paid' else 'warning' }}">
                                                 {{ sale.payment_status }}

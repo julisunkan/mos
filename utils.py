@@ -97,8 +97,17 @@ def calculate_loyalty_points(amount, customer_type='Retail'):
     rate = rates.get(customer_type, 1.0)
     return int(float(amount) * rate)
 
-def format_currency(amount, currency='USD'):
-    """Format currency amount"""
+def get_default_currency():
+    """Get the default currency from company profile"""
+    from models import CompanyProfile
+    profile = CompanyProfile.query.first()
+    return profile.default_currency if profile else 'USD'
+
+def format_currency(amount, currency=None):
+    """Format currency amount using default currency if not specified"""
+    if currency is None:
+        currency = get_default_currency()
+        
     symbols = {
         'USD': '$',
         'EUR': '€',

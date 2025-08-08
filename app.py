@@ -6,6 +6,7 @@ from flask_login import LoginManager, login_required
 from flask_wtf.csrf import CSRFProtect
 from sqlalchemy.orm import DeclarativeBase
 from werkzeug.middleware.proxy_fix import ProxyFix
+from utils import format_currency, get_default_currency
 
 # Configure logging
 logging.basicConfig(level=logging.DEBUG)
@@ -113,6 +114,11 @@ def dashboard_stats_api():
 # Create tables and default data
 with app.app_context():
     db.create_all()
+
+# Make utility functions available in templates
+@app.context_processor
+def utility_processor():
+    return dict(format_currency=format_currency, get_default_currency=get_default_currency)
     
     # Create default roles and admin user if they don't exist
     from utils import create_default_data

@@ -210,7 +210,7 @@
         <div class="summary-title">Report Summary</div>
         <div class="summary-stats">
             <div class="stat-item">
-                <div class="stat-value">${{ "%.2f"|format(total_amount) }}</div>
+                <div class="stat-value">{{ format_currency(total_amount) }}</div>
                 <div class="stat-label">Total Revenue</div>
             </div>
             <div class="stat-item">
@@ -218,7 +218,7 @@
                 <div class="stat-label">Total Transactions</div>
             </div>
             <div class="stat-item">
-                <div class="stat-value">${{ "%.2f"|format(avg_sale) }}</div>
+                <div class="stat-value">{{ format_currency(avg_sale) }}</div>
                 <div class="stat-label">Average Sale</div>
             </div>
         </div>
@@ -251,16 +251,16 @@
                 <td>{{ sale.user.full_name }}</td>
                 <td class="text-center">{{ sale.sale_items|length }}</td>
                 <td>{{ sale.payment_method }}</td>
-                <td class="text-right">${{ "%.2f"|format(sale.subtotal) }}</td>
-                <td class="text-right">${{ "%.2f"|format(sale.tax_amount) }}</td>
+                <td class="text-right">{{ format_currency(sale.subtotal) }}</td>
+                <td class="text-right">{{ format_currency(sale.tax_amount) }}</td>
                 <td class="text-right">
                     {% if sale.discount_amount > 0 %}
-                        -${{ "%.2f"|format(sale.discount_amount) }}
+                        -{{ format_currency(sale.discount_amount) }}
                     {% else %}
                         -
                     {% endif %}
                 </td>
-                <td class="text-right"><strong>${{ "%.2f"|format(sale.total_amount) }}</strong></td>
+                <td class="text-right"><strong>{{ format_currency(sale.total_amount) }}</strong></td>
                 <td class="text-center">{{ sale.payment_status or 'Paid' }}</td>
             </tr>
             {% endfor %}
@@ -268,10 +268,10 @@
         <tfoot>
             <tr class="total-row">
                 <th colspan="6">TOTALS:</th>
-                <th class="text-right">${{ "%.2f"|format(sales | sum(attribute='subtotal')) }}</th>
-                <th class="text-right">${{ "%.2f"|format(sales | sum(attribute='tax_amount')) }}</th>
-                <th class="text-right">-${{ "%.2f"|format(sales | sum(attribute='discount_amount')) }}</th>
-                <th class="text-right"><strong>${{ "%.2f"|format(sales | sum(attribute='total_amount')) }}</strong></th>
+                <th class="text-right">{{ format_currency(sales | sum(attribute='subtotal')) }}</th>
+                <th class="text-right">{{ format_currency(sales | sum(attribute='tax_amount')) }}</th>
+                <th class="text-right">-{{ format_currency(sales | sum(attribute='discount_amount')) }}</th>
+                <th class="text-right"><strong>{{ format_currency(sales | sum(attribute='total_amount')) }}</strong></th>
                 <th></th>
             </tr>
         </tfoot>

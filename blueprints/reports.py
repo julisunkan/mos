@@ -1,9 +1,10 @@
-from flask import Blueprint, render_template, request, flash, redirect, url_for
+from flask import Blueprint, render_template, request, flash, redirect, url_for, jsonify
 from flask_login import login_required, current_user
 from models import Sale, Product, Customer, User, SaleItem
 from app import db
 from datetime import datetime, timedelta
 from sqlalchemy import func, desc
+from utils import format_currency, get_default_currency
 
 reports_bp = Blueprint('reports', __name__)
 
