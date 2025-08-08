@@ -1,7 +1,7 @@
 from flask import Blueprint, render_template, redirect, url_for, flash, request, jsonify
 from flask_login import login_required, current_user
 from forms import SaleForm, CashRegisterForm
-from models import Product, Customer, Sale, SaleItem, CashRegister
+from models import Product, Customer, Sale, SaleItem, CashRegister, UserStore
 from app import db
 from utils import generate_receipt_number, calculate_tax, generate_hold_number, generate_return_number
 from datetime import datetime
@@ -43,10 +43,25 @@ def open_register():
         flash('You already have an open cash register.', 'info')
         return redirect(url_for('pos.index'))
     
+    # Get user's default store
+    user_store = UserStore.query.filter_by(
+        user_id=current_user.id,
+        is_default=True
+    ).first()
+    
+    if not user_store:
+        # If no default store, get the first one assigned to user
+        user_store = UserStore.query.filter_by(user_id=current_user.id).first()
+    
+    if not user_store:
+        flash('You are not assigned to any store. Please contact an administrator.', 'error')
+        return redirect(url_for('auth.login'))
+    
     form = CashRegisterForm()
     if form.validate_on_submit():
         register = CashRegister(
             user_id=current_user.id,
+            store_id=user_store.store_id,
             opening_balance=form.opening_balance.data,
             is_open=True
         )
@@ -118,6 +133,7 @@ def process_sale():
         sale = Sale(
             receipt_number=generate_receipt_number(),
             user_id=current_user.id,
+            store_id=register.store_id,
             customer_id=data.get('customer_id') if data.get('customer_id') else None,
             payment_method=data.get('payment_method', 'Cash'),
             discount_amount=float(data.get('discount', 0)),
