@@ -62,7 +62,8 @@ def dashboard():
                          daily_sales=daily_sales,
                          low_stock_count=low_stock_count,
                          start_date=start_date,
-                         end_date=end_date)
+                         end_date=end_date,
+                         currency_symbol=get_default_currency())
 
 @reports_bp.route('/sales')
 @login_required
@@ -116,7 +117,8 @@ def sales():
                              'start_date': start_date.strftime('%Y-%m-%d') if start_date else '',
                              'end_date': (end_date - timedelta(days=1)).strftime('%Y-%m-%d') if end_date else '',
                              'user_id': user_id
-                         })
+                         },
+                         currency_symbol=get_default_currency())
 
 @reports_bp.route('/sale/<int:sale_id>/details')
 @login_required

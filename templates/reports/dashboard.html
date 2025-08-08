@@ -25,7 +25,7 @@
                 <div class="card-body">
                     <div class="d-flex justify-content-between">
                         <div>
-                            <h4>${{ "%.2f"|format(total_revenue) }}</h4>
+                            <h4>{{ total_revenue|format_currency }}</h4>
                             <p class="mb-0">Total Revenue</p>
                         </div>
                         <div class="align-self-center">
@@ -57,7 +57,7 @@
                 <div class="card-body">
                     <div class="d-flex justify-content-between">
                         <div>
-                            <h4>${{ "%.2f"|format(avg_sale) }}</h4>
+                            <h4>{{ avg_sale|format_currency }}</h4>
                             <p class="mb-0">Average Sale</p>
                         </div>
                         <div class="align-self-center">
