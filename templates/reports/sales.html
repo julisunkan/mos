@@ -342,6 +342,8 @@ async function viewSaleDetails(saleId) {
 }
 
 function generateSaleDetailsHTML(sale) {
+    const currencySymbol = window.currencySymbol || '$';
+    
     return `
         <div class="row">
             <div class="col-md-6">
@@ -357,10 +359,10 @@ function generateSaleDetailsHTML(sale) {
             <div class="col-md-6">
                 <h6>Totals</h6>
                 <table class="table table-sm">
-                    <tr><td><strong>Subtotal:</strong></td><td>\${sale.subtotal.toFixed(2)}</td></tr>
-                    <tr><td><strong>Tax:</strong></td><td>\${sale.tax_amount.toFixed(2)}</td></tr>
-                    <tr><td><strong>Discount:</strong></td><td>-\${sale.discount_amount.toFixed(2)}</td></tr>
-                    <tr><td><strong>Total:</strong></td><td><strong>\${sale.total_amount.toFixed(2)}</strong></td></tr>
+                    <tr><td><strong>Subtotal:</strong></td><td>${currencySymbol}${sale.subtotal.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td></tr>
+                    <tr><td><strong>Tax:</strong></td><td>${currencySymbol}${sale.tax_amount.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td></tr>
+                    <tr><td><strong>Discount:</strong></td><td>-${currencySymbol}${sale.discount_amount.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td></tr>
+                    <tr><td><strong>Total:</strong></td><td><strong>${currencySymbol}${sale.total_amount.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</strong></td></tr>
                 </table>
             </div>
         </div>
@@ -380,9 +382,9 @@ function generateSaleDetailsHTML(sale) {
                     ${sale.items.map(item => `
                         <tr>
                             <td>${item.product_name}</td>
-                            <td>${item.quantity}</td>
-                            <td>\${item.unit_price.toFixed(2)}</td>
-                            <td>\${item.total_price.toFixed(2)}</td>
+                            <td>${formatNumber(item.quantity)}</td>
+                            <td>${currencySymbol}${item.unit_price.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
+                            <td>${currencySymbol}${item.total_price.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
                         </tr>
                     `).join('')}
                 </tbody>
