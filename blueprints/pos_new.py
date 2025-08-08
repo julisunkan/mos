@@ -271,7 +271,7 @@ def download_receipt(receipt_number):
         
         # Items
         p.setFont("Helvetica", 10)
-        for item in sale.items:
+        for item in sale.sale_items:
             p.drawString(50, y_pos, f"{item.product.name} x{item.quantity}")
             p.drawString(450, y_pos, f"${item.total_price:.2f}")
             y_pos -= 15
@@ -401,7 +401,7 @@ def print_receipt(receipt_number):
                 <div class="item-price">Total</div>
             </div>"""
     
-    for item in sale.items:
+    for item in sale.sale_items:
         html_content += f"""
             <div class="item">
                 <div class="item-name">{item.product.name}</div>
