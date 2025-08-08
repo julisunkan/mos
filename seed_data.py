@@ -11,7 +11,7 @@ from werkzeug.security import generate_password_hash
 # Add the current directory to Python path
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
-from app import create_app, db
+from app import app, db
 from models import User, Role, Permission, Store, Category, Product, Customer, Inventory, role_permissions
 
 def create_permissions():
@@ -280,8 +280,6 @@ def create_sample_customers():
 def main():
     """Main function to run all seed operations"""
     print("Starting database seeding...")
-    
-    app = create_app()
     
     with app.app_context():
         # Create all tables
