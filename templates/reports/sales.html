@@ -104,6 +104,7 @@
                                         <th>Discount</th>
                                         <th>Total</th>
                                         <th>Status</th>
+                                        <th>Actions</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -142,6 +143,25 @@
                                                 {{ sale.payment_status }}
                                             </span>
                                         </td>
+                                        <td>
+                                            <div class="btn-group btn-group-sm">
+                                                <button type="button" class="btn btn-outline-primary" 
+                                                        onclick="reprintReceipt('{{ sale.receipt_number }}')"
+                                                        title="Reprint Receipt">
+                                                    <i class="fas fa-print"></i>
+                                                </button>
+                                                <button type="button" class="btn btn-outline-success" 
+                                                        onclick="downloadReceipt('{{ sale.receipt_number }}')"
+                                                        title="Download PDF">
+                                                    <i class="fas fa-download"></i>
+                                                </button>
+                                                <button type="button" class="btn btn-outline-info" 
+                                                        onclick="viewSaleDetails('{{ sale.id }}')"
+                                                        title="View Details">
+                                                    <i class="fas fa-eye"></i>
+                                                </button>
+                                            </div>
+                                        </td>
                                     </tr>
                                     {% endfor %}
                                 </tbody>
@@ -152,6 +172,7 @@
                                         <th>${{ "%.2f"|format(sales.items | sum(attribute='tax_amount')) }}</th>
                                         <th>-${{ "%.2f"|format(sales.items | sum(attribute='discount_amount')) }}</th>
                                         <th><strong>${{ "%.2f"|format(sales.items | sum(attribute='total_amount')) }}</strong></th>
+                                        <th></th>
                                         <th></th>
                                     </tr>
                                 </tfoot>
@@ -221,6 +242,31 @@
         </div>
     </div>
 </div>
+
+<!-- Sale Details Modal -->
+<div class="modal fade" id="saleDetailsModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Sale Details</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" id="saleDetailsContent">
+                <div class="text-center">
+                    <div class="spinner-border" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary" id="reprintFromModal">
+                    <i class="fas fa-print me-2"></i>Reprint Receipt
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
 {% endblock %}
 
 {% block scripts %}
@@ -231,7 +277,8 @@ function exportToCSV() {
     
     document.querySelectorAll('tbody tr').forEach(row => {
         const cells = row.querySelectorAll('td');
-        const rowData = Array.from(cells).map(cell => 
+        // Skip the last column (Actions)
+        const rowData = Array.from(cells).slice(0, -1).map(cell => 
             '"' + cell.textContent.trim().replace(/"/g, '""') + '"'
         ).join(',');
         csv += rowData + '\n';
@@ -244,6 +291,128 @@ function exportToCSV() {
     a.download = 'sales_report_' + new Date().toISOString().split('T')[0] + '.csv';
     a.click();
     window.URL.revokeObjectURL(url);
+}
+
+// Reprint receipt function
+function reprintReceipt(receiptNumber) {
+    const printWindow = window.open(`/pos/receipt/${receiptNumber}/print`, '_blank', 'width=400,height=600');
+    if (!printWindow) {
+        showAlert('Please allow popups to print receipts', 'warning');
+    } else {
+        showAlert('Receipt opened for printing', 'success');
+    }
+}
+
+// Download receipt PDF
+function downloadReceipt(receiptNumber) {
+    const link = document.createElement('a');
+    link.href = `/pos/receipt/${receiptNumber}/download`;
+    link.download = `receipt_${receiptNumber}.pdf`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    showAlert('Receipt PDF download started', 'success');
+}
+
+// View sale details modal
+async function viewSaleDetails(saleId) {
+    const modal = new bootstrap.Modal(document.getElementById('saleDetailsModal'));
+    const modalContent = document.getElementById('saleDetailsContent');
+    
+    modal.show();
+    
+    try {
+        const response = await fetch(`/reports/sale/${saleId}/details`);
+        const saleData = await response.json();
+        
+        if (response.ok) {
+            modalContent.innerHTML = generateSaleDetailsHTML(saleData);
+            
+            // Set up reprint button
+            document.getElementById('reprintFromModal').onclick = () => {
+                reprintReceipt(saleData.receipt_number);
+                modal.hide();
+            };
+        } else {
+            modalContent.innerHTML = `<div class="alert alert-danger">Error: ${saleData.error}</div>`;
+        }
+    } catch (error) {
+        modalContent.innerHTML = `<div class="alert alert-danger">Network error: ${error.message}</div>`;
+    }
+}
+
+function generateSaleDetailsHTML(sale) {
+    return `
+        <div class="row">
+            <div class="col-md-6">
+                <h6>Sale Information</h6>
+                <table class="table table-sm">
+                    <tr><td><strong>Receipt Number:</strong></td><td><code>${sale.receipt_number}</code></td></tr>
+                    <tr><td><strong>Date:</strong></td><td>${new Date(sale.created_at).toLocaleString()}</td></tr>
+                    <tr><td><strong>Sales Person:</strong></td><td>${sale.user_name}</td></tr>
+                    <tr><td><strong>Customer:</strong></td><td>${sale.customer_name || 'Walk-in'}</td></tr>
+                    <tr><td><strong>Payment Method:</strong></td><td><span class="badge bg-secondary">${sale.payment_method}</span></td></tr>
+                </table>
+            </div>
+            <div class="col-md-6">
+                <h6>Totals</h6>
+                <table class="table table-sm">
+                    <tr><td><strong>Subtotal:</strong></td><td>$${sale.subtotal.toFixed(2)}</td></tr>
+                    <tr><td><strong>Tax:</strong></td><td>$${sale.tax_amount.toFixed(2)}</td></tr>
+                    <tr><td><strong>Discount:</strong></td><td>-$${sale.discount_amount.toFixed(2)}</td></tr>
+                    <tr><td><strong>Total:</strong></td><td><strong>$${sale.total_amount.toFixed(2)}</strong></td></tr>
+                </table>
+            </div>
+        </div>
+        
+        <h6>Items</h6>
+        <div class="table-responsive">
+            <table class="table table-sm">
+                <thead>
+                    <tr>
+                        <th>Product</th>
+                        <th>Quantity</th>
+                        <th>Unit Price</th>
+                        <th>Total</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    ${sale.items.map(item => `
+                        <tr>
+                            <td>${item.product_name}</td>
+                            <td>${item.quantity}</td>
+                            <td>$${item.unit_price.toFixed(2)}</td>
+                            <td>$${item.total_price.toFixed(2)}</td>
+                        </tr>
+                    `).join('')}
+                </tbody>
+            </table>
+        </div>
+        
+        ${sale.notes ? `
+            <h6>Notes</h6>
+            <div class="alert alert-info">${sale.notes}</div>
+        ` : ''}
+    `;
+}
+
+// Show alert function
+function showAlert(message, type) {
+    const alert = document.createElement('div');
+    alert.className = `alert alert-${type} alert-dismissible fade show`;
+    alert.innerHTML = `
+        ${message}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    `;
+    
+    const container = document.querySelector('.container');
+    container.insertBefore(alert, container.firstChild);
+    
+    setTimeout(() => {
+        if (alert.parentNode) {
+            alert.remove();
+        }
+    }, 3000);
 }
 </script>
 {% endblock %}

@@ -116,3 +116,40 @@ def sales():
                              'end_date': (end_date - timedelta(days=1)).strftime('%Y-%m-%d') if end_date else '',
                              'user_id': user_id
                          })
+
+@reports_bp.route('/sale/<int:sale_id>/details')
+@login_required
+def sale_details(sale_id):
+    """Get detailed information about a specific sale"""
+    if not current_user.has_permission('read_reports') and not current_user.has_permission('all'):
+        return jsonify({'error': 'Permission denied'}), 403
+    
+    sale = Sale.query.get_or_404(sale_id)
+    
+    # Build sale details JSON
+    sale_data = {
+        'id': sale.id,
+        'receipt_number': sale.receipt_number,
+        'created_at': sale.created_at.isoformat(),
+        'user_name': sale.user.full_name,
+        'customer_name': sale.customer.name if sale.customer else None,
+        'payment_method': sale.payment_method,
+        'subtotal': float(sale.subtotal),
+        'tax_amount': float(sale.tax_amount),
+        'discount_amount': float(sale.discount_amount),
+        'total_amount': float(sale.total_amount),
+        'notes': sale.notes,
+        'payment_status': getattr(sale, 'payment_status', 'Paid'),
+        'items': []
+    }
+    
+    # Add sale items
+    for item in sale.sale_items:
+        sale_data['items'].append({
+            'product_name': item.product.name,
+            'quantity': item.quantity,
+            'unit_price': float(item.unit_price),
+            'total_price': float(item.total_price)
+        })
+    
+    return jsonify(sale_data)
