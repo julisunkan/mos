@@ -1,0 +1,103 @@
+{% extends "base.html" %}
+{% set active_page = 'stores' %}
+
+{% block title %}Purchase Order {{ po.po_number }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid mt-3">
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="mb-1">Purchase Order {{ po.po_number }}</h2>
+            <p class="text-muted mb-0">Purchase order details and items</p>
+        </div>
+        <div>
+            <a href="{{ url_for('stores.purchase_orders') }}" class="btn btn-secondary">
+                <i class="fas fa-arrow-left"></i> Back to Purchase Orders
+            </a>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-lg-8">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">Order Details</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h6 class="text-muted">PO Number</h6>
+                            <p class="mb-3"><strong>{{ po.po_number }}</strong></p>
+                            
+                            <h6 class="text-muted">Supplier</h6>
+                            <p class="mb-3">{{ po.supplier.name }}</p>
+                            
+                            <h6 class="text-muted">Status</h6>
+                            <p class="mb-3">
+                                <span class="badge bg-{{ 'success' if po.status == 'Received' else 'warning' if po.status == 'Sent' else 'secondary' if po.status == 'Draft' else 'danger' }}">
+                                    {{ po.status }}
+                                </span>
+                            </p>
+                        </div>
+                        <div class="col-md-6">
+                            <h6 class="text-muted">Created Date</h6>
+                            <p class="mb-3">{{ po.created_at.strftime('%Y-%m-%d %H:%M') }}</p>
+                            
+                            <h6 class="text-muted">Expected Date</h6>
+                            <p class="mb-3">
+                                {% if po.expected_date %}
+                                    {{ po.expected_date.strftime('%Y-%m-%d') }}
+                                {% else %}
+                                    <span class="text-muted">Not specified</span>
+                                {% endif %}
+                            </p>
+                            
+                            <h6 class="text-muted">Created By</h6>
+                            <p class="mb-3">{{ po.user.full_name }}</p>
+                        </div>
+                    </div>
+                    
+                    {% if po.notes %}
+                    <div class="mt-3">
+                        <h6 class="text-muted">Notes</h6>
+                        <p>{{ po.notes }}</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-lg-4">
+            <div class="card">
+                <div class="card-header">
+                    <h6 class="card-title mb-0">Supplier Information</h6>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <h6 class="text-muted">Contact Person</h6>
+                        <p class="mb-0">{{ po.supplier.contact_person or 'Not specified' }}</p>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <h6 class="text-muted">Email</h6>
+                        <p class="mb-0">{{ po.supplier.email or 'Not specified' }}</p>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <h6 class="text-muted">Phone</h6>
+                        <p class="mb-0">{{ po.supplier.phone or 'Not specified' }}</p>
+                    </div>
+                    
+                    {% if po.supplier.address %}
+                    <div class="mb-0">
+                        <h6 class="text-muted">Address</h6>
+                        <p class="mb-0">{{ po.supplier.address }}</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -143,3 +143,41 @@ def new_stock_transfer():
             flash(f'Error creating stock transfer: {str(e)}', 'error')
     
     return render_template('stores/transfer_form.html', form=form, title='New Stock Transfer')
+
+@stores_bp.route('/purchase-orders/new', methods=['GET', 'POST'])
+@login_required
+@admin_required
+def new_purchase_order():
+    form = PurchaseOrderForm()
+    if form.validate_on_submit():
+        po = PurchaseOrder(
+            po_number=generate_po_number(),
+            supplier_id=form.supplier_id.data,
+            user_id=current_user.id,
+            expected_date=form.expected_date.data,
+            notes=form.notes.data,
+            status='Draft'
+        )
+        
+        try:
+            db.session.add(po)
+            db.session.commit()
+            flash(f'Purchase order {po.po_number} created successfully!', 'success')
+            return redirect(url_for('stores.purchase_orders'))
+        except Exception as e:
+            db.session.rollback()
+            flash(f'Error creating purchase order: {str(e)}', 'error')
+    
+    return render_template('stores/purchase_order_form.html', form=form, title='New Purchase Order')
+
+@stores_bp.route('/purchase-orders/<int:id>')
+@login_required
+def view_purchase_order(id):
+    po = PurchaseOrder.query.get_or_404(id)
+    return render_template('stores/purchase_order_view.html', po=po)
+
+@stores_bp.route('/stock-transfers/<int:id>')
+@login_required  
+def view_stock_transfer(id):
+    transfer = StockTransfer.query.get_or_404(id)
+    return render_template('stores/transfer_view.html', transfer=transfer)
