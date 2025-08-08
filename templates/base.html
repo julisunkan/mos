@@ -70,7 +70,7 @@
                         <nav class="nav flex-column ms-3">
                             <a class="nav-link text-light" href="{{ url_for('inventory.products') }}">Products</a>
                             {% if current_user.has_permission('all') %}
-                            <a class="nav-link text-light" href="{{ url_for('admin.categories') }}">Categories</a>
+                            <a class="nav-link text-light" href="{{ url_for('inventory.categories') }}">Categories</a>
                             {% endif %}
                             <a class="nav-link text-light" href="{{ url_for('inventory.low_stock') }}">Low Stock</a>
                         </nav>
@@ -105,6 +105,8 @@
                     <div class="collapse" id="adminMenu">
                         <nav class="nav flex-column ms-3">
                             <a class="nav-link text-light" href="{{ url_for('admin.users') }}">Users</a>
+                            <a class="nav-link text-light" href="{{ url_for('admin.company_profile') }}">Company Profile</a>
+                            <a class="nav-link text-light" href="{{ url_for('stores.index') }}">Stores</a>
                         </nav>
                     </div>
                 </div>
