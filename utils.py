@@ -29,6 +29,18 @@ def generate_po_number():
     suffix = ''.join(random.choices(string.digits, k=3))
     return f"PO-{timestamp}-{suffix}"
 
+def generate_hold_number():
+    """Generate a unique hold number"""
+    timestamp = datetime.now().strftime('%Y%m%d%H%M%S')
+    suffix = ''.join(random.choices(string.digits, k=3))
+    return f"HOLD-{timestamp}-{suffix}"
+
+def generate_return_number():
+    """Generate a unique return number"""
+    timestamp = datetime.now().strftime('%Y%m%d%H%M%S')
+    suffix = ''.join(random.choices(string.digits, k=3))
+    return f"RTN-{timestamp}-{suffix}"
+
 def admin_required(f):
     """Decorator to require admin role"""
     @wraps(f)

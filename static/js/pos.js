@@ -70,6 +70,12 @@ class POSSystem {
         if (holdSaleBtn) {
             holdSaleBtn.addEventListener('click', this.holdSale.bind(this));
         }
+        
+        // View held sales button
+        const viewHeldSalesBtn = document.getElementById('viewHeldSales');
+        if (viewHeldSalesBtn) {
+            viewHeldSalesBtn.addEventListener('click', this.showHeldSales.bind(this));
+        }
 
         // Barcode scan button (mock functionality)
         const scanBarcodeBtn = document.getElementById('scanBarcode');

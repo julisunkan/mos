@@ -190,3 +190,137 @@ def edit_category(id):
             flash(f'Error updating category: {str(e)}', 'error')
     
     return render_template('inventory/category_form.html', form=form, title='Edit Category', category=category)
+
+# Product Image Management
+@inventory_bp.route('/products/<int:product_id>/images')
+@login_required
+def product_images(product_id):
+    """Manage product images"""
+    product = Product.query.get_or_404(product_id)
+    return render_template('inventory/product_images.html', product=product)
+
+@inventory_bp.route('/products/<int:product_id>/upload-image', methods=['POST'])
+@login_required
+def upload_product_image(product_id):
+    """Upload a new product image"""
+    from models import ProductImage
+    import os
+    from werkzeug.utils import secure_filename
+    
+    if not current_user.has_permission('write_inventory') and not current_user.has_permission('all'):
+        return jsonify({'success': False, 'message': 'Permission denied'}), 403
+    
+    product = Product.query.get_or_404(product_id)
+    
+    if 'image' not in request.files:
+        return jsonify({'success': False, 'message': 'No image file provided'}), 400
+    
+    file = request.files['image']
+    if file.filename == '':
+        return jsonify({'success': False, 'message': 'No file selected'}), 400
+    
+    # Check file type
+    allowed_extensions = {'png', 'jpg', 'jpeg', 'gif'}
+    if not ('.' in file.filename and file.filename.rsplit('.', 1)[1].lower() in allowed_extensions):
+        return jsonify({'success': False, 'message': 'Invalid file type'}), 400
+    
+    try:
+        # Create uploads directory if it doesn't exist
+        upload_dir = os.path.join('static', 'uploads', 'products')
+        os.makedirs(upload_dir, exist_ok=True)
+        
+        # Generate unique filename
+        filename = secure_filename(f"product_{product_id}_{int(datetime.now().timestamp())}_{file.filename}")
+        file_path = os.path.join(upload_dir, filename)
+        
+        # Save file
+        file.save(file_path)
+        
+        # Create database record
+        is_primary = request.form.get('is_primary') == 'on'
+        
+        # If this is set as primary, remove primary flag from other images
+        if is_primary:
+            ProductImage.query.filter_by(product_id=product_id, is_primary=True).update({'is_primary': False})
+        
+        # If no images exist, make this the primary
+        if not ProductImage.query.filter_by(product_id=product_id).first():
+            is_primary = True
+        
+        product_image = ProductImage(
+            product_id=product_id,
+            image_url=f"/static/uploads/products/{filename}",
+            is_primary=is_primary,
+            alt_text=request.form.get('alt_text', '')
+        )
+        
+        db.session.add(product_image)
+        db.session.commit()
+        
+        return jsonify({'success': True, 'message': 'Image uploaded successfully'})
+        
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'success': False, 'message': f'Error uploading image: {str(e)}'}), 500
+
+@inventory_bp.route('/images/<int:image_id>/set-primary', methods=['POST'])
+@login_required
+def set_primary_image(image_id):
+    """Set an image as primary"""
+    from models import ProductImage
+    
+    if not current_user.has_permission('write_inventory') and not current_user.has_permission('all'):
+        return jsonify({'success': False, 'message': 'Permission denied'}), 403
+    
+    try:
+        image = ProductImage.query.get_or_404(image_id)
+        
+        # Remove primary flag from other images of this product
+        ProductImage.query.filter_by(product_id=image.product_id, is_primary=True).update({'is_primary': False})
+        
+        # Set this image as primary
+        image.is_primary = True
+        db.session.commit()
+        
+        return jsonify({'success': True, 'message': 'Primary image updated'})
+        
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'success': False, 'message': f'Error setting primary image: {str(e)}'}), 500
+
+@inventory_bp.route('/images/<int:image_id>/delete', methods=['DELETE'])
+@login_required
+def delete_product_image(image_id):
+    """Delete a product image"""
+    from models import ProductImage
+    import os
+    
+    if not current_user.has_permission('write_inventory') and not current_user.has_permission('all'):
+        return jsonify({'success': False, 'message': 'Permission denied'}), 403
+    
+    try:
+        image = ProductImage.query.get_or_404(image_id)
+        
+        # Delete file from filesystem
+        if image.image_url.startswith('/static/'):
+            file_path = image.image_url[1:]  # Remove leading slash
+            if os.path.exists(file_path):
+                os.remove(file_path)
+        
+        # If this was the primary image, set another image as primary
+        if image.is_primary:
+            other_image = ProductImage.query.filter(
+                ProductImage.product_id == image.product_id,
+                ProductImage.id != image_id
+            ).first()
+            if other_image:
+                other_image.is_primary = True
+        
+        db.session.delete(image)
+        db.session.commit()
+        
+        return jsonify({'success': True, 'message': 'Image deleted successfully'})
+        
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'success': False, 'message': f'Error deleting image: {str(e)}'}), 500

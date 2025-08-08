@@ -154,9 +154,21 @@
                         <button type="button" id="processSale" class="btn btn-success" disabled>
                             <i class="fas fa-check me-2"></i>Process Sale
                         </button>
-                        <button type="button" id="holdSale" class="btn btn-warning">
-                            <i class="fas fa-pause me-2"></i>Hold Sale
-                        </button>
+                        <div class="row g-2">
+                            <div class="col-6">
+                                <button type="button" id="holdSale" class="btn btn-warning w-100">
+                                    <i class="fas fa-pause me-1"></i>Hold
+                                </button>
+                            </div>
+                            <div class="col-6">
+                                <button type="button" id="viewHeldSales" class="btn btn-info w-100">
+                                    <i class="fas fa-list me-1"></i>Resume
+                                </button>
+                            </div>
+                        </div>
+                        <a href="{{ url_for('pos.returns') }}" class="btn btn-outline-danger">
+                            <i class="fas fa-undo-alt me-2"></i>Returns & Refunds
+                        </a>
                         <button type="button" id="clearCart" class="btn btn-secondary">
                             <i class="fas fa-trash me-2"></i>Clear Cart
                         </button>

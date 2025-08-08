@@ -367,3 +367,98 @@ class CashRegister(db.Model):
     
     def __repr__(self):
         return f'<CashRegister {self.user.username} - {self.opened_at}>'
+
+# Additional models for enhanced POS features
+class ProductImage(db.Model):
+    __tablename__ = 'product_images'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    product_id = db.Column(db.Integer, db.ForeignKey('products.id'), nullable=False)
+    image_url = db.Column(db.String(500), nullable=False)
+    is_primary = db.Column(db.Boolean, default=False)
+    alt_text = db.Column(db.String(200))
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    
+    # Relationships
+    product = db.relationship('Product', backref='images')
+
+class HeldSale(db.Model):
+    __tablename__ = 'held_sales'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    hold_number = db.Column(db.String(50), unique=True, nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    customer_id = db.Column(db.Integer, db.ForeignKey('customers.id'))
+    subtotal = db.Column(db.Numeric(10, 2), nullable=False, default=0.00)
+    tax_amount = db.Column(db.Numeric(10, 2), nullable=False, default=0.00)
+    discount_amount = db.Column(db.Numeric(10, 2), nullable=False, default=0.00)
+    total_amount = db.Column(db.Numeric(10, 2), nullable=False, default=0.00)
+    notes = db.Column(db.Text)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    
+    # Relationships
+    user = db.relationship('User', backref='held_sales')
+    customer = db.relationship('Customer', backref='held_sales')
+
+class HeldSaleItem(db.Model):
+    __tablename__ = 'held_sale_items'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    held_sale_id = db.Column(db.Integer, db.ForeignKey('held_sales.id'), nullable=False)
+    product_id = db.Column(db.Integer, db.ForeignKey('products.id'), nullable=False)
+    quantity = db.Column(db.Integer, nullable=False)
+    unit_price = db.Column(db.Numeric(10, 2), nullable=False)
+    total_price = db.Column(db.Numeric(10, 2), nullable=False)
+    
+    # Relationships
+    held_sale = db.relationship('HeldSale', backref='items')
+    product = db.relationship('Product', backref='held_items')
+
+class SaleReturn(db.Model):
+    __tablename__ = 'sale_returns'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    return_number = db.Column(db.String(50), unique=True, nullable=False)
+    original_sale_id = db.Column(db.Integer, db.ForeignKey('sales.id'), nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    return_amount = db.Column(db.Numeric(10, 2), nullable=False)
+    return_reason = db.Column(db.String(200), nullable=False)
+    notes = db.Column(db.Text)
+    status = db.Column(db.String(20), default='Pending', nullable=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    processed_at = db.Column(db.DateTime)
+    
+    # Relationships
+    original_sale = db.relationship('Sale', backref='returns')
+    processed_by = db.relationship('User', backref='processed_returns')
+
+class SaleReturnItem(db.Model):
+    __tablename__ = 'sale_return_items'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    return_id = db.Column(db.Integer, db.ForeignKey('sale_returns.id'), nullable=False)
+    product_id = db.Column(db.Integer, db.ForeignKey('products.id'), nullable=False)
+    original_sale_item_id = db.Column(db.Integer, db.ForeignKey('sale_items.id'), nullable=False)
+    quantity_returned = db.Column(db.Integer, nullable=False)
+    unit_price = db.Column(db.Numeric(10, 2), nullable=False)
+    total_amount = db.Column(db.Numeric(10, 2), nullable=False)
+    
+    # Relationships
+    return_record = db.relationship('SaleReturn', backref='items')
+    product = db.relationship('Product', backref='return_items')
+    original_item = db.relationship('SaleItem', backref='returns')
+
+class SalePayment(db.Model):
+    __tablename__ = 'sale_payments'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    sale_id = db.Column(db.Integer, db.ForeignKey('sales.id'), nullable=False)
+    payment_method = db.Column(db.String(20), nullable=False)
+    amount = db.Column(db.Numeric(10, 2), nullable=False)
+    reference_number = db.Column(db.String(100))
+    gateway_response = db.Column(db.JSON)
+    status = db.Column(db.String(20), default='Completed', nullable=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    
+    # Relationships
+    sale = db.relationship('Sale', backref='payments')

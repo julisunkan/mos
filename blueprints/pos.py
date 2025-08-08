@@ -3,7 +3,7 @@ from flask_login import login_required, current_user
 from forms import SaleForm, CashRegisterForm
 from models import Product, Customer, Sale, SaleItem, CashRegister
 from app import db
-from utils import generate_receipt_number, calculate_tax
+from utils import generate_receipt_number, calculate_tax, generate_hold_number, generate_return_number
 from datetime import datetime
 import json
 
@@ -203,3 +203,115 @@ def search_products():
         'stock': p.stock_quantity,
         'tax_rate': float(p.tax_rate)
     } for p in products])
+
+# Enhanced POS Features: Hold/Resume Sales and Returns
+@pos_bp.route('/hold-sale', methods=['POST'])
+@login_required
+def hold_sale():
+    """Hold the current sale for later completion"""
+    from models import HeldSale, HeldSaleItem
+    
+    data = request.get_json()
+    
+    try:
+        hold_number = generate_hold_number()
+        
+        # Create held sale record
+        held_sale = HeldSale(
+            hold_number=hold_number,
+            user_id=current_user.id,
+            customer_id=data.get('customer_id'),
+            subtotal=data.get('subtotal', 0),
+            tax_amount=data.get('tax_amount', 0),
+            discount_amount=data.get('discount_amount', 0),
+            total_amount=data.get('total_amount', 0),
+            notes=data.get('notes', '')
+        )
+        
+        db.session.add(held_sale)
+        db.session.flush()  # Get the ID
+        
+        # Add held sale items
+        for item in data.get('items', []):
+            held_item = HeldSaleItem(
+                held_sale_id=held_sale.id,
+                product_id=item['product_id'],
+                quantity=item['quantity'],
+                unit_price=item['unit_price'],
+                total_price=item['total_price']
+            )
+            db.session.add(held_item)
+        
+        db.session.commit()
+        
+        return jsonify({
+            'success': True,
+            'hold_number': hold_number,
+            'message': f'Sale held successfully as #{hold_number}'
+        })
+        
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({
+            'success': False,
+            'message': f'Error holding sale: {str(e)}'
+        }), 500
+
+@pos_bp.route('/held-sales')
+@login_required
+def held_sales():
+    """Get list of held sales for current user"""
+    from models import HeldSale
+    
+    held_sales_list = HeldSale.query.filter_by(user_id=current_user.id).order_by(HeldSale.created_at.desc()).all()
+    
+    sales_data = []
+    for sale in held_sales_list:
+        sales_data.append({
+            'id': sale.id,
+            'hold_number': sale.hold_number,
+            'customer_name': sale.customer.name if sale.customer else 'Walk-in',
+            'total_amount': float(sale.total_amount),
+            'created_at': sale.created_at.strftime('%Y-%m-%d %H:%M'),
+            'item_count': len(sale.items)
+        })
+    
+    return jsonify({
+        'success': True,
+        'held_sales': sales_data
+    })
+
+@pos_bp.route('/resume-sale/<int:sale_id>')
+@login_required
+def resume_sale(sale_id):
+    """Resume a held sale"""
+    from models import HeldSale
+    
+    held_sale = HeldSale.query.get_or_404(sale_id)
+    
+    if held_sale.user_id != current_user.id:
+        return jsonify({'success': False, 'message': 'Unauthorized'}), 403
+    
+    # Convert held sale to cart format
+    cart_items = []
+    for item in held_sale.items:
+        cart_items.append({
+            'product_id': item.product_id,
+            'product_name': item.product.name,
+            'quantity': item.quantity,
+            'unit_price': float(item.unit_price),
+            'total_price': float(item.total_price)
+        })
+    
+    return jsonify({
+        'success': True,
+        'sale_data': {
+            'customer_id': held_sale.customer_id,
+            'items': cart_items,
+            'subtotal': float(held_sale.subtotal),
+            'tax_amount': float(held_sale.tax_amount),
+            'discount_amount': float(held_sale.discount_amount),
+            'total_amount': float(held_sale.total_amount),
+            'notes': held_sale.notes
+        }
+    })

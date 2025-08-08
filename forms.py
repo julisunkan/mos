@@ -1,5 +1,6 @@
 from flask_wtf import FlaskForm
-from wtforms import StringField, TextAreaField, SelectField, DecimalField, IntegerField, BooleanField, PasswordField, HiddenField
+from flask_wtf.file import FileField, FileRequired
+from wtforms import StringField, TextAreaField, SelectField, DecimalField, IntegerField, BooleanField, PasswordField, HiddenField, SubmitField
 from wtforms.validators import DataRequired, Email, Length, NumberRange, Optional, ValidationError
 from models import User, Product, Category, Customer
 
@@ -167,3 +168,28 @@ class CompanyProfileForm(FlaskForm):
     ], validators=[DataRequired()])
     default_tax_rate = DecimalField('Default Tax Rate (%)', validators=[DataRequired(), NumberRange(min=0, max=100)])
     receipt_footer = TextAreaField('Receipt Footer Text')
+
+# Enhanced POS Forms
+class HoldSaleForm(FlaskForm):
+    hold_number = StringField('Hold Number', validators=[DataRequired(), Length(1, 50)])
+    customer_id = SelectField('Customer', coerce=int, validators=[Optional()])
+    notes = TextAreaField('Notes')
+    submit = SubmitField('Hold Sale')
+
+class ReturnForm(FlaskForm):
+    return_reason = SelectField('Return Reason', choices=[
+        ('Defective', 'Defective Product'),
+        ('Wrong Item', 'Wrong Item'),
+        ('Customer Changed Mind', 'Customer Changed Mind'),
+        ('Size Issue', 'Size Issue'),
+        ('Quality Issue', 'Quality Issue'),
+        ('Other', 'Other')
+    ], validators=[DataRequired()])
+    notes = TextAreaField('Additional Notes')
+    submit = SubmitField('Process Return')
+
+class ProductImageForm(FlaskForm):
+    image = FileField('Product Image', validators=[FileRequired()])
+    alt_text = StringField('Image Description', validators=[Optional(), Length(max=200)])
+    is_primary = BooleanField('Set as Primary Image')
+    submit = SubmitField('Upload Image')
