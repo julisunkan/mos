@@ -23,14 +23,13 @@ def users():
 def new_user():
     form = UserForm()
     if form.validate_on_submit():
-        user = User(
-            username=form.username.data,
-            email=form.email.data,
-            first_name=form.first_name.data,
-            last_name=form.last_name.data,
-            role=form.role.data,
-            is_active=form.is_active.data
-        )
+        user = User()
+        user.username = form.username.data
+        user.email = form.email.data
+        user.first_name = form.first_name.data
+        user.last_name = form.last_name.data
+        user.role = form.role.data
+        user.is_active = form.is_active.data
         user.set_password(form.password.data)
         
         try:
@@ -98,7 +97,8 @@ def delete_user(id):
 def company_profile():
     profile = CompanyProfile.query.first()
     if not profile:
-        profile = CompanyProfile(company_name='Your Company Name')
+        profile = CompanyProfile()
+        profile.company_name = 'Your Company Name'
         db.session.add(profile)
         db.session.commit()
     
@@ -174,15 +174,22 @@ def assign_user_stores():
             UserStore.query.filter_by(user_id=user_id).delete()
             
             # Add new assignments
-            for store_id in store_ids:
-                user_store = UserStore(user_id=user_id, store_id=store_id)
-                db.session.add(user_store)
+            if store_ids:
+                for store_id in store_ids:
+                    user_store = UserStore()
+                    user_store.user_id = user_id
+                    user_store.store_id = store_id
+                    db.session.add(user_store)
             
             db.session.commit()
             
             user = User.query.get(user_id)
-            store_names = [Store.query.get(sid).name for sid in store_ids]
-            flash(f'User {user.username} assigned to stores: {", ".join(store_names)}', 'success')
+            if store_ids and user:
+                stores = Store.query.filter(Store.id.in_(store_ids)).all()
+                store_names = [store.name for store in stores]
+                flash(f'User {user.username} assigned to stores: {", ".join(store_names)}', 'success')
+            else:
+                flash(f'User store assignments cleared', 'success')
             return redirect(url_for('admin.user_stores'))
             
         except Exception as e:
@@ -213,14 +220,21 @@ def edit_user_stores(user_id):
             UserStore.query.filter_by(user_id=user_id).delete()
             
             # Add new assignments
-            for store_id in store_ids:
-                user_store = UserStore(user_id=user_id, store_id=store_id)
-                db.session.add(user_store)
+            if store_ids:
+                for store_id in store_ids:
+                    user_store = UserStore()
+                    user_store.user_id = user_id
+                    user_store.store_id = store_id
+                    db.session.add(user_store)
             
             db.session.commit()
             
-            store_names = [Store.query.get(sid).name for sid in store_ids] if store_ids else ['None']
-            flash(f'Store assignments updated for {user.username}: {", ".join(store_names)}', 'success')
+            if store_ids:
+                stores = Store.query.filter(Store.id.in_(store_ids)).all()
+                store_names = [store.name for store in stores]
+                flash(f'Store assignments updated for {user.username}: {", ".join(store_names)}', 'success')
+            else:
+                flash(f'All store assignments removed for {user.username}', 'success')
             return redirect(url_for('admin.user_stores'))
             
         except Exception as e:
