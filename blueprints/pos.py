@@ -520,18 +520,32 @@ def print_receipt(receipt_number):
     
     # Receipt header
     p.setFont("Helvetica-Bold", 16)
-    p.drawCentredText(width/2, height-50, "Cloud POS & Inventory Manager")
+    title_text = "Cloud POS & Inventory Manager"
+    text_width = p.stringWidth(title_text, "Helvetica-Bold", 16)
+    p.drawString((width - text_width) / 2, height-50, title_text)
     
     p.setFont("Helvetica", 12)
-    p.drawCentredText(width/2, height-80, f"Receipt: {receipt_number}")
-    p.drawCentredText(width/2, height-100, f"Date: {sale.created_at.strftime('%Y-%m-%d %H:%M:%S')}")
-    p.drawCentredText(width/2, height-120, f"Cashier: {sale.user.full_name}")
+    receipt_text = f"Receipt: {receipt_number}"
+    text_width = p.stringWidth(receipt_text, "Helvetica", 12)
+    p.drawString((width - text_width) / 2, height-80, receipt_text)
+    
+    date_text = f"Date: {sale.created_at.strftime('%Y-%m-%d %H:%M:%S')}"
+    text_width = p.stringWidth(date_text, "Helvetica", 12)
+    p.drawString((width - text_width) / 2, height-100, date_text)
+    
+    cashier_text = f"Cashier: {sale.user.full_name}"
+    text_width = p.stringWidth(cashier_text, "Helvetica", 12)
+    p.drawString((width - text_width) / 2, height-120, cashier_text)
     
     if sale.customer:
-        p.drawCentredText(width/2, height-140, f"Customer: {sale.customer.name}")
+        customer_text = f"Customer: {sale.customer.name}"
+        text_width = p.stringWidth(customer_text, "Helvetica", 12)
+        p.drawString((width - text_width) / 2, height-140, customer_text)
         y_pos = height - 170
     else:
-        p.drawCentredText(width/2, height-140, "Customer: Walk-in")
+        customer_text = "Customer: Walk-in"
+        text_width = p.stringWidth(customer_text, "Helvetica", 12)
+        p.drawString((width - text_width) / 2, height-140, customer_text)
         y_pos = height - 170
     
     # Line separator
@@ -585,8 +599,14 @@ def print_receipt(receipt_number):
     
     # Footer
     p.setFont("Helvetica", 8)
-    p.drawCentredText(width/2, 100, "Thank you for your business!")
-    p.drawCentredText(width/2, 80, "Powered by Cloud POS")
+    
+    footer_text = "Thank you for your business!"
+    text_width = p.stringWidth(footer_text, "Helvetica", 8)
+    p.drawString((width - text_width) / 2, 100, footer_text)
+    
+    powered_text = "Powered by Cloud POS"
+    text_width = p.stringWidth(powered_text, "Helvetica", 8)
+    p.drawString((width - text_width) / 2, 80, powered_text)
     
     p.save()
     buffer.seek(0)
@@ -596,3 +616,39 @@ def print_receipt(receipt_number):
     response.headers['Content-Disposition'] = f'attachment; filename=receipt_{receipt_number}.pdf'
     
     return response
+
+@pos_bp.route('/returns')
+@login_required 
+def returns():
+    """Display returns management page for cashiers"""
+    # Get recent sales that can be returned (within last 30 days)
+    from datetime import datetime, timedelta
+    cutoff_date = datetime.utcnow() - timedelta(days=30)
+    
+    recent_sales = Sale.query.filter(
+        Sale.created_at >= cutoff_date,
+        Sale.total_amount > 0  # Don't show refund transactions
+    ).order_by(Sale.created_at.desc()).limit(50).all()
+    
+    return render_template('pos/returns.html', recent_sales=recent_sales)
+
+@pos_bp.route('/api/sale/<int:sale_id>/details')
+@login_required
+def get_sale_details(sale_id):
+    """Get sale details for returns processing"""
+    sale = Sale.query.get_or_404(sale_id)
+    
+    return jsonify({
+        'id': sale.id,
+        'receipt_number': sale.receipt_number,
+        'created_at': sale.created_at.isoformat(),
+        'customer_name': sale.customer.name if sale.customer else None,
+        'total_amount': float(sale.total_amount),
+        'items': [{
+            'id': item.id,
+            'product_name': item.product.name,
+            'quantity': item.quantity,
+            'unit_price': float(item.unit_price),
+            'total_price': float(item.total_price)
+        } for item in sale.items]
+    })
