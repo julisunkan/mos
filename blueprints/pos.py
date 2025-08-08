@@ -352,3 +352,102 @@ def search_products():
         })
     
     return jsonify(results)
+
+@pos_bp.route('/receipt/print/<receipt_number>')
+@login_required
+def print_receipt(receipt_number):
+    """Generate and download PDF receipt"""
+    from reportlab.lib.pagesizes import letter
+    from reportlab.pdfgen import canvas
+    from reportlab.lib.units import inch
+    from flask import make_response
+    import io
+    
+    # Find the sale by receipt number
+    sale = Sale.query.filter_by(receipt_number=receipt_number).first()
+    if not sale:
+        return jsonify({'error': 'Receipt not found'}), 404
+    
+    # Create PDF in memory
+    buffer = io.BytesIO()
+    p = canvas.Canvas(buffer, pagesize=letter)
+    width, height = letter
+    
+    # Receipt header
+    p.setFont("Helvetica-Bold", 16)
+    p.drawCentredText(width/2, height-50, "Cloud POS & Inventory Manager")
+    
+    p.setFont("Helvetica", 12)
+    p.drawCentredText(width/2, height-80, f"Receipt: {receipt_number}")
+    p.drawCentredText(width/2, height-100, f"Date: {sale.created_at.strftime('%Y-%m-%d %H:%M:%S')}")
+    p.drawCentredText(width/2, height-120, f"Cashier: {sale.user.full_name}")
+    
+    if sale.customer:
+        p.drawCentredText(width/2, height-140, f"Customer: {sale.customer.name}")
+        y_pos = height - 170
+    else:
+        p.drawCentredText(width/2, height-140, "Customer: Walk-in")
+        y_pos = height - 170
+    
+    # Line separator
+    p.line(50, y_pos, width-50, y_pos)
+    y_pos -= 30
+    
+    # Items header
+    p.setFont("Helvetica-Bold", 10)
+    p.drawString(50, y_pos, "Item")
+    p.drawString(300, y_pos, "Qty")
+    p.drawString(350, y_pos, "Price")
+    p.drawString(450, y_pos, "Total")
+    y_pos -= 20
+    
+    # Items
+    p.setFont("Helvetica", 10)
+    for item in sale.items:
+        p.drawString(50, y_pos, item.product.name[:30])  # Truncate long names
+        p.drawString(300, y_pos, str(item.quantity))
+        p.drawString(350, y_pos, f"${item.unit_price:.2f}")
+        p.drawString(450, y_pos, f"${item.total_price:.2f}")
+        y_pos -= 15
+    
+    # Totals section
+    y_pos -= 20
+    p.line(50, y_pos, width-50, y_pos)
+    y_pos -= 20
+    
+    p.setFont("Helvetica", 10)
+    p.drawString(350, y_pos, f"Subtotal:")
+    p.drawString(450, y_pos, f"${sale.subtotal:.2f}")
+    y_pos -= 15
+    
+    p.drawString(350, y_pos, f"Tax:")
+    p.drawString(450, y_pos, f"${sale.tax_amount:.2f}")
+    y_pos -= 15
+    
+    if sale.discount_amount > 0:
+        p.drawString(350, y_pos, f"Discount:")
+        p.drawString(450, y_pos, f"-${sale.discount_amount:.2f}")
+        y_pos -= 15
+    
+    p.setFont("Helvetica-Bold", 12)
+    p.drawString(350, y_pos, f"Total:")
+    p.drawString(450, y_pos, f"${sale.total_amount:.2f}")
+    y_pos -= 20
+    
+    p.setFont("Helvetica", 10)
+    p.drawString(350, y_pos, f"Payment:")
+    p.drawString(450, y_pos, sale.payment_method)
+    
+    # Footer
+    p.setFont("Helvetica", 8)
+    p.drawCentredText(width/2, 100, "Thank you for your business!")
+    p.drawCentredText(width/2, 80, "Powered by Cloud POS")
+    
+    p.save()
+    buffer.seek(0)
+    
+    response = make_response(buffer.getvalue())
+    response.headers['Content-Type'] = 'application/pdf'
+    response.headers['Content-Disposition'] = f'attachment; filename=receipt_{receipt_number}.pdf'
+    
+    return response

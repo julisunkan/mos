@@ -400,60 +400,20 @@ class POSSystem {
             return;
         }
 
-        const data = this.lastReceiptData;
-        let receiptContent = `
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Receipt ${data.receiptNumber}</title>
-    <style>
-        body { font-family: monospace; width: 300px; margin: 0 auto; }
-        .header { text-align: center; border-bottom: 1px dashed #000; padding-bottom: 10px; }
-        .item { display: flex; justify-content: space-between; margin: 5px 0; }
-        .total { border-top: 1px dashed #000; padding-top: 10px; font-weight: bold; }
-        .footer { text-align: center; margin-top: 20px; font-size: 12px; }
-    </style>
-</head>
-<body>
-    <div class="header">
-        <h2>Cloud POS</h2>
-        <p>Receipt: ${data.receiptNumber}</p>
-        <p>${data.timestamp.toLocaleString()}</p>
-    </div>
-    <div class="items">`;
-
-        data.items.forEach(item => {
-            receiptContent += `
-        <div class="item">
-            <span>${item.name} x${item.quantity}</span>
-            <span>$${(item.price * item.quantity).toFixed(2)}</span>
-        </div>`;
-        });
-
-        receiptContent += `
-    </div>
-    <div class="total">
-        <div class="item">
-            <span>Total:</span>
-            <span>$${data.totalAmount.toFixed(2)}</span>
-        </div>
-        <div class="item">
-            <span>Payment:</span>
-            <span>${data.paymentMethod}</span>
-        </div>
-    </div>
-    <div class="footer">
-        <p>Thank you for your business!</p>
-    </div>
-</body>
-</html>`;
-
-        const printWindow = window.open('', '_blank');
-        printWindow.document.write(receiptContent);
-        printWindow.document.close();
-        printWindow.focus();
-        printWindow.print();
-        printWindow.close();
+        const receiptNumber = this.lastReceiptData.receiptNumber;
+        
+        // Create a download link for the PDF
+        const downloadUrl = `/pos/receipt/print/${receiptNumber}`;
+        
+        // Create temporary link element and trigger download
+        const link = document.createElement('a');
+        link.href = downloadUrl;
+        link.download = `receipt_${receiptNumber}.pdf`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        
+        this.showAlert('Receipt PDF generated and downloaded!', 'success');
     }
 
     showAlert(message, type) {
