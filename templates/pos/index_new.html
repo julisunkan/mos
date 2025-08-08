@@ -272,6 +272,14 @@ function addToCart(productCard) {
     const productTax = parseFloat(productCard.dataset.tax || 0);
     
     console.log('Adding to cart:', { productId, productName, productPrice, productStock }); // Debug
+    console.log('Product card dataset:', productCard.dataset); // Debug
+    
+    // Validate product ID
+    if (!productId || isNaN(productId)) {
+        showAlert('Invalid product selected!', 'danger');
+        console.error('Invalid product ID:', productCard.dataset.id);
+        return;
+    }
     
     if (productStock <= 0) {
         showAlert('Product is out of stock!', 'warning');
@@ -426,6 +434,8 @@ async function processSale() {
         discount: parseFloat(document.getElementById('discount').value) || 0,
         notes: document.getElementById('saleNotes').value
     };
+    
+    console.log('Sale data being sent:', JSON.stringify(saleData, null, 2)); // Debug
     
     try {
         const response = await fetch('/pos/api/sale/process', {
