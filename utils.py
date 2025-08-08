@@ -62,6 +62,44 @@ def manager_required(f):
         return f(*args, **kwargs)
     return decorated_function
 
+def get_default_currency():
+    """Get the default currency from company profile"""
+    from models import CompanyProfile
+    profile = CompanyProfile.query.first()
+    return profile.default_currency if profile else 'USD'
+
+def get_currency_symbol(currency_code=None):
+    """Get currency symbol for a given currency code"""
+    if currency_code is None:
+        currency_code = get_default_currency()
+    
+    currency_symbols = {
+        'USD': '$',
+        'EUR': '€',
+        'GBP': '£',
+        'NGN': '₦',
+        'KES': 'KSh',
+        'GHS': '₵',
+        'JPY': '¥',
+        'INR': '₹',
+        'CAD': 'C$',
+        'AUD': 'A$'
+    }
+    return currency_symbols.get(currency_code, currency_code + ' ')
+
+def format_currency(amount, currency_code=None):
+    """Format amount with appropriate currency symbol"""
+    if amount is None:
+        amount = 0
+    
+    if currency_code is None:
+        currency_code = get_default_currency()
+    
+    symbol = get_currency_symbol(currency_code)
+    
+    # Format with 2 decimal places
+    return f"{symbol}{amount:.2f}"
+
 def log_audit_action(action, entity_type, entity_id=None, old_values=None, new_values=None):
     """Log an audit action"""
     from models import AuditLog

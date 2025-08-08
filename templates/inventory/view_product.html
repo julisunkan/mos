@@ -43,10 +43,10 @@
                         </div>
                         <div class="col-md-6">
                             <h6 class="text-muted">Cost Price</h6>
-                            <p class="mb-3">${{ "%.2f"|format(product.cost_price) }}</p>
+                            <p class="mb-3">{{ product.cost_price|format_currency }}</p>
                             
                             <h6 class="text-muted">Selling Price</h6>
-                            <p class="mb-3">${{ "%.2f"|format(product.selling_price) }}</p>
+                            <p class="mb-3">{{ product.selling_price|format_currency }}</p>
                             
                             <h6 class="text-muted">Tax Rate</h6>
                             <p class="mb-3">{{ product.tax_rate }}%</p>

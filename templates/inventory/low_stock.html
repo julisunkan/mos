@@ -59,7 +59,7 @@
                                             </span>
                                         </td>
                                         <td>{{ product.low_stock_threshold }}</td>
-                                        <td>${{ "%.2f"|format(product.selling_price) }}</td>
+                                        <td>{{ product.selling_price|format_currency }}</td>
                                         <td>
                                             {% if current_user.has_permission('write_inventory') or current_user.has_permission('all') %}
                                             <a href="{{ url_for('inventory.edit_product', id=product.id) }}" 

@@ -85,10 +85,10 @@
                                                 {{ customer.customer_type }}
                                             </span>
                                         </td>
-                                        <td>${{ "%.2f"|format(customer.credit_limit) }}</td>
+                                        <td>{{ customer.credit_limit|format_currency }}</td>
                                         <td>
                                             <span class="badge bg-{{ 'danger' if customer.current_balance > 0 else 'success' }}">
-                                                ${{ "%.2f"|format(customer.current_balance) }}
+                                                {{ customer.current_balance|format_currency }}
                                             </span>
                                         </td>
                                         <td>

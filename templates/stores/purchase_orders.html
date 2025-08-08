@@ -55,7 +55,7 @@
                                         {{ po.status }}
                                     </span>
                                 </td>
-                                <td>${{ "%.2f"|format(po.total_amount or 0) }}</td>
+                                <td>{{ (po.total_amount or 0)|format_currency }}</td>
                                 <td>
                                     {% if po.expected_date %}
                                         {{ po.expected_date.strftime('%Y-%m-%d') }}

@@ -78,7 +78,7 @@
                             <div class="col-md-6 mb-3">
                                 {{ form.credit_limit.label(class="form-label") }}
                                 <div class="input-group">
-                                    <span class="input-group-text">$</span>
+                                    <span class="input-group-text">{{ get_currency_symbol() }}</span>
                                     {{ form.credit_limit(class="form-control" + (" is-invalid" if form.credit_limit.errors else ""), step="0.01") }}
                                 </div>
                                 {% if form.credit_limit.errors %}

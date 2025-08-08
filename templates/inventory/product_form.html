@@ -78,7 +78,7 @@
                             <div class="col-md-4 mb-3">
                                 {{ form.cost_price.label(class="form-label") }}
                                 <div class="input-group">
-                                    <span class="input-group-text">$</span>
+                                    <span class="input-group-text">{{ get_currency_symbol() }}</span>
                                     {{ form.cost_price(class="form-control" + (" is-invalid" if form.cost_price.errors else ""), step="0.01") }}
                                 </div>
                                 {% if form.cost_price.errors %}
@@ -93,7 +93,7 @@
                             <div class="col-md-4 mb-3">
                                 {{ form.selling_price.label(class="form-label") }}
                                 <div class="input-group">
-                                    <span class="input-group-text">$</span>
+                                    <span class="input-group-text">{{ get_currency_symbol() }}</span>
                                     {{ form.selling_price(class="form-control" + (" is-invalid" if form.selling_price.errors else ""), step="0.01") }}
                                 </div>
                                 {% if form.selling_price.errors %}

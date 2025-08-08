@@ -156,7 +156,7 @@
                                     {% for sale in recent_sales %}
                                     <tr>
                                         <td>{{ sale.receipt_number }}</td>
-                                        <td>${{ "%.2f"|format(sale.total_amount) }}</td>
+                                        <td>{{ sale.total_amount|format_currency }}</td>
                                         <td>{{ sale.created_at.strftime('%m/%d %I:%M %p') }}</td>
                                     </tr>
                                     {% endfor %}

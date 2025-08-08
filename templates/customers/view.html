@@ -67,13 +67,13 @@
                     
                     <div class="mb-3">
                         <strong>Credit Limit:</strong><br>
-                        ${{ "%.2f"|format(customer.credit_limit) }}
+                        {{ customer.credit_limit|format_currency }}
                     </div>
                     
                     <div class="mb-3">
                         <strong>Current Balance:</strong><br>
                         <span class="badge bg-{{ 'danger' if customer.current_balance > 0 else 'success' }}">
-                            ${{ "%.2f"|format(customer.current_balance) }}
+                            {{ customer.current_balance|format_currency }}
                         </span>
                     </div>
                     
@@ -106,7 +106,7 @@
                 <div class="col-md-4">
                     <div class="card bg-success text-white">
                         <div class="card-body text-center">
-                            <h4>${{ "%.2f"|format(total_spent) }}</h4>
+                            <h4>{{ total_spent|format_currency }}</h4>
                             <p class="mb-0">Total Spent</p>
                         </div>
                     </div>
@@ -114,7 +114,7 @@
                 <div class="col-md-4">
                     <div class="card bg-info text-white">
                         <div class="card-body text-center">
-                            <h4>${{ "%.2f"|format(total_spent / sales.total if sales.total > 0 else 0) }}</h4>
+                            <h4>{{ (total_spent / sales.total if sales.total > 0 else 0)|format_currency }}</h4>
                             <p class="mb-0">Average Order</p>
                         </div>
                     </div>
@@ -146,7 +146,7 @@
                                         <td><code>{{ sale.receipt_number }}</code></td>
                                         <td>{{ sale.created_at.strftime('%m/%d/%Y %I:%M %p') }}</td>
                                         <td>{{ sale.sale_items|length }} items</td>
-                                        <td>${{ "%.2f"|format(sale.total_amount) }}</td>
+                                        <td>{{ sale.total_amount|format_currency }}</td>
                                         <td>
                                             <span class="badge bg-secondary">{{ sale.payment_method }}</span>
                                         </td>

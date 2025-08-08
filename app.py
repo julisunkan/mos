@@ -6,7 +6,7 @@ from flask_login import LoginManager, login_required
 from flask_wtf.csrf import CSRFProtect
 from sqlalchemy.orm import DeclarativeBase
 from werkzeug.middleware.proxy_fix import ProxyFix
-from utils import format_currency, get_default_currency
+from utils import format_currency, get_default_currency, get_currency_symbol
 
 # Configure logging
 logging.basicConfig(level=logging.DEBUG)
@@ -68,6 +68,10 @@ app.register_blueprint(inventory_bp, url_prefix='/inventory')
 app.register_blueprint(customers_bp, url_prefix='/customers')
 app.register_blueprint(reports_bp, url_prefix='/reports')
 app.register_blueprint(stores_bp, url_prefix='/stores')
+
+# Register template filters
+app.jinja_env.filters['format_currency'] = format_currency
+app.jinja_env.globals['get_currency_symbol'] = get_currency_symbol
 
 # Main dashboard route
 @app.route('/')
