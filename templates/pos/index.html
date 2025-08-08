@@ -164,8 +164,11 @@
                 <p id="saleTotal">Total: $0.00</p>
             </div>
             <div class="modal-footer">
+                <button type="button" class="btn btn-success" onclick="printReceipt()">
+                    <i class="fas fa-print me-2"></i>Print Receipt
+                </button>
                 <button type="button" class="btn btn-primary" onclick="downloadReceipt()">
-                    <i class="fas fa-download me-2"></i>Download Receipt
+                    <i class="fas fa-download me-2"></i>Download PDF
                 </button>
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
             </div>
@@ -427,7 +430,20 @@ async function processSale() {
     }
 }
 
-// Download receipt
+// Print receipt (opens in new window for printing)
+function printReceipt() {
+    if (!lastReceiptNumber) {
+        showAlert('No receipt available!', 'warning');
+        return;
+    }
+    
+    const printWindow = window.open(`/pos/receipt/${lastReceiptNumber}/print`, '_blank', 'width=400,height=600');
+    if (!printWindow) {
+        showAlert('Please allow popups to print receipts', 'warning');
+    }
+}
+
+// Download receipt PDF
 function downloadReceipt() {
     if (!lastReceiptNumber) {
         showAlert('No receipt available!', 'warning');
@@ -435,11 +451,13 @@ function downloadReceipt() {
     }
     
     const link = document.createElement('a');
-    link.href = `/pos/receipt/${lastReceiptNumber}`;
+    link.href = `/pos/receipt/${lastReceiptNumber}/download`;
     link.download = `receipt_${lastReceiptNumber}.pdf`;
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
+    
+    showAlert('Receipt PDF download started!', 'success');
 }
 
 // Close register

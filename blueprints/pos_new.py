@@ -227,7 +227,7 @@ def process_sale():
         db.session.rollback()
         return jsonify({'error': str(e)}), 500
 
-@pos_bp.route('/receipt/<receipt_number>')
+@pos_bp.route('/receipt/<receipt_number>/download')
 @login_required
 def download_receipt(receipt_number):
     """Generate and download PDF receipt"""
@@ -302,3 +302,154 @@ def download_receipt(receipt_number):
         return jsonify({'error': 'PDF generation not available'}), 500
     except Exception as e:
         return jsonify({'error': str(e)}), 500
+
+@pos_bp.route('/receipt/<receipt_number>/print')
+@login_required
+def print_receipt(receipt_number):
+    """Generate HTML receipt for printing"""
+    # Find the sale by receipt number
+    sale = Sale.query.filter_by(receipt_number=receipt_number).first()
+    if not sale:
+        return jsonify({'error': 'Receipt not found'}), 404
+    
+    # Generate HTML receipt content
+    html_content = f"""
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <title>Receipt {receipt_number}</title>
+        <style>
+            @media print {{
+                body {{ margin: 0; padding: 20px; font-family: monospace; }}
+                .no-print {{ display: none; }}
+            }}
+            body {{ 
+                font-family: monospace; 
+                width: 350px; 
+                margin: 0 auto; 
+                padding: 20px;
+                background: white;
+                color: black;
+            }}
+            .header {{ 
+                text-align: center; 
+                border-bottom: 2px dashed #000; 
+                padding-bottom: 15px; 
+                margin-bottom: 15px;
+            }}
+            .header h2 {{ margin: 0 0 10px 0; font-size: 18px; }}
+            .item {{ 
+                display: flex; 
+                justify-content: space-between; 
+                margin: 8px 0; 
+                padding: 2px 0;
+            }}
+            .item-name {{ flex: 1; }}
+            .item-qty {{ width: 60px; text-align: center; }}
+            .item-price {{ width: 80px; text-align: right; }}
+            .total-section {{ 
+                border-top: 2px dashed #000; 
+                padding-top: 15px; 
+                margin-top: 15px;
+            }}
+            .total-line {{ 
+                display: flex; 
+                justify-content: space-between; 
+                margin: 5px 0;
+                font-weight: bold;
+            }}
+            .footer {{ 
+                text-align: center; 
+                margin-top: 20px; 
+                font-size: 12px; 
+                border-top: 1px dashed #000;
+                padding-top: 15px;
+            }}
+            .print-btn {{
+                background: #007bff;
+                color: white;
+                border: none;
+                padding: 10px 20px;
+                border-radius: 5px;
+                cursor: pointer;
+                margin: 10px 5px;
+            }}
+            .print-controls {{
+                text-align: center;
+                margin: 20px 0;
+            }}
+        </style>
+    </head>
+    <body>
+        <div class="print-controls no-print">
+            <button class="print-btn" onclick="window.print()">🖨️ Print Receipt</button>
+            <button class="print-btn" onclick="window.close()">❌ Close</button>
+        </div>
+        
+        <div class="header">
+            <h2>Cloud POS & Inventory Manager</h2>
+            <div>Receipt: {receipt_number}</div>
+            <div>Date: {sale.created_at.strftime('%Y-%m-%d %H:%M:%S')}</div>
+            <div>Cashier: {sale.user.full_name}</div>
+            <div>Customer: {sale.customer.name if sale.customer else 'Walk-in'}</div>
+        </div>
+        
+        <div class="items">
+            <div class="item" style="font-weight: bold; border-bottom: 1px solid #000;">
+                <div class="item-name">Item</div>
+                <div class="item-qty">Qty</div>
+                <div class="item-price">Total</div>
+            </div>"""
+    
+    for item in sale.items:
+        html_content += f"""
+            <div class="item">
+                <div class="item-name">{item.product.name}</div>
+                <div class="item-qty">{item.quantity}</div>
+                <div class="item-price">${item.total_price:.2f}</div>
+            </div>"""
+    
+    html_content += f"""
+        </div>
+        
+        <div class="total-section">
+            <div class="total-line">
+                <span>Subtotal:</span>
+                <span>${sale.subtotal:.2f}</span>
+            </div>
+            <div class="total-line">
+                <span>Tax:</span>
+                <span>${sale.tax_amount:.2f}</span>
+            </div>"""
+    
+    if sale.discount_amount > 0:
+        html_content += f"""
+            <div class="total-line">
+                <span>Discount:</span>
+                <span>-${sale.discount_amount:.2f}</span>
+            </div>"""
+    
+    html_content += f"""
+            <div class="total-line" style="font-size: 16px; border-top: 1px solid #000; padding-top: 5px;">
+                <span>TOTAL:</span>
+                <span>${sale.total_amount:.2f}</span>
+            </div>
+            <div class="total-line">
+                <span>Payment:</span>
+                <span>{sale.payment_method}</span>
+            </div>
+        </div>
+        
+        <div class="footer">
+            <div>Thank you for your business!</div>
+            <div>Powered by Cloud POS</div>
+        </div>
+        
+        <script>
+            // Auto-print when page loads (optional)
+            // window.onload = function() {{ window.print(); }}
+        </script>
+    </body>
+    </html>"""
+    
+    return html_content
