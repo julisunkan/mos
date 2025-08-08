@@ -1,0 +1,74 @@
+{% extends "base.html" %}
+
+{% block title %}{{ title }} - Cloud POS{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h1 class="h3 mb-0">
+                    <i class="fas fa-cash-register me-2"></i>{{ title }}
+                </h1>
+                <a href="{{ url_for('pos.index') }}" class="btn btn-secondary">
+                    <i class="fas fa-arrow-left me-2"></i>Back to POS
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-body">
+                    <div class="text-center mb-4">
+                        <i class="fas fa-cash-register fa-3x text-primary mb-3"></i>
+                        <h4>Open Cash Register</h4>
+                        <p class="text-muted">Enter your opening cash amount to start your shift</p>
+                    </div>
+
+                    <form method="POST">
+                        {{ form.hidden_tag() }}
+                        
+                        <div class="mb-4">
+                            {{ form.opening_balance.label(class="form-label") }}
+                            <div class="input-group">
+                                <span class="input-group-text">$</span>
+                                {{ form.opening_balance(class="form-control form-control-lg text-center" + (" is-invalid" if form.opening_balance.errors else ""), step="0.01") }}
+                            </div>
+                            {% if form.opening_balance.errors %}
+                                <div class="invalid-feedback">
+                                    {% for error in form.opening_balance.errors %}
+                                        {{ error }}
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                            <div class="form-text">Count all cash in your drawer and enter the total amount</div>
+                        </div>
+                        
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-primary btn-lg">
+                                <i class="fas fa-unlock me-2"></i>Open Register
+                            </button>
+                            <a href="{{ url_for('dashboard') }}" class="btn btn-secondary">
+                                Cancel
+                            </a>
+                        </div>
+                    </form>
+
+                    <hr class="my-4">
+                    
+                    <div class="text-center">
+                        <h6 class="text-muted">Important Notes:</h6>
+                        <ul class="list-unstyled text-start small">
+                            <li><i class="fas fa-info-circle text-info me-2"></i>Count all bills and coins in your cash drawer</li>
+                            <li><i class="fas fa-info-circle text-info me-2"></i>This amount will be used to calculate your closing balance</li>
+                            <li><i class="fas fa-info-circle text-info me-2"></i>Make sure to keep your cash drawer secure</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

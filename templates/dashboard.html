@@ -1,0 +1,210 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard - Cloud POS{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-12">
+            <h1 class="h3 mb-4">
+                <i class="fas fa-tachometer-alt me-2"></i>Dashboard
+                <small class="text-muted">Welcome back, {{ current_user.first_name }}!</small>
+            </h1>
+        </div>
+    </div>
+
+    <!-- Statistics Cards -->
+    <div class="row mb-4">
+        <div class="col-md-3 mb-3">
+            <div class="card bg-primary text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h4>{{ total_products }}</h4>
+                            <p class="mb-0">Total Products</p>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="fas fa-box fa-2x"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-3 mb-3">
+            <div class="card bg-success text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h4>{{ total_customers }}</h4>
+                            <p class="mb-0">Total Customers</p>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="fas fa-users fa-2x"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-3 mb-3">
+            <div class="card bg-info text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h4>{{ total_sales }}</h4>
+                            <p class="mb-0">Total Sales</p>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="fas fa-chart-line fa-2x"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-3 mb-3">
+            <div class="card bg-warning text-dark">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h4>{{ low_stock_products|length }}</h4>
+                            <p class="mb-0">Low Stock Items</p>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="fas fa-exclamation-triangle fa-2x"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Recent Sales -->
+        <div class="col-md-6 mb-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-receipt me-2"></i>Recent Sales
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {% if recent_sales %}
+                        <div class="table-responsive">
+                            <table class="table table-sm">
+                                <thead>
+                                    <tr>
+                                        <th>Receipt #</th>
+                                        <th>Total</th>
+                                        <th>Date</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for sale in recent_sales %}
+                                    <tr>
+                                        <td>{{ sale.receipt_number }}</td>
+                                        <td>${{ "%.2f"|format(sale.total_amount) }}</td>
+                                        <td>{{ sale.created_at.strftime('%m/%d %I:%M %p') }}</td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                        <div class="text-center">
+                            <a href="{{ url_for('reports.sales') }}" class="btn btn-sm btn-outline-primary">
+                                View All Sales
+                            </a>
+                        </div>
+                    {% else %}
+                        <p class="text-muted text-center mb-0">No recent sales</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Low Stock Alert -->
+        <div class="col-md-6 mb-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-exclamation-triangle me-2 text-warning"></i>Low Stock Alert
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {% if low_stock_products %}
+                        <div class="table-responsive">
+                            <table class="table table-sm">
+                                <thead>
+                                    <tr>
+                                        <th>Product</th>
+                                        <th>Stock</th>
+                                        <th>Threshold</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for product in low_stock_products %}
+                                    <tr>
+                                        <td>{{ product.name }}</td>
+                                        <td>
+                                            <span class="badge bg-warning">{{ product.stock_quantity }}</span>
+                                        </td>
+                                        <td>{{ product.low_stock_threshold }}</td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                        <div class="text-center">
+                            <a href="{{ url_for('inventory.low_stock') }}" class="btn btn-sm btn-outline-warning">
+                                View All Low Stock
+                            </a>
+                        </div>
+                    {% else %}
+                        <p class="text-muted text-center mb-0">All products are well stocked</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-bolt me-2"></i>Quick Actions
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-3 mb-2">
+                            <a href="{{ url_for('pos.index') }}" class="btn btn-primary w-100">
+                                <i class="fas fa-cash-register me-2"></i>Start Sale
+                            </a>
+                        </div>
+                        <div class="col-md-3 mb-2">
+                            <a href="{{ url_for('inventory.new_product') }}" class="btn btn-success w-100">
+                                <i class="fas fa-plus me-2"></i>Add Product
+                            </a>
+                        </div>
+                        <div class="col-md-3 mb-2">
+                            <a href="{{ url_for('customers.new_customer') }}" class="btn btn-info w-100">
+                                <i class="fas fa-user-plus me-2"></i>Add Customer
+                            </a>
+                        </div>
+                        {% if current_user.has_permission('read_reports') or current_user.has_permission('all') %}
+                        <div class="col-md-3 mb-2">
+                            <a href="{{ url_for('reports.dashboard') }}" class="btn btn-warning w-100">
+                                <i class="fas fa-chart-bar me-2"></i>View Reports
+                            </a>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

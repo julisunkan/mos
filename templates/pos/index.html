@@ -1,0 +1,196 @@
+{% extends "base.html" %}
+
+{% block title %}Point of Sale - Cloud POS{% endblock %}
+
+{% block content %}
+<div class="container-fluid mt-4">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h1 class="h3 mb-0">
+                    <i class="fas fa-cash-register me-2"></i>Point of Sale
+                </h1>
+                <div>
+                    <span class="badge bg-success me-2">Register Open</span>
+                    <form method="POST" action="{{ url_for('pos.close_register') }}" class="d-inline">
+                        <button type="submit" class="btn btn-warning btn-sm" 
+                                onclick="return confirm('Are you sure you want to close the register?')">
+                            <i class="fas fa-lock me-1"></i>Close Register
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Product Selection -->
+        <div class="col-lg-8">
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-search me-2"></i>Product Search
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-8 mb-3">
+                            <input type="text" id="productSearch" class="form-control" 
+                                   placeholder="Search by name, SKU, or barcode...">
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <button type="button" class="btn btn-primary w-100" id="scanBarcode">
+                                <i class="fas fa-barcode me-2"></i>Scan Barcode
+                            </button>
+                        </div>
+                    </div>
+                    <div id="searchResults" class="row"></div>
+                </div>
+            </div>
+
+            <!-- Quick Access Products -->
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-boxes me-2"></i>Quick Access Products
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row" id="quickProducts">
+                        {% for product in products[:12] %}
+                        <div class="col-md-3 col-sm-4 col-6 mb-3">
+                            <div class="card product-card h-100" data-product-id="{{ product.id }}" 
+                                 data-product-name="{{ product.name }}" 
+                                 data-product-price="{{ product.selling_price }}"
+                                 data-product-stock="{{ product.stock_quantity }}"
+                                 data-product-tax="{{ product.tax_rate }}">
+                                <div class="card-body text-center p-2">
+                                    <h6 class="card-title mb-1">{{ product.name }}</h6>
+                                    <p class="card-text mb-1">
+                                        <strong>${{ "%.2f"|format(product.selling_price) }}</strong>
+                                    </p>
+                                    <small class="text-muted">Stock: {{ product.stock_quantity }}</small>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Cart and Checkout -->
+        <div class="col-lg-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">
+                        <i class="fas fa-shopping-cart me-2"></i>Current Sale
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <!-- Customer Selection -->
+                    <div class="mb-3">
+                        <label class="form-label">Customer</label>
+                        <select id="customerSelect" class="form-select">
+                            <option value="">Walk-in Customer</option>
+                            {% for customer in customers %}
+                            <option value="{{ customer.id }}">{{ customer.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <!-- Cart Items -->
+                    <div id="cartItems" class="mb-3" style="max-height: 300px; overflow-y: auto;">
+                        <div class="text-center text-muted py-4" id="emptyCart">
+                            <i class="fas fa-shopping-cart fa-2x mb-2"></i>
+                            <p>No items in cart</p>
+                        </div>
+                    </div>
+
+                    <!-- Totals -->
+                    <div class="border-top pt-3">
+                        <div class="d-flex justify-content-between mb-2">
+                            <span>Subtotal:</span>
+                            <span id="subtotal">$0.00</span>
+                        </div>
+                        <div class="d-flex justify-content-between mb-2">
+                            <span>Tax:</span>
+                            <span id="taxAmount">$0.00</span>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Discount:</label>
+                            <div class="input-group">
+                                <span class="input-group-text">$</span>
+                                <input type="number" id="discount" class="form-control" 
+                                       value="0" min="0" step="0.01">
+                            </div>
+                        </div>
+                        <div class="d-flex justify-content-between mb-3">
+                            <strong>Total:</strong>
+                            <strong id="total">$0.00</strong>
+                        </div>
+                    </div>
+
+                    <!-- Payment Method -->
+                    <div class="mb-3">
+                        <label class="form-label">Payment Method</label>
+                        <select id="paymentMethod" class="form-select">
+                            <option value="Cash">Cash</option>
+                            <option value="Card">Card</option>
+                            <option value="Bank Transfer">Bank Transfer</option>
+                            <option value="Mobile Money">Mobile Money</option>
+                        </select>
+                    </div>
+
+                    <!-- Notes -->
+                    <div class="mb-3">
+                        <label class="form-label">Notes</label>
+                        <textarea id="saleNotes" class="form-control" rows="2" 
+                                  placeholder="Optional notes..."></textarea>
+                    </div>
+
+                    <!-- Action Buttons -->
+                    <div class="d-grid gap-2">
+                        <button type="button" id="processSale" class="btn btn-success" disabled>
+                            <i class="fas fa-check me-2"></i>Process Sale
+                        </button>
+                        <button type="button" id="holdSale" class="btn btn-warning">
+                            <i class="fas fa-pause me-2"></i>Hold Sale
+                        </button>
+                        <button type="button" id="clearCart" class="btn btn-secondary">
+                            <i class="fas fa-trash me-2"></i>Clear Cart
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Sale Success Modal -->
+<div class="modal fade" id="saleSuccessModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Sale Completed</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body text-center">
+                <i class="fas fa-check-circle fa-3x text-success mb-3"></i>
+                <h5 id="receiptNumber">Receipt: #12345</h5>
+                <p id="saleTotal">Total: $0.00</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-primary" id="printReceipt">
+                    <i class="fas fa-print me-2"></i>Print Receipt
+                </button>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/pos.js') }}"></script>
+{% endblock %}

@@ -1,0 +1,211 @@
+{% extends "base.html" %}
+
+{% block title %}{{ customer.name }} - Customer Details - Cloud POS{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h1 class="h3 mb-0">
+                    <i class="fas fa-user me-2"></i>{{ customer.name }}
+                </h1>
+                <div>
+                    {% if current_user.has_permission('write_customers') or current_user.has_permission('all') %}
+                    <a href="{{ url_for('customers.edit_customer', id=customer.id) }}" class="btn btn-primary me-2">
+                        <i class="fas fa-edit me-2"></i>Edit Customer
+                    </a>
+                    {% endif %}
+                    <a href="{{ url_for('customers.index') }}" class="btn btn-secondary">
+                        <i class="fas fa-arrow-left me-2"></i>Back to Customers
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Customer Information -->
+        <div class="col-md-4 mb-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">Customer Information</h5>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <strong>Name:</strong><br>
+                        {{ customer.name }}
+                    </div>
+                    
+                    {% if customer.email %}
+                    <div class="mb-3">
+                        <strong>Email:</strong><br>
+                        <a href="mailto:{{ customer.email }}">{{ customer.email }}</a>
+                    </div>
+                    {% endif %}
+                    
+                    {% if customer.phone %}
+                    <div class="mb-3">
+                        <strong>Phone:</strong><br>
+                        <a href="tel:{{ customer.phone }}">{{ customer.phone }}</a>
+                    </div>
+                    {% endif %}
+                    
+                    {% if customer.address %}
+                    <div class="mb-3">
+                        <strong>Address:</strong><br>
+                        {{ customer.address }}
+                    </div>
+                    {% endif %}
+                    
+                    <div class="mb-3">
+                        <strong>Customer Type:</strong><br>
+                        <span class="badge bg-{{ 'warning' if customer.customer_type == 'VIP' else 'info' if customer.customer_type == 'Wholesale' else 'secondary' }}">
+                            {{ customer.customer_type }}
+                        </span>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <strong>Credit Limit:</strong><br>
+                        ${{ "%.2f"|format(customer.credit_limit) }}
+                    </div>
+                    
+                    <div class="mb-3">
+                        <strong>Current Balance:</strong><br>
+                        <span class="badge bg-{{ 'danger' if customer.current_balance > 0 else 'success' }}">
+                            ${{ "%.2f"|format(customer.current_balance) }}
+                        </span>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <strong>Status:</strong><br>
+                        <span class="badge bg-{{ 'success' if customer.is_active else 'secondary' }}">
+                            {{ 'Active' if customer.is_active else 'Inactive' }}
+                        </span>
+                    </div>
+                    
+                    <div class="mb-0">
+                        <strong>Member Since:</strong><br>
+                        {{ customer.created_at.strftime('%B %d, %Y') }}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Sales Statistics -->
+        <div class="col-md-8">
+            <div class="row mb-4">
+                <div class="col-md-4">
+                    <div class="card bg-primary text-white">
+                        <div class="card-body text-center">
+                            <h4>{{ sales.total }}</h4>
+                            <p class="mb-0">Total Orders</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card bg-success text-white">
+                        <div class="card-body text-center">
+                            <h4>${{ "%.2f"|format(total_spent) }}</h4>
+                            <p class="mb-0">Total Spent</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card bg-info text-white">
+                        <div class="card-body text-center">
+                            <h4>${{ "%.2f"|format(total_spent / sales.total if sales.total > 0 else 0) }}</h4>
+                            <p class="mb-0">Average Order</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Sales History -->
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">Sales History</h5>
+                </div>
+                <div class="card-body">
+                    {% if sales.items %}
+                        <div class="table-responsive">
+                            <table class="table table-sm">
+                                <thead>
+                                    <tr>
+                                        <th>Receipt #</th>
+                                        <th>Date</th>
+                                        <th>Items</th>
+                                        <th>Total</th>
+                                        <th>Payment</th>
+                                        <th>Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for sale in sales.items %}
+                                    <tr>
+                                        <td><code>{{ sale.receipt_number }}</code></td>
+                                        <td>{{ sale.created_at.strftime('%m/%d/%Y %I:%M %p') }}</td>
+                                        <td>{{ sale.sale_items|length }} items</td>
+                                        <td>${{ "%.2f"|format(sale.total_amount) }}</td>
+                                        <td>
+                                            <span class="badge bg-secondary">{{ sale.payment_method }}</span>
+                                        </td>
+                                        <td>
+                                            <span class="badge bg-{{ 'success' if sale.payment_status == 'Paid' else 'warning' }}">
+                                                {{ sale.payment_status }}
+                                            </span>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <!-- Pagination -->
+                        {% if sales.pages > 1 %}
+                        <nav>
+                            <ul class="pagination justify-content-center">
+                                {% if sales.has_prev %}
+                                    <li class="page-item">
+                                        <a class="page-link" href="{{ url_for('customers.view_customer', id=customer.id, page=sales.prev_num) }}">Previous</a>
+                                    </li>
+                                {% endif %}
+                                
+                                {% for page_num in sales.iter_pages() %}
+                                    {% if page_num %}
+                                        {% if page_num != sales.page %}
+                                            <li class="page-item">
+                                                <a class="page-link" href="{{ url_for('customers.view_customer', id=customer.id, page=page_num) }}">{{ page_num }}</a>
+                                            </li>
+                                        {% else %}
+                                            <li class="page-item active">
+                                                <span class="page-link">{{ page_num }}</span>
+                                            </li>
+                                        {% endif %}
+                                    {% else %}
+                                        <li class="page-item disabled">
+                                            <span class="page-link">...</span>
+                                        </li>
+                                    {% endif %}
+                                {% endfor %}
+                                
+                                {% if sales.has_next %}
+                                    <li class="page-item">
+                                        <a class="page-link" href="{{ url_for('customers.view_customer', id=customer.id, page=sales.next_num) }}">Next</a>
+                                    </li>
+                                {% endif %}
+                            </ul>
+                        </nav>
+                        {% endif %}
+                    {% else %}
+                        <div class="text-center py-4">
+                            <i class="fas fa-receipt fa-2x text-muted mb-3"></i>
+                            <p class="text-muted">No sales history found for this customer.</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en" data-bs-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Cloud POS & Inventory Manager{% endblock %}</title>
+    
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.replit.com/agent/bootstrap-agent-dark-theme.min.css" rel="stylesheet">
+    
+    <!-- Font Awesome -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <!-- Custom CSS -->
+    <link href="{{ url_for('static', filename='css/custom.css') }}" rel="stylesheet">
+</head>
+<body>
+    {% if current_user.is_authenticated %}
+    <!-- Navigation -->
+    <nav class="navbar navbar-dark bg-dark fixed-top">
+        <div class="container-fluid">
+            <button class="navbar-toggler" type="button" data-bs-toggle="offcanvas" data-bs-target="#sidebar">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <a class="navbar-brand" href="{{ url_for('dashboard') }}">
+                <i class="fas fa-store me-2"></i>Cloud POS
+            </a>
+            <div class="navbar-nav ms-auto">
+                <div class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle text-white" href="#" role="button" data-bs-toggle="dropdown">
+                        <i class="fas fa-user me-1"></i>{{ current_user.full_name }}
+                    </a>
+                    <ul class="dropdown-menu dropdown-menu-end">
+                        <li><span class="dropdown-item-text">Role: {{ current_user.role }}</span></li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li><a class="dropdown-item" href="{{ url_for('auth.logout') }}">
+                            <i class="fas fa-sign-out-alt me-2"></i>Logout
+                        </a></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Sidebar -->
+    <div class="offcanvas offcanvas-start bg-dark text-white" tabindex="-1" id="sidebar">
+        <div class="offcanvas-header">
+            <h5 class="offcanvas-title">Menu</h5>
+            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="offcanvas"></button>
+        </div>
+        <div class="offcanvas-body p-0">
+            <nav class="nav flex-column">
+                <a class="nav-link text-white" href="{{ url_for('dashboard') }}">
+                    <i class="fas fa-tachometer-alt me-2"></i>Dashboard
+                </a>
+                
+                <a class="nav-link text-white" href="{{ url_for('pos.index') }}">
+                    <i class="fas fa-cash-register me-2"></i>Point of Sale
+                </a>
+                
+                <div class="nav-item">
+                    <a class="nav-link text-white" data-bs-toggle="collapse" href="#inventoryMenu">
+                        <i class="fas fa-boxes me-2"></i>Inventory
+                        <i class="fas fa-chevron-down ms-auto"></i>
+                    </a>
+                    <div class="collapse" id="inventoryMenu">
+                        <nav class="nav flex-column ms-3">
+                            <a class="nav-link text-light" href="{{ url_for('inventory.products') }}">Products</a>
+                            {% if current_user.has_permission('all') %}
+                            <a class="nav-link text-light" href="{{ url_for('admin.categories') }}">Categories</a>
+                            {% endif %}
+                            <a class="nav-link text-light" href="{{ url_for('inventory.low_stock') }}">Low Stock</a>
+                        </nav>
+                    </div>
+                </div>
+                
+                <a class="nav-link text-white" href="{{ url_for('customers.index') }}">
+                    <i class="fas fa-users me-2"></i>Customers
+                </a>
+                
+                {% if current_user.has_permission('read_reports') or current_user.has_permission('all') %}
+                <div class="nav-item">
+                    <a class="nav-link text-white" data-bs-toggle="collapse" href="#reportsMenu">
+                        <i class="fas fa-chart-bar me-2"></i>Reports
+                        <i class="fas fa-chevron-down ms-auto"></i>
+                    </a>
+                    <div class="collapse" id="reportsMenu">
+                        <nav class="nav flex-column ms-3">
+                            <a class="nav-link text-light" href="{{ url_for('reports.dashboard') }}">Analytics</a>
+                            <a class="nav-link text-light" href="{{ url_for('reports.sales') }}">Sales Report</a>
+                        </nav>
+                    </div>
+                </div>
+                {% endif %}
+                
+                {% if current_user.has_permission('all') %}
+                <div class="nav-item">
+                    <a class="nav-link text-white" data-bs-toggle="collapse" href="#adminMenu">
+                        <i class="fas fa-cog me-2"></i>Administration
+                        <i class="fas fa-chevron-down ms-auto"></i>
+                    </a>
+                    <div class="collapse" id="adminMenu">
+                        <nav class="nav flex-column ms-3">
+                            <a class="nav-link text-light" href="{{ url_for('admin.users') }}">Users</a>
+                        </nav>
+                    </div>
+                </div>
+                {% endif %}
+            </nav>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="main-content">
+        {% endif %}
+        
+        <!-- Flash Messages -->
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                <div class="container mt-3">
+                    {% for category, message in messages %}
+                        <div class="alert alert-{{ 'danger' if category == 'error' else category }} alert-dismissible fade show" role="alert">
+                            {{ message }}
+                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        {% endwith %}
+        
+        <!-- Page Content -->
+        {% block content %}{% endblock %}
+        
+        {% if current_user.is_authenticated %}
+    </div>
+    {% endif %}
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <!-- Custom JS -->
+    <script src="{{ url_for('static', filename='js/dashboard.js') }}"></script>
+    
+    {% block scripts %}{% endblock %}
+</body>
+</html>

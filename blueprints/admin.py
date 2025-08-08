@@ -1,0 +1,177 @@
+from flask import Blueprint, render_template, redirect, url_for, flash, request, abort
+from flask_login import login_required, current_user
+from forms import UserForm, CategoryForm
+from models import User, Category
+from app import db
+from utils import generate_sku
+
+admin_bp = Blueprint('admin', __name__)
+
+def admin_required(f):
+    """Decorator to require admin role"""
+    def decorated_function(*args, **kwargs):
+        if not current_user.is_authenticated or not current_user.has_permission('all'):
+            abort(403)
+        return f(*args, **kwargs)
+    decorated_function.__name__ = f.__name__
+    return decorated_function
+
+@admin_bp.route('/users')
+@login_required
+@admin_required
+def users():
+    page = request.args.get('page', 1, type=int)
+    users = User.query.paginate(
+        page=page, per_page=20, error_out=False
+    )
+    return render_template('admin/users.html', users=users)
+
+@admin_bp.route('/users/new', methods=['GET', 'POST'])
+@login_required
+@admin_required
+def new_user():
+    form = UserForm()
+    if form.validate_on_submit():
+        user = User(
+            username=form.username.data,
+            email=form.email.data,
+            first_name=form.first_name.data,
+            last_name=form.last_name.data,
+            role=form.role.data,
+            is_active=form.is_active.data
+        )
+        user.set_password(form.password.data)
+        
+        try:
+            db.session.add(user)
+            db.session.commit()
+            flash(f'User {user.username} created successfully!', 'success')
+            return redirect(url_for('admin.users'))
+        except Exception as e:
+            db.session.rollback()
+            flash(f'Error creating user: {str(e)}', 'error')
+    
+    return render_template('admin/user_form.html', form=form, title='New User')
+
+@admin_bp.route('/users/<int:id>/edit', methods=['GET', 'POST'])
+@login_required
+@admin_required
+def edit_user(id):
+    user = User.query.get_or_404(id)
+    form = UserForm(user=user, obj=user)
+    
+    if form.validate_on_submit():
+        user.username = form.username.data
+        user.email = form.email.data
+        user.first_name = form.first_name.data
+        user.last_name = form.last_name.data
+        user.role = form.role.data
+        user.is_active = form.is_active.data
+        
+        if form.password.data:
+            user.set_password(form.password.data)
+        
+        try:
+            db.session.commit()
+            flash(f'User {user.username} updated successfully!', 'success')
+            return redirect(url_for('admin.users'))
+        except Exception as e:
+            db.session.rollback()
+            flash(f'Error updating user: {str(e)}', 'error')
+    
+    return render_template('admin/user_form.html', form=form, title='Edit User', user=user)
+
+@admin_bp.route('/users/<int:id>/delete', methods=['POST'])
+@login_required
+@admin_required
+def delete_user(id):
+    user = User.query.get_or_404(id)
+    
+    if user.id == current_user.id:
+        flash('You cannot delete your own account.', 'error')
+        return redirect(url_for('admin.users'))
+    
+    try:
+        db.session.delete(user)
+        db.session.commit()
+        flash(f'User {user.username} deleted successfully!', 'success')
+    except Exception as e:
+        db.session.rollback()
+        flash(f'Error deleting user: {str(e)}', 'error')
+    
+    return redirect(url_for('admin.users'))
+
+@admin_bp.route('/categories')
+@login_required
+@admin_required
+def categories():
+    page = request.args.get('page', 1, type=int)
+    categories = Category.query.paginate(
+        page=page, per_page=20, error_out=False
+    )
+    return render_template('inventory/categories.html', categories=categories)
+
+@admin_bp.route('/categories/new', methods=['GET', 'POST'])
+@login_required
+@admin_required
+def new_category():
+    form = CategoryForm()
+    if form.validate_on_submit():
+        category = Category(
+            name=form.name.data,
+            description=form.description.data,
+            is_active=form.is_active.data
+        )
+        
+        try:
+            db.session.add(category)
+            db.session.commit()
+            flash(f'Category {category.name} created successfully!', 'success')
+            return redirect(url_for('admin.categories'))
+        except Exception as e:
+            db.session.rollback()
+            flash(f'Error creating category: {str(e)}', 'error')
+    
+    return render_template('inventory/category_form.html', form=form, title='New Category')
+
+@admin_bp.route('/categories/<int:id>/edit', methods=['GET', 'POST'])
+@login_required
+@admin_required
+def edit_category(id):
+    category = Category.query.get_or_404(id)
+    form = CategoryForm(category=category, obj=category)
+    
+    if form.validate_on_submit():
+        category.name = form.name.data
+        category.description = form.description.data
+        category.is_active = form.is_active.data
+        
+        try:
+            db.session.commit()
+            flash(f'Category {category.name} updated successfully!', 'success')
+            return redirect(url_for('admin.categories'))
+        except Exception as e:
+            db.session.rollback()
+            flash(f'Error updating category: {str(e)}', 'error')
+    
+    return render_template('inventory/category_form.html', form=form, title='Edit Category', category=category)
+
+@admin_bp.route('/categories/<int:id>/delete', methods=['POST'])
+@login_required
+@admin_required
+def delete_category(id):
+    category = Category.query.get_or_404(id)
+    
+    if category.products:
+        flash('Cannot delete category with existing products.', 'error')
+        return redirect(url_for('admin.categories'))
+    
+    try:
+        db.session.delete(category)
+        db.session.commit()
+        flash(f'Category {category.name} deleted successfully!', 'success')
+    except Exception as e:
+        db.session.rollback()
+        flash(f'Error deleting category: {str(e)}', 'error')
+    
+    return redirect(url_for('admin.categories'))

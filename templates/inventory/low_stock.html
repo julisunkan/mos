@@ -1,0 +1,119 @@
+{% extends "base.html" %}
+
+{% block title %}Low Stock Alert - Cloud POS{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h1 class="h3 mb-0">
+                    <i class="fas fa-exclamation-triangle me-2 text-warning"></i>Low Stock Alert
+                </h1>
+                <a href="{{ url_for('inventory.products') }}" class="btn btn-secondary">
+                    <i class="fas fa-arrow-left me-2"></i>Back to Products
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-body">
+                    {% if products %}
+                        <div class="alert alert-warning">
+                            <i class="fas fa-exclamation-triangle me-2"></i>
+                            <strong>{{ products|length }} product(s)</strong> are running low on stock and need attention.
+                        </div>
+
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>Product</th>
+                                        <th>SKU</th>
+                                        <th>Category</th>
+                                        <th>Current Stock</th>
+                                        <th>Threshold</th>
+                                        <th>Selling Price</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for product in products %}
+                                    <tr class="table-warning">
+                                        <td>
+                                            <strong>{{ product.name }}</strong>
+                                            {% if product.stock_quantity == 0 %}
+                                                <br><small class="text-danger">
+                                                    <i class="fas fa-times-circle"></i> Out of Stock
+                                                </small>
+                                            {% endif %}
+                                        </td>
+                                        <td><code>{{ product.sku }}</code></td>
+                                        <td>{{ product.category.name }}</td>
+                                        <td>
+                                            <span class="badge bg-{{ 'danger' if product.stock_quantity == 0 else 'warning' }}">
+                                                {{ product.stock_quantity }}
+                                            </span>
+                                        </td>
+                                        <td>{{ product.low_stock_threshold }}</td>
+                                        <td>${{ "%.2f"|format(product.selling_price) }}</td>
+                                        <td>
+                                            {% if current_user.has_permission('write_inventory') or current_user.has_permission('all') %}
+                                            <a href="{{ url_for('inventory.edit_product', id=product.id) }}" 
+                                               class="btn btn-sm btn-primary">
+                                                <i class="fas fa-plus me-1"></i>Restock
+                                            </a>
+                                            {% else %}
+                                            <span class="text-muted">No permission</span>
+                                            {% endif %}
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <div class="mt-4">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <h6>Stock Status Legend:</h6>
+                                    <ul class="list-unstyled">
+                                        <li><span class="badge bg-danger me-2">0</span> Out of Stock</li>
+                                        <li><span class="badge bg-warning me-2">1-{{ products[0].low_stock_threshold if products else 10 }}</span> Low Stock</li>
+                                        <li><span class="badge bg-success me-2">{{ (products[0].low_stock_threshold + 1) if products else 11 }}+</span> Normal Stock</li>
+                                    </ul>
+                                </div>
+                                <div class="col-md-6">
+                                    <h6>Quick Actions:</h6>
+                                    <div class="d-grid gap-2">
+                                        {% if current_user.has_permission('write_inventory') or current_user.has_permission('all') %}
+                                        <a href="{{ url_for('inventory.new_product') }}" class="btn btn-success btn-sm">
+                                            <i class="fas fa-plus me-2"></i>Add New Product
+                                        </a>
+                                        {% endif %}
+                                        <a href="{{ url_for('inventory.products') }}" class="btn btn-info btn-sm">
+                                            <i class="fas fa-boxes me-2"></i>View All Products
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    {% else %}
+                        <div class="text-center py-5">
+                            <i class="fas fa-check-circle fa-3x text-success mb-3"></i>
+                            <h5>All Products Well Stocked!</h5>
+                            <p class="text-muted">No products are currently below their low stock threshold.</p>
+                            <a href="{{ url_for('inventory.products') }}" class="btn btn-primary">
+                                <i class="fas fa-boxes me-2"></i>View All Products
+                            </a>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
