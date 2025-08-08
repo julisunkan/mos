@@ -222,7 +222,7 @@
                                 <button type="button" class="btn btn-success" onclick="exportToCSV()">
                                     <i class="fas fa-file-csv me-2"></i>Export to CSV
                                 </button>
-                                <button type="button" class="btn btn-info" onclick="window.print()">
+                                <button type="button" class="btn btn-info" onclick="printFormattedReport()">
                                     <i class="fas fa-print me-2"></i>Print Report
                                 </button>
                             </div>
@@ -394,6 +394,27 @@ function generateSaleDetailsHTML(sale) {
             <div class="alert alert-info">${sale.notes}</div>
         ` : ''}
     `;
+}
+
+// Print formatted report
+function printFormattedReport() {
+    // Get current filter values
+    const startDate = document.querySelector('input[name="start_date"]').value;
+    const endDate = document.querySelector('input[name="end_date"]').value;
+    const userId = document.querySelector('select[name="user_id"]').value;
+    
+    // Build query parameters
+    const params = new URLSearchParams(window.location.search);
+    
+    // Open print-formatted report in new window
+    const printUrl = `/reports/sales/print?${params.toString()}`;
+    const printWindow = window.open(printUrl, '_blank', 'width=800,height=600');
+    
+    if (!printWindow) {
+        showAlert('Please allow popups to print reports', 'warning');
+    } else {
+        showAlert('Opening print-formatted report...', 'success');
+    }
 }
 
 // Show alert function

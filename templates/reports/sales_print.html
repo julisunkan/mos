@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sales Report - Cloud POS</title>
+    <style>
+        @media print {
+            body {
+                margin: 0;
+                padding: 20px;
+                font-family: Arial, sans-serif;
+                font-size: 12px;
+                line-height: 1.4;
+            }
+            
+            .no-print {
+                display: none !important;
+            }
+            
+            table {
+                page-break-inside: auto;
+            }
+            
+            tr {
+                page-break-inside: avoid;
+                page-break-after: auto;
+            }
+            
+            .page-break {
+                page-break-before: always;
+            }
+        }
+        
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background: white;
+            color: black;
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            border-bottom: 2px solid #333;
+            padding-bottom: 20px;
+        }
+        
+        .company-name {
+            font-size: 24px;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+        
+        .report-title {
+            font-size: 18px;
+            color: #666;
+            margin-bottom: 10px;
+        }
+        
+        .report-info {
+            font-size: 12px;
+            color: #888;
+        }
+        
+        .summary-section {
+            margin: 20px 0;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 5px;
+        }
+        
+        .summary-title {
+            font-size: 16px;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+        
+        .summary-stats {
+            display: flex;
+            justify-content: space-between;
+            flex-wrap: wrap;
+        }
+        
+        .stat-item {
+            text-align: center;
+            margin: 5px;
+        }
+        
+        .stat-value {
+            font-size: 20px;
+            font-weight: bold;
+            color: #2563eb;
+        }
+        
+        .stat-label {
+            font-size: 12px;
+            color: #666;
+        }
+        
+        .filters-section {
+            margin: 20px 0;
+            padding: 10px;
+            background: #e9ecef;
+            border-radius: 5px;
+        }
+        
+        .filters-title {
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+        }
+        
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+        
+        th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+            font-size: 11px;
+        }
+        
+        td {
+            font-size: 10px;
+        }
+        
+        .text-right {
+            text-align: right;
+        }
+        
+        .text-center {
+            text-align: center;
+        }
+        
+        .total-row {
+            background-color: #e9ecef;
+            font-weight: bold;
+        }
+        
+        .footer {
+            margin-top: 30px;
+            text-align: center;
+            font-size: 10px;
+            color: #888;
+            border-top: 1px solid #ddd;
+            padding-top: 10px;
+        }
+        
+        .print-button {
+            background: #2563eb;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 20px 0;
+        }
+        
+        .print-button:hover {
+            background: #1d4ed8;
+        }
+    </style>
+</head>
+<body>
+    <!-- Print Button (hidden when printing) -->
+    <div class="no-print">
+        <button class="print-button" onclick="window.print()">
+            🖨️ Print This Report
+        </button>
+        <button class="print-button" onclick="window.close()" style="background: #6b7280;">
+            ✕ Close
+        </button>
+    </div>
+
+    <!-- Report Header -->
+    <div class="header">
+        <div class="company-name">Cloud POS & Inventory Manager</div>
+        <div class="report-title">Sales Report</div>
+        <div class="report-info">
+            Generated on {{ current_time.strftime('%B %d, %Y at %I:%M %p') }}
+        </div>
+    </div>
+
+    <!-- Applied Filters -->
+    {% if filters.start_date or filters.end_date or filters.user_name != 'All Users' %}
+    <div class="filters-section">
+        <div class="filters-title">Applied Filters:</div>
+        {% if filters.start_date %}
+            <div>Start Date: {{ filters.start_date }}</div>
+        {% endif %}
+        {% if filters.end_date %}
+            <div>End Date: {{ filters.end_date }}</div>
+        {% endif %}
+        {% if filters.user_name != 'All Users' %}
+            <div>Sales Person: {{ filters.user_name }}</div>
+        {% endif %}
+    </div>
+    {% endif %}
+
+    <!-- Summary Statistics -->
+    <div class="summary-section">
+        <div class="summary-title">Report Summary</div>
+        <div class="summary-stats">
+            <div class="stat-item">
+                <div class="stat-value">${{ "%.2f"|format(total_amount) }}</div>
+                <div class="stat-label">Total Revenue</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-value">{{ total_transactions }}</div>
+                <div class="stat-label">Total Transactions</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-value">${{ "%.2f"|format(avg_sale) }}</div>
+                <div class="stat-label">Average Sale</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Sales Data Table -->
+    {% if sales %}
+    <table>
+        <thead>
+            <tr>
+                <th>Receipt #</th>
+                <th>Date/Time</th>
+                <th>Customer</th>
+                <th>Sales Person</th>
+                <th>Items</th>
+                <th>Payment</th>
+                <th class="text-right">Subtotal</th>
+                <th class="text-right">Tax</th>
+                <th class="text-right">Discount</th>
+                <th class="text-right">Total</th>
+                <th class="text-center">Status</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for sale in sales %}
+            <tr>
+                <td>{{ sale.receipt_number }}</td>
+                <td>{{ sale.created_at.strftime('%m/%d/%Y %I:%M %p') }}</td>
+                <td>{{ sale.customer.name if sale.customer else 'Walk-in' }}</td>
+                <td>{{ sale.user.full_name }}</td>
+                <td class="text-center">{{ sale.sale_items|length }}</td>
+                <td>{{ sale.payment_method }}</td>
+                <td class="text-right">${{ "%.2f"|format(sale.subtotal) }}</td>
+                <td class="text-right">${{ "%.2f"|format(sale.tax_amount) }}</td>
+                <td class="text-right">
+                    {% if sale.discount_amount > 0 %}
+                        -${{ "%.2f"|format(sale.discount_amount) }}
+                    {% else %}
+                        -
+                    {% endif %}
+                </td>
+                <td class="text-right"><strong>${{ "%.2f"|format(sale.total_amount) }}</strong></td>
+                <td class="text-center">{{ sale.payment_status or 'Paid' }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+        <tfoot>
+            <tr class="total-row">
+                <th colspan="6">TOTALS:</th>
+                <th class="text-right">${{ "%.2f"|format(sales | sum(attribute='subtotal')) }}</th>
+                <th class="text-right">${{ "%.2f"|format(sales | sum(attribute='tax_amount')) }}</th>
+                <th class="text-right">-${{ "%.2f"|format(sales | sum(attribute='discount_amount')) }}</th>
+                <th class="text-right"><strong>${{ "%.2f"|format(sales | sum(attribute='total_amount')) }}</strong></th>
+                <th></th>
+            </tr>
+        </tfoot>
+    </table>
+    {% else %}
+    <div style="text-align: center; padding: 40px; color: #666;">
+        <h3>No sales found</h3>
+        <p>No sales records match the selected criteria.</p>
+    </div>
+    {% endif %}
+
+    <!-- Report Footer -->
+    <div class="footer">
+        <div>Cloud POS & Inventory Manager - Sales Report</div>
+        <div>Page printed on {{ current_time.strftime('%B %d, %Y at %I:%M %p') }}</div>
+    </div>
+
+    <script>
+        // Auto-focus print dialog when page loads (but not when already printing)
+        window.addEventListener('load', function() {
+            // Small delay to ensure page is fully rendered
+            setTimeout(function() {
+                if (!window.matchMedia('print').matches) {
+                    // Only auto-print if not already in print mode
+                    window.print();
+                }
+            }, 500);
+        });
+    </script>
+</body>
+</html>

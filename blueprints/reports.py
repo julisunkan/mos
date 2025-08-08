@@ -153,3 +153,57 @@ def sale_details(sale_id):
         })
     
     return jsonify(sale_data)
+
+@reports_bp.route('/sales/print')
+@login_required
+def sales_print():
+    """Generate print-formatted sales report"""
+    if not current_user.has_permission('read_reports') and not current_user.has_permission('all'):
+        flash('You do not have permission to view reports.', 'error')
+        return redirect(url_for('dashboard'))
+    
+    # Get filter parameters
+    start_date = request.args.get('start_date')
+    end_date = request.args.get('end_date')
+    user_id = request.args.get('user_id', type=int)
+    
+    query = Sale.query
+    
+    # Apply date filters
+    if start_date:
+        start_date = datetime.strptime(start_date, '%Y-%m-%d')
+        query = query.filter(Sale.created_at >= start_date)
+    
+    if end_date:
+        end_date = datetime.strptime(end_date, '%Y-%m-%d')
+        # Add 1 day to include the entire end date
+        end_date = end_date + timedelta(days=1)
+        query = query.filter(Sale.created_at < end_date)
+    
+    if user_id:
+        query = query.filter_by(user_id=user_id)
+    
+    # Get all sales for the report (no pagination for print)
+    sales = query.order_by(Sale.created_at.desc()).all()
+    
+    # Get users for display
+    users = User.query.filter_by(is_active=True).all()
+    user_dict = {u.id: u.full_name for u in users}
+    
+    # Calculate totals
+    total_amount = sum(sale.total_amount for sale in sales)
+    total_transactions = len(sales)
+    avg_sale = total_amount / total_transactions if total_transactions > 0 else 0
+    
+    return render_template('reports/sales_print.html',
+                         sales=sales,
+                         total_amount=total_amount,
+                         total_transactions=total_transactions,
+                         avg_sale=avg_sale,
+                         current_time=datetime.now(),
+                         filters={
+                             'start_date': start_date.strftime('%Y-%m-%d') if start_date else '',
+                             'end_date': (end_date - timedelta(days=1)).strftime('%Y-%m-%d') if end_date else '',
+                             'user_id': user_id,
+                             'user_name': user_dict.get(user_id, 'All Users') if user_id else 'All Users'
+                         })
