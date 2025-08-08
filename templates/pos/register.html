@@ -31,7 +31,7 @@
                         <div class="mb-4">
                             <label for="opening_balance" class="form-label">Opening Balance</label>
                             <div class="input-group">
-                                <span class="input-group-text">$</span>
+                                <span class="input-group-text">{{ get_currency_symbol() }}</span>
                                 <input type="number" name="opening_balance" id="opening_balance" 
                                        class="form-control form-control-lg text-center" 
                                        step="0.01" min="0" value="0.00" required>

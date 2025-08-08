@@ -42,7 +42,7 @@
                                     <td>{{ sale.receipt_number }}</td>
                                     <td>{{ sale.created_at.strftime('%m/%d/%Y %H:%M') }}</td>
                                     <td>{{ sale.customer.name if sale.customer else 'Walk-in' }}</td>
-                                    <td>${{ "%.2f"|format(sale.total_amount) }}</td>
+                                    <td>{{ sale.total_amount|format_currency }}</td>
                                     <td>{{ sale.payment_method }}</td>
                                     <td>
                                         <button class="btn btn-sm btn-outline-danger" onclick="initiateReturn({{ sale.id }})">
