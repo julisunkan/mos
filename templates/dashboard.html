@@ -1,103 +1,101 @@
 {% extends "base.html" %}
 
 {% block title %}Dashboard - Cloud POS{% endblock %}
+{% block mobile_title %}Dashboard{% endblock %}
 
 {% block content %}
-<div class="container mt-4">
-    <div class="row">
-        <div class="col-12">
-            <h1 class="h3 mb-4">
-                <i class="fas fa-tachometer-alt me-2"></i>Dashboard
-                <small class="text-muted">Welcome back, {{ current_user.first_name }}!</small>
-            </h1>
+    <!-- Quick Actions (Mobile) -->
+    <div class="row g-3 mb-4 d-md-none">
+        <div class="col-6">
+            <a href="{{ url_for('pos.index') }}" class="btn btn-primary w-100 py-3">
+                <i class="fas fa-cash-register fa-2x d-block mb-2"></i>
+                <span>Start Sale</span>
+            </a>
+        </div>
+        <div class="col-6">
+            <a href="{{ url_for('inventory.products') }}" class="btn btn-success w-100 py-3">
+                <i class="fas fa-boxes fa-2x d-block mb-2"></i>
+                <span>Inventory</span>
+            </a>
         </div>
     </div>
 
     <!-- Statistics Cards -->
-    <div class="row mb-4">
-        <div class="col-md-3 mb-3">
-            <div class="card bg-primary text-white">
-                <div class="card-body">
-                    <div class="d-flex justify-content-between">
-                        <div>
-                            <h4>{{ total_products }}</h4>
-                            <p class="mb-0">Total Products</p>
-                        </div>
-                        <div class="align-self-center">
-                            <i class="fas fa-box fa-2x"></i>
-                        </div>
+    <div class="row g-3 mb-4">
+        <div class="col-12 col-md-3">
+            <div class="stat-card mobile-card">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h4>{{ total_products }}</h4>
+                        <p class="mb-0">Products</p>
+                    </div>
+                    <div>
+                        <i class="fas fa-box fa-2x opacity-75"></i>
                     </div>
                 </div>
             </div>
         </div>
         
-        <div class="col-md-3 mb-3">
-            <div class="card bg-success text-white">
-                <div class="card-body">
-                    <div class="d-flex justify-content-between">
-                        <div>
-                            <h4>{{ total_customers }}</h4>
-                            <p class="mb-0">Total Customers</p>
-                        </div>
-                        <div class="align-self-center">
-                            <i class="fas fa-users fa-2x"></i>
-                        </div>
+        <div class="col-12 col-md-3">
+            <div class="stat-card mobile-card" style="background: linear-gradient(135deg, var(--app-success), #059669);">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h4>{{ total_customers }}</h4>
+                        <p class="mb-0">Customers</p>
+                    </div>
+                    <div>
+                        <i class="fas fa-users fa-2x opacity-75"></i>
                     </div>
                 </div>
             </div>
         </div>
         
-        <div class="col-md-3 mb-3">
-            <div class="card bg-info text-white">
-                <div class="card-body">
-                    <div class="d-flex justify-content-between">
-                        <div>
-                            <h4>{{ total_sales }}</h4>
-                            <p class="mb-0">Total Sales</p>
-                        </div>
-                        <div class="align-self-center">
-                            <i class="fas fa-chart-line fa-2x"></i>
-                        </div>
+        <div class="col-12 col-md-3">
+            <div class="stat-card mobile-card" style="background: linear-gradient(135deg, var(--app-info), #0891b2);">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h4>{{ total_sales }}</h4>
+                        <p class="mb-0">Sales</p>
+                    </div>
+                    <div>
+                        <i class="fas fa-chart-line fa-2x opacity-75"></i>
                     </div>
                 </div>
             </div>
         </div>
         
-        <div class="col-md-3 mb-3">
-            <div class="card bg-warning text-dark">
-                <div class="card-body">
-                    <div class="d-flex justify-content-between">
-                        <div>
-                            <h4>{{ low_stock_products|length }}</h4>
-                            <p class="mb-0">Low Stock Items</p>
-                        </div>
-                        <div class="align-self-center">
-                            <i class="fas fa-exclamation-triangle fa-2x"></i>
-                        </div>
+        <div class="col-12 col-md-3">
+            <div class="stat-card mobile-card" style="background: linear-gradient(135deg, var(--app-warning), #d97706);">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h4>{{ low_stock_products|length }}</h4>
+                        <p class="mb-0">Low Stock</p>
+                    </div>
+                    <div>
+                        <i class="fas fa-exclamation-triangle fa-2x opacity-75"></i>
                     </div>
                 </div>
             </div>
         </div>
     </div>
 
-    <div class="row">
+    <!-- Recent Sales & Low Stock -->
+    <div class="row g-3 mb-4">
         <!-- Recent Sales -->
-        <div class="col-md-6 mb-4">
-            <div class="card">
-                <div class="card-header">
-                    <h5 class="card-title mb-0">
-                        <i class="fas fa-receipt me-2"></i>Recent Sales
-                    </h5>
-                </div>
+        <div class="col-12 col-md-6">
+            <div class="mobile-card">
                 <div class="card-body">
+                    <h5 class="card-title d-flex align-items-center mb-3">
+                        <i class="fas fa-receipt me-2 text-primary"></i>Recent Sales
+                    </h5>
                     {% if recent_sales %}
                         <div class="table-responsive">
-                            <table class="table table-sm">
+                            <table class="table table-sm mb-0">
                                 <thead>
                                     <tr>
                                         <th>Receipt #</th>
                                         <th>Total</th>
-                                        <th>Date</th>
+                                        <th class="d-none d-md-table-cell">Date</th>
                                     </tr>
                                 </thead>
                                 <tbody>
