@@ -1,0 +1,424 @@
+{% extends "base.html" %}
+
+{% block title %}Returns Management - Cloud POS{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h1 class="h3 mb-0">
+                    <i class="fas fa-undo me-2"></i>Returns Management
+                </h1>
+                <div>
+                    <a href="{{ url_for('admin.index') }}" class="btn btn-secondary">
+                        <i class="fas fa-arrow-left me-2"></i>Back to Admin
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filters -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-body">
+                    <form method="GET" class="row g-3">
+                        <div class="col-md-3">
+                            <label class="form-label">Start Date</label>
+                            <input type="date" name="start_date" class="form-control" 
+                                   value="{{ filters.start_date }}">
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">End Date</label>
+                            <input type="date" name="end_date" class="form-control" 
+                                   value="{{ filters.end_date }}">
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label">Status</label>
+                            <select name="status" class="form-select">
+                                <option value="">All Statuses</option>
+                                <option value="Pending" {{ 'selected' if filters.status == 'Pending' }}>Pending</option>
+                                <option value="Processed" {{ 'selected' if filters.status == 'Processed' }}>Processed</option>
+                                <option value="Rejected" {{ 'selected' if filters.status == 'Rejected' }}>Rejected</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3 d-flex align-items-end">
+                            <button type="submit" class="btn btn-primary me-2">
+                                <i class="fas fa-filter me-2"></i>Filter
+                            </button>
+                            <a href="{{ url_for('admin.returns') }}" class="btn btn-secondary">
+                                <i class="fas fa-times me-2"></i>Clear
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Summary Stats -->
+    {% if returns.items %}
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card bg-info text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h4 class="card-title">{{ returns.total }}</h4>
+                            <p class="card-text">Total Returns</p>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="fas fa-undo fa-2x"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-success text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h4 class="card-title">{{ total_amount|format_currency }}</h4>
+                            <p class="card-text">Total Refunded</p>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="fas fa-dollar-sign fa-2x"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-warning text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h4 class="card-title">{{ pending_count }}</h4>
+                            <p class="card-text">Pending Returns</p>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="fas fa-clock fa-2x"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-primary text-white">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h4 class="card-title">{{ (total_amount / returns.total if returns.total > 0 else 0)|format_currency }}</h4>
+                            <p class="card-text">Avg Return Value</p>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="fas fa-calculator fa-2x"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Returns Table -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-body">
+                    {% if returns.items %}
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>Return #</th>
+                                        <th>Date</th>
+                                        <th>Original Sale</th>
+                                        <th>Customer</th>
+                                        <th>Processed By</th>
+                                        <th>Reason</th>
+                                        <th>Return Amount</th>
+                                        <th>Status</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for return in returns.items %}
+                                    <tr>
+                                        <td><code>{{ return.return_number }}</code></td>
+                                        <td>{{ return.created_at.strftime('%m/%d/%Y %I:%M %p') }}</td>
+                                        <td>
+                                            <code>{{ return.original_sale.receipt_number }}</code>
+                                        </td>
+                                        <td>
+                                            {% if return.original_sale.customer %}
+                                                <a href="{{ url_for('customers.view_customer', id=return.original_sale.customer.id) }}">
+                                                    {{ return.original_sale.customer.name }}
+                                                </a>
+                                            {% else %}
+                                                <span class="text-muted">Walk-in</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>{{ return.processed_by.full_name }}</td>
+                                        <td>
+                                            <span class="badge bg-secondary">{{ return.return_reason }}</span>
+                                        </td>
+                                        <td>{{ return.return_amount|format_currency }}</td>
+                                        <td>
+                                            <span class="badge bg-{{ 'success' if return.status == 'Processed' else 'warning' if return.status == 'Pending' else 'danger' }}">
+                                                {{ return.status }}
+                                            </span>
+                                        </td>
+                                        <td>
+                                            <div class="btn-group btn-group-sm">
+                                                <button type="button" class="btn btn-outline-info" 
+                                                        onclick="viewReturnDetails('{{ return.id }}')"
+                                                        title="View Details">
+                                                    <i class="fas fa-eye"></i>
+                                                </button>
+                                                {% if return.status == 'Pending' and current_user.has_permission('all') %}
+                                                <button type="button" class="btn btn-outline-success" 
+                                                        onclick="approveReturn('{{ return.id }}')"
+                                                        title="Approve Return">
+                                                    <i class="fas fa-check"></i>
+                                                </button>
+                                                <button type="button" class="btn btn-outline-danger" 
+                                                        onclick="rejectReturn('{{ return.id }}')"
+                                                        title="Reject Return">
+                                                    <i class="fas fa-times"></i>
+                                                </button>
+                                                {% endif %}
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                                <tfoot>
+                                    <tr class="table-info">
+                                        <th colspan="6">TOTALS:</th>
+                                        <th>{{ (returns.items | sum(attribute='return_amount'))|format_currency }}</th>
+                                        <th></th>
+                                        <th></th>
+                                    </tr>
+                                </tfoot>
+                            </table>
+                        </div>
+
+                        <!-- Pagination -->
+                        {% if returns.pages > 1 %}
+                        <nav>
+                            <ul class="pagination justify-content-center">
+                                {% if returns.has_prev %}
+                                    <li class="page-item">
+                                        <a class="page-link" href="{{ url_for('admin.returns', page=returns.prev_num, **filters) }}">Previous</a>
+                                    </li>
+                                {% endif %}
+                                
+                                {% for page_num in returns.iter_pages() %}
+                                    {% if page_num %}
+                                        {% if page_num != returns.page %}
+                                            <li class="page-item">
+                                                <a class="page-link" href="{{ url_for('admin.returns', page=page_num, **filters) }}">{{ page_num }}</a>
+                                            </li>
+                                        {% else %}
+                                            <li class="page-item active">
+                                                <span class="page-link">{{ page_num }}</span>
+                                            </li>
+                                        {% endif %}
+                                    {% else %}
+                                        <li class="page-item disabled">
+                                            <span class="page-link">...</span>
+                                        </li>
+                                    {% endif %}
+                                {% endfor %}
+                                
+                                {% if returns.has_next %}
+                                    <li class="page-item">
+                                        <a class="page-link" href="{{ url_for('admin.returns', page=returns.next_num, **filters) }}">Next</a>
+                                    </li>
+                                {% endif %}
+                            </ul>
+                        </nav>
+                        {% endif %}
+                    {% else %}
+                        <div class="text-center py-5">
+                            <i class="fas fa-undo fa-3x text-muted mb-3"></i>
+                            <h5>No returns found</h5>
+                            <p class="text-muted">No returns match your current filters.</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Return Details Modal -->
+<div class="modal fade" id="returnDetailsModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Return Details</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" id="returnDetailsContent">
+                <div class="text-center">
+                    <div class="spinner-border" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+async function viewReturnDetails(returnId) {
+    const modal = new bootstrap.Modal(document.getElementById('returnDetailsModal'));
+    const modalContent = document.getElementById('returnDetailsContent');
+    
+    modal.show();
+    
+    try {
+        const response = await fetch(`/admin/return/${returnId}/details`);
+        const returnData = await response.json();
+        
+        if (response.ok) {
+            modalContent.innerHTML = generateReturnDetailsHTML(returnData);
+        } else {
+            modalContent.innerHTML = `<div class="alert alert-danger">Error: ${returnData.error}</div>`;
+        }
+    } catch (error) {
+        modalContent.innerHTML = `<div class="alert alert-danger">Network error: ${error.message}</div>`;
+    }
+}
+
+function generateReturnDetailsHTML(returnData) {
+    const currencySymbol = window.currencySymbol || '$';
+    
+    return `
+        <div class="row">
+            <div class="col-md-6">
+                <h6>Return Information</h6>
+                <table class="table table-sm">
+                    <tr><td><strong>Return Number:</strong></td><td><code>${returnData.return_number}</code></td></tr>
+                    <tr><td><strong>Date:</strong></td><td>${new Date(returnData.created_at).toLocaleString()}</td></tr>
+                    <tr><td><strong>Original Sale:</strong></td><td><code>${returnData.original_receipt}</code></td></tr>
+                    <tr><td><strong>Customer:</strong></td><td>${returnData.customer_name || 'Walk-in'}</td></tr>
+                    <tr><td><strong>Processed By:</strong></td><td>${returnData.processed_by}</td></tr>
+                    <tr><td><strong>Reason:</strong></td><td><span class="badge bg-secondary">${returnData.return_reason}</span></td></tr>
+                    <tr><td><strong>Status:</strong></td><td><span class="badge bg-${returnData.status === 'Processed' ? 'success' : returnData.status === 'Pending' ? 'warning' : 'danger'}">${returnData.status}</span></td></tr>
+                </table>
+            </div>
+            <div class="col-md-6">
+                <h6>Return Summary</h6>
+                <table class="table table-sm">
+                    <tr><td><strong>Total Amount:</strong></td><td><strong>${currencySymbol}${returnData.return_amount.toLocaleString('en-US', {minimumFractionDigits: 2})}</strong></td></tr>
+                </table>
+                ${returnData.notes ? `
+                    <h6>Notes</h6>
+                    <div class="alert alert-info">${returnData.notes}</div>
+                ` : ''}
+            </div>
+        </div>
+        
+        <h6>Returned Items</h6>
+        <div class="table-responsive">
+            <table class="table table-sm">
+                <thead>
+                    <tr>
+                        <th>Product</th>
+                        <th>Quantity</th>
+                        <th>Unit Price</th>
+                        <th>Total</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    ${returnData.items.map(item => `
+                        <tr>
+                            <td>${item.product_name}</td>
+                            <td>${item.quantity_returned}</td>
+                            <td>${currencySymbol}${item.unit_price.toLocaleString('en-US', {minimumFractionDigits: 2})}</td>
+                            <td>${currencySymbol}${item.total_amount.toLocaleString('en-US', {minimumFractionDigits: 2})}</td>
+                        </tr>
+                    `).join('')}
+                </tbody>
+            </table>
+        </div>
+    `;
+}
+
+async function approveReturn(returnId) {
+    if (!confirm('Are you sure you want to approve this return?')) {
+        return;
+    }
+    
+    try {
+        const response = await fetch(`/admin/return/${returnId}/approve`, {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'}
+        });
+        
+        const result = await response.json();
+        
+        if (response.ok) {
+            showAlert('Return approved successfully!', 'success');
+            location.reload();
+        } else {
+            showAlert(result.error || 'Error approving return', 'danger');
+        }
+    } catch (error) {
+        showAlert('Network error: ' + error.message, 'danger');
+    }
+}
+
+async function rejectReturn(returnId) {
+    const reason = prompt('Enter reason for rejection:');
+    if (!reason) return;
+    
+    try {
+        const response = await fetch(`/admin/return/${returnId}/reject`, {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({reason: reason})
+        });
+        
+        const result = await response.json();
+        
+        if (response.ok) {
+            showAlert('Return rejected successfully!', 'success');
+            location.reload();
+        } else {
+            showAlert(result.error || 'Error rejecting return', 'danger');
+        }
+    } catch (error) {
+        showAlert('Network error: ' + error.message, 'danger');
+    }
+}
+
+function showAlert(message, type) {
+    const alert = document.createElement('div');
+    alert.className = `alert alert-${type} alert-dismissible fade show`;
+    alert.innerHTML = `
+        ${message}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    `;
+    
+    document.body.insertAdjacentElement('afterbegin', alert);
+    
+    setTimeout(() => {
+        if (alert.parentNode) {
+            alert.remove();
+        }
+    }, 5000);
+}
+</script>
+{% endblock %}

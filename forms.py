@@ -1,106 +1,57 @@
 from flask_wtf import FlaskForm
-from flask_wtf.file import FileField, FileRequired
-from wtforms import StringField, TextAreaField, SelectField, SelectMultipleField, DecimalField, IntegerField, BooleanField, PasswordField, HiddenField, SubmitField
-from wtforms.validators import DataRequired, Email, Length, NumberRange, Optional, ValidationError
-from models import User, Product, Category, Customer
+from wtforms import StringField, TextAreaField, FloatField, IntegerField, BooleanField, SelectField, SelectMultipleField, PasswordField, DateField
+from wtforms.validators import DataRequired, Length, Email, Optional, NumberRange
+from wtforms.widgets import CheckboxInput, ListWidget
 
 class LoginForm(FlaskForm):
-    username = StringField('Username', validators=[DataRequired(), Length(1, 64)])
+    username = StringField('Username', validators=[DataRequired(), Length(min=4, max=25)])
     password = PasswordField('Password', validators=[DataRequired()])
+    remember_me = BooleanField('Remember Me')
 
 class UserForm(FlaskForm):
-    username = StringField('Username', validators=[DataRequired(), Length(1, 64)])
-    email = StringField('Email', validators=[DataRequired(), Email(), Length(1, 120)])
-    first_name = StringField('First Name', validators=[DataRequired(), Length(1, 64)])
-    last_name = StringField('Last Name', validators=[DataRequired(), Length(1, 64)])
-    password = PasswordField('Password', validators=[Optional(), Length(min=6)])
+    username = StringField('Username', validators=[DataRequired(), Length(min=4, max=25)])
+    email = StringField('Email', validators=[DataRequired(), Email()])
+    first_name = StringField('First Name', validators=[DataRequired(), Length(max=50)])
+    last_name = StringField('Last Name', validators=[DataRequired(), Length(max=50)])
+    password = PasswordField('Password', validators=[DataRequired(), Length(min=6)])
     role = SelectField('Role', choices=[
         ('Admin', 'Admin'),
-        ('Manager', 'Manager'),
+        ('Manager', 'Manager'), 
         ('Cashier', 'Cashier'),
         ('Accountant', 'Accountant')
     ], validators=[DataRequired()])
-    is_active = BooleanField('Active')
-    
-    def __init__(self, user=None, *args, **kwargs):
-        super(UserForm, self).__init__(*args, **kwargs)
-        self.user = user
-    
-    def validate_username(self, field):
-        if self.user is None or field.data != self.user.username:
-            if User.query.filter_by(username=field.data).first():
-                raise ValidationError('Username already exists.')
-    
-    def validate_email(self, field):
-        if self.user is None or field.data != self.user.email:
-            if User.query.filter_by(email=field.data).first():
-                raise ValidationError('Email already exists.')
+    is_active = BooleanField('Active', default=True)
 
 class CategoryForm(FlaskForm):
-    name = StringField('Name', validators=[DataRequired(), Length(1, 100)])
-    description = TextAreaField('Description')
+    name = StringField('Category Name', validators=[DataRequired(), Length(max=100)])
+    description = TextAreaField('Description', validators=[Optional(), Length(max=255)])
+    parent_id = SelectField('Parent Category', coerce=int, validators=[Optional()])
     is_active = BooleanField('Active', default=True)
-    
-    def __init__(self, category=None, *args, **kwargs):
-        super(CategoryForm, self).__init__(*args, **kwargs)
-        self.category = category
-    
-    def validate_name(self, field):
-        if self.category is None or field.data != self.category.name:
-            if Category.query.filter_by(name=field.data).first():
-                raise ValidationError('Category name already exists.')
 
-class ProductForm(FlaskForm):
-    name = StringField('Name', validators=[DataRequired(), Length(1, 200)])
-    description = TextAreaField('Description')
-    sku = StringField('SKU', validators=[DataRequired(), Length(1, 50)])
-    barcode = StringField('Barcode', validators=[Optional(), Length(1, 50)])
-    category_id = SelectField('Category', coerce=int, validators=[DataRequired()])
-    cost_price = DecimalField('Cost Price', validators=[DataRequired(), NumberRange(min=0)])
-    selling_price = DecimalField('Selling Price', validators=[DataRequired(), NumberRange(min=0)])
-    stock_quantity = IntegerField('Stock Quantity', validators=[DataRequired(), NumberRange(min=0)], default=0)
-    low_stock_threshold = IntegerField('Low Stock Threshold', validators=[DataRequired(), NumberRange(min=0)], default=10)
-    tax_rate = DecimalField('Tax Rate (%)', validators=[DataRequired(), NumberRange(min=0, max=100)])
-    is_active = BooleanField('Active', default=True)
-    
-    def __init__(self, product=None, *args, **kwargs):
-        super(ProductForm, self).__init__(*args, **kwargs)
-        self.product = product
-        self.category_id.choices = [(c.id, c.name) for c in Category.query.filter_by(is_active=True).all()]
-    
-    def validate_sku(self, field):
-        if self.product is None or field.data != self.product.sku:
-            if Product.query.filter_by(sku=field.data).first():
-                raise ValidationError('SKU already exists.')
-    
-    def validate_barcode(self, field):
-        if field.data:
-            if self.product is None or field.data != self.product.barcode:
-                if Product.query.filter_by(barcode=field.data).first():
-                    raise ValidationError('Barcode already exists.')
+class CompanyProfileForm(FlaskForm):
+    company_name = StringField('Company Name', validators=[DataRequired(), Length(max=200)])
+    address = TextAreaField('Address', validators=[Optional(), Length(max=500)])
+    phone = StringField('Phone', validators=[Optional(), Length(max=20)])
+    email = StringField('Email', validators=[Optional(), Email()])
+    tax_id = StringField('Tax ID', validators=[Optional(), Length(max=50)])
+    website = StringField('Website', validators=[Optional(), Length(max=200)])
+    default_currency = SelectField('Default Currency', choices=[
+        ('USD', 'US Dollar ($)'),
+        ('EUR', 'Euro (€)'),
+        ('GBP', 'British Pound (£)'),
+        ('NGN', 'Nigerian Naira (₦)'),
+        ('KES', 'Kenyan Shilling (KSh)'),
+        ('GHS', 'Ghanaian Cedi (₵)')
+    ], default='USD')
+    logo_url = StringField('Logo URL', validators=[Optional(), Length(max=500)])
 
-class CustomerForm(FlaskForm):
-    name = StringField('Name', validators=[DataRequired(), Length(1, 200)])
-    email = StringField('Email', validators=[Optional(), Email(), Length(1, 120)])
-    phone = StringField('Phone', validators=[Optional(), Length(1, 20)])
-    address = TextAreaField('Address')
-    customer_type = SelectField('Customer Type', choices=[
-        ('Retail', 'Retail'),
-        ('Wholesale', 'Wholesale'),
-        ('VIP', 'VIP')
-    ], validators=[DataRequired()])
-    credit_limit = DecimalField('Credit Limit', validators=[DataRequired(), NumberRange(min=0)])
-    is_active = BooleanField('Active', default=True)
-    
-    def __init__(self, customer=None, *args, **kwargs):
-        super(CustomerForm, self).__init__(*args, **kwargs)
-        self.customer = customer
-    
-    def validate_email(self, field):
-        if field.data:
-            if self.customer is None or field.data != self.customer.email:
-                if Customer.query.filter_by(email=field.data).first():
-                    raise ValidationError('Email already exists.')
+class MultiCheckboxField(SelectMultipleField):
+    widget = ListWidget(prefix_label=False)
+    option_widget = CheckboxInput()
+
+class UserStoreAssignmentForm(FlaskForm):
+    user_id = SelectField('Select User', coerce=int, validators=[DataRequired()])
+    store_ids = MultiCheckboxField('Assign to Stores', coerce=int, validators=[Optional()])
 
 class SaleForm(FlaskForm):
     customer_id = SelectField('Customer', coerce=int, validators=[Optional()])
@@ -109,109 +60,68 @@ class SaleForm(FlaskForm):
         ('Card', 'Card'),
         ('Bank Transfer', 'Bank Transfer'),
         ('Mobile Money', 'Mobile Money')
-    ], validators=[DataRequired()])
-    discount_amount = DecimalField('Discount', validators=[DataRequired(), NumberRange(min=0)])
-    notes = TextAreaField('Notes')
-    
-    def __init__(self, *args, **kwargs):
-        super(SaleForm, self).__init__(*args, **kwargs)
-        self.customer_id.choices = [(0, 'Walk-in Customer')] + [(c.id, c.name) for c in Customer.query.filter_by(is_active=True).all()]
+    ], default='Cash')
+    discount_amount = FloatField('Discount', default=0.0, validators=[Optional(), NumberRange(min=0)])
+    notes = TextAreaField('Notes', validators=[Optional(), Length(max=500)])
 
 class CashRegisterForm(FlaskForm):
-    opening_balance = DecimalField('Opening Balance', validators=[DataRequired(), NumberRange(min=0)])
+    opening_balance = FloatField('Opening Balance', validators=[DataRequired(), NumberRange(min=0)])
+    notes = TextAreaField('Notes', validators=[Optional(), Length(max=500)])
+
+class ReturnForm(FlaskForm):
+    sale_id = IntegerField('Sale ID', validators=[DataRequired()])
+    return_reason = StringField('Return Reason', validators=[DataRequired(), Length(max=200)])
+    notes = TextAreaField('Notes', validators=[Optional(), Length(max=500)])
 
 class StoreForm(FlaskForm):
-    name = StringField('Store Name', validators=[DataRequired(), Length(1, 100)])
-    address = TextAreaField('Address')
-    phone = StringField('Phone', validators=[Optional(), Length(1, 20)])
-    email = StringField('Email', validators=[Optional(), Email(), Length(1, 120)])
-    is_active = BooleanField('Active', default=True)
-
-class SupplierForm(FlaskForm):
-    name = StringField('Supplier Name', validators=[DataRequired(), Length(1, 200)])
-    contact_person = StringField('Contact Person', validators=[Optional(), Length(1, 100)])
-    email = StringField('Email', validators=[Optional(), Email(), Length(1, 120)])
-    phone = StringField('Phone', validators=[Optional(), Length(1, 20)])
-    address = TextAreaField('Address')
+    name = StringField('Store Name', validators=[DataRequired(), Length(max=100)])
+    address = TextAreaField('Address', validators=[Optional(), Length(max=500)])
+    phone = StringField('Phone', validators=[Optional(), Length(max=20)])
+    manager_id = SelectField('Store Manager', coerce=int, validators=[Optional()])
     is_active = BooleanField('Active', default=True)
 
 class StockTransferForm(FlaskForm):
     from_store_id = SelectField('From Store', coerce=int, validators=[DataRequired()])
     to_store_id = SelectField('To Store', coerce=int, validators=[DataRequired()])
-    notes = TextAreaField('Notes')
-    
-    def __init__(self, *args, **kwargs):
-        super(StockTransferForm, self).__init__(*args, **kwargs)
-        from models import Store
-        stores = Store.query.filter_by(is_active=True).all()
-        self.from_store_id.choices = [(s.id, s.name) for s in stores]
-        self.to_store_id.choices = [(s.id, s.name) for s in stores]
+    product_id = SelectField('Product', coerce=int, validators=[DataRequired()])
+    quantity = IntegerField('Quantity', validators=[DataRequired(), NumberRange(min=1)])
+    notes = TextAreaField('Notes', validators=[Optional(), Length(max=500)])
 
 class PurchaseOrderForm(FlaskForm):
     supplier_id = SelectField('Supplier', coerce=int, validators=[DataRequired()])
-    expected_date = StringField('Expected Date')
-    notes = TextAreaField('Notes')
-    
-    def __init__(self, *args, **kwargs):
-        super(PurchaseOrderForm, self).__init__(*args, **kwargs)
-        from models import Supplier
-        suppliers = Supplier.query.filter_by(is_active=True).all()
-        self.supplier_id.choices = [(s.id, s.name) for s in suppliers]
+    store_id = SelectField('Store', coerce=int, validators=[DataRequired()])
+    expected_date = DateField('Expected Delivery Date', validators=[Optional()])
+    notes = TextAreaField('Notes', validators=[Optional(), Length(max=500)])
 
+class SupplierForm(FlaskForm):
+    name = StringField('Supplier Name', validators=[DataRequired(), Length(max=100)])
+    contact_person = StringField('Contact Person', validators=[Optional(), Length(max=100)])
+    email = StringField('Email', validators=[Optional(), Email()])
+    phone = StringField('Phone', validators=[Optional(), Length(max=20)])
+    address = TextAreaField('Address', validators=[Optional(), Length(max=500)])
+    is_active = BooleanField('Active', default=True)
 
+class ProductForm(FlaskForm):
+    name = StringField('Product Name', validators=[DataRequired(), Length(max=200)])
+    sku = StringField('SKU', validators=[Optional(), Length(max=50)])
+    barcode = StringField('Barcode', validators=[Optional(), Length(max=100)])
+    category_id = SelectField('Category', coerce=int, validators=[Optional()])
+    description = TextAreaField('Description', validators=[Optional(), Length(max=1000)])
+    cost_price = FloatField('Cost Price', validators=[DataRequired(), NumberRange(min=0)])
+    selling_price = FloatField('Selling Price', validators=[DataRequired(), NumberRange(min=0)])
+    stock_quantity = IntegerField('Stock Quantity', validators=[DataRequired(), NumberRange(min=0)])
+    low_stock_threshold = IntegerField('Low Stock Threshold', validators=[Optional(), NumberRange(min=0)], default=10)
+    tax_rate = FloatField('Tax Rate (%)', validators=[Optional(), NumberRange(min=0, max=100)], default=0)
+    is_active = BooleanField('Active', default=True)
 
-class CompanyProfileForm(FlaskForm):
-    company_name = StringField('Company Name', validators=[DataRequired(), Length(1, 200)])
-    address = TextAreaField('Address')
-    phone = StringField('Phone', validators=[Optional(), Length(1, 20)])
-    email = StringField('Email', validators=[Optional(), Email(), Length(1, 120)])
-    website = StringField('Website', validators=[Optional(), Length(1, 200)])
-    tax_number = StringField('Tax Number', validators=[Optional(), Length(1, 50)])
-    registration_number = StringField('Registration Number', validators=[Optional(), Length(1, 50)])
-    default_currency = SelectField('Default Currency', choices=[
-        ('USD', 'US Dollar'),
-        ('EUR', 'Euro'),
-        ('GBP', 'British Pound'),
-        ('NGN', 'Nigerian Naira'),
-        ('KES', 'Kenyan Shilling'),
-        ('GHS', 'Ghanaian Cedi')
-    ], validators=[DataRequired()])
-    default_tax_rate = DecimalField('Default Tax Rate (%)', validators=[DataRequired(), NumberRange(min=0, max=100)])
-    receipt_footer = TextAreaField('Receipt Footer Text')
-
-# Enhanced POS Forms
-class HoldSaleForm(FlaskForm):
-    hold_number = StringField('Hold Number', validators=[DataRequired(), Length(1, 50)])
-    customer_id = SelectField('Customer', coerce=int, validators=[Optional()])
-    notes = TextAreaField('Notes')
-    submit = SubmitField('Hold Sale')
-
-class ReturnForm(FlaskForm):
-    return_reason = SelectField('Return Reason', choices=[
-        ('Defective', 'Defective Product'),
-        ('Wrong Item', 'Wrong Item'),
-        ('Customer Changed Mind', 'Customer Changed Mind'),
-        ('Size Issue', 'Size Issue'),
-        ('Quality Issue', 'Quality Issue'),
-        ('Other', 'Other')
-    ], validators=[DataRequired()])
-    notes = TextAreaField('Additional Notes')
-    submit = SubmitField('Process Return')
-
-class ProductImageForm(FlaskForm):
-    image = FileField('Product Image', validators=[FileRequired()])
-
-class UserStoreAssignmentForm(FlaskForm):
-    user_id = SelectField('User', coerce=int, validators=[DataRequired()])
-    store_ids = SelectMultipleField('Assign to Stores', coerce=int, validators=[DataRequired()])
-    
-    def __init__(self, *args, **kwargs):
-        super(UserStoreAssignmentForm, self).__init__(*args, **kwargs)
-        from models import User, Store
-        # Get all users except admin (or include admin if needed)
-        users = User.query.all()
-        self.user_id.choices = [(u.id, f"{u.username} ({u.email})") for u in users]
-        
-        # Get all active stores
-        stores = Store.query.filter_by(is_active=True).all()
-        self.store_ids.choices = [(s.id, s.name) for s in stores]
+class CustomerForm(FlaskForm):
+    name = StringField('Customer Name', validators=[DataRequired(), Length(max=100)])
+    email = StringField('Email', validators=[Optional(), Email()])
+    phone = StringField('Phone', validators=[Optional(), Length(max=20)])
+    address = TextAreaField('Address', validators=[Optional(), Length(max=500)])
+    customer_type = SelectField('Customer Type', choices=[
+        ('Retail', 'Retail'),
+        ('Wholesale', 'Wholesale'),
+        ('VIP', 'VIP')
+    ], default='Retail')
+    is_active = BooleanField('Active', default=True)

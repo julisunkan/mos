@@ -1,8 +1,7 @@
 from flask import Blueprint, render_template, redirect, url_for, flash, request, jsonify
 from flask_login import login_required, current_user
-from forms import SaleForm, CashRegisterForm
-from models import Product, Customer, Sale, SaleItem, CashRegister, UserStore
-# from models_additional import SaleReturn, SaleReturnItem
+from forms import SaleForm, CashRegisterForm, ReturnForm
+from models import Product, Customer, Sale, SaleItem, CashRegister, UserStore, SaleReturn, SaleReturnItem
 from app import db
 from utils import generate_receipt_number, calculate_tax, generate_hold_number, generate_return_number
 from datetime import datetime
@@ -352,6 +351,148 @@ def search_products():
         })
     
     return jsonify(results)
+
+@pos_bp.route('/api/sale/<int:sale_id>/details')
+@login_required
+def get_sale_details(sale_id):
+    """Get detailed information about a specific sale for returns"""
+    sale = Sale.query.get_or_404(sale_id)
+    
+    # Build sale details JSON
+    sale_data = {
+        'id': sale.id,
+        'receipt_number': sale.receipt_number,
+        'created_at': sale.created_at.isoformat(),
+        'customer_name': sale.customer.name if sale.customer else None,
+        'total_amount': float(sale.total_amount),
+        'items': []
+    }
+    
+    # Add sale items
+    for item in sale.sale_items:
+        sale_data['items'].append({
+            'id': item.id,
+            'product_name': item.product.name,
+            'quantity': item.quantity,
+            'unit_price': float(item.unit_price),
+            'total_price': float(item.total_price)
+        })
+    
+    return jsonify(sale_data)
+
+@pos_bp.route('/api/process_return', methods=['POST'])
+@login_required
+def process_return():
+    """Process a return with selected items and quantities"""
+    try:
+        data = request.get_json()
+        
+        if not data or 'sale_id' not in data:
+            return jsonify({'error': 'Sale ID is required'}), 400
+        
+        sale_id = data['sale_id']
+        return_reason = data.get('return_reason', 'Customer request')
+        notes = data.get('notes', '')
+        return_items = data.get('items', [])
+        
+        if not return_items:
+            return jsonify({'error': 'No items specified for return'}), 400
+        
+        # Find the original sale
+        original_sale = Sale.query.get_or_404(sale_id)
+        
+        # Check if this sale can be returned by current user or admin
+        if not (current_user.has_permission('all') or original_sale.user_id == current_user.id):
+            return jsonify({'error': 'Not authorized to return this sale'}), 403
+        
+        # Generate return number
+        return_number = generate_return_number()
+        
+        # Create return record
+        sale_return = SaleReturn(
+            return_number=return_number,
+            original_sale_id=original_sale.id,
+            user_id=current_user.id,
+            return_reason=return_reason,
+            notes=notes,
+            status='Processed'
+        )
+        
+        db.session.add(sale_return)
+        db.session.flush()  # Get the return ID
+        
+        total_return_amount = 0
+        
+        # Process each return item
+        for return_item_data in return_items:
+            item_id = return_item_data['item_id']
+            return_qty = int(return_item_data['quantity'])
+            unit_price = float(return_item_data['unit_price'])
+            
+            # Find the original sale item
+            original_item = SaleItem.query.get(item_id)
+            if not original_item or original_item.sale_id != original_sale.id:
+                return jsonify({'error': f'Invalid sale item: {item_id}'}), 400
+            
+            if return_qty > original_item.quantity:
+                return jsonify({'error': f'Return quantity cannot exceed sold quantity for {original_item.product.name}'}), 400
+            
+            if return_qty <= 0:
+                continue
+                
+            # Calculate return amount
+            return_amount = unit_price * return_qty
+            total_return_amount += return_amount
+            
+            # Create return item record
+            return_item = SaleReturnItem(
+                return_id=sale_return.id,
+                product_id=original_item.product_id,
+                original_sale_item_id=original_item.id,
+                quantity_returned=return_qty,
+                unit_price=unit_price,
+                total_amount=return_amount
+            )
+            
+            db.session.add(return_item)
+            
+            # Restore stock
+            product = Product.query.get(original_item.product_id)
+            if product:
+                product.stock_quantity += return_qty
+        
+        # Update return total
+        sale_return.return_amount = total_return_amount
+        sale_return.processed_at = datetime.utcnow()
+        
+        # Create negative sale entry for refund tracking
+        refund_sale = Sale(
+            receipt_number=f"REF-{return_number}",
+            user_id=current_user.id,
+            store_id=original_sale.store_id,
+            customer_id=original_sale.customer_id,
+            payment_method=original_sale.payment_method,
+            subtotal=-total_return_amount,
+            tax_amount=0,  # Tax calculation for returns can be added later
+            discount_amount=0,
+            total_amount=-total_return_amount,
+            notes=f'REFUND for {original_sale.receipt_number} - {return_reason}'
+        )
+        
+        db.session.add(refund_sale)
+        db.session.commit()
+        
+        return jsonify({
+            'success': True,
+            'return_id': sale_return.id,
+            'return_number': return_number,
+            'return_amount': float(total_return_amount),
+            'message': f'Return processed successfully'
+        })
+        
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'error': str(e)}), 500
 
 @pos_bp.route('/receipt/print/<receipt_number>')
 @login_required

@@ -1,6 +1,7 @@
 from flask import Blueprint, render_template, request, redirect, url_for, flash
 from flask_login import login_required, current_user
-from models import User, Category, CompanyProfile, AuditLog, Store, UserStore
+from datetime import datetime
+from models import User, Category, CompanyProfile, AuditLog, SaleReturn, SaleReturnItem, Store, UserStore
 from forms import UserForm, CategoryForm, CompanyProfileForm, UserStoreAssignmentForm
 from app import db
 from utils import admin_required
@@ -242,3 +243,157 @@ def edit_user_stores(user_id):
             flash(f'Error updating store assignments: {str(e)}', 'error')
     
     return render_template('admin/user_store_assignment.html', form=form, title=f'Edit Store Assignments - {user.username}', user=user)
+
+@admin_bp.route('/returns')
+@login_required
+@admin_required
+def returns():
+    """Display returns management page"""
+    from flask import jsonify
+    from datetime import datetime, timedelta
+    
+    # Get filter parameters
+    start_date = request.args.get('start_date')
+    end_date = request.args.get('end_date')
+    status = request.args.get('status')
+    page = request.args.get('page', 1, type=int)
+    
+    # Build query
+    query = SaleReturn.query
+    
+    # Apply filters
+    if start_date:
+        try:
+            start_dt = datetime.strptime(start_date, '%Y-%m-%d')
+            query = query.filter(SaleReturn.created_at >= start_dt)
+        except ValueError:
+            pass
+            
+    if end_date:
+        try:
+            end_dt = datetime.strptime(end_date, '%Y-%m-%d') + timedelta(days=1)
+            query = query.filter(SaleReturn.created_at < end_dt)
+        except ValueError:
+            pass
+            
+    if status:
+        query = query.filter(SaleReturn.status == status)
+    
+    # Get paginated results
+    returns = query.order_by(SaleReturn.created_at.desc()).paginate(
+        page=page, per_page=20, error_out=False
+    )
+    
+    # Calculate summary stats
+    total_amount = sum(r.return_amount for r in returns.items)
+    pending_count = SaleReturn.query.filter_by(status='Pending').count()
+    
+    filters = {
+        'start_date': start_date or '',
+        'end_date': end_date or '',
+        'status': status or ''
+    }
+    
+    return render_template('admin/returns.html', 
+                         returns=returns, 
+                         filters=filters,
+                         total_amount=total_amount,
+                         pending_count=pending_count)
+
+@admin_bp.route('/return/<int:return_id>/details')
+@login_required
+@admin_required
+def return_details(return_id):
+    """Get detailed information about a specific return"""
+    from flask import jsonify
+    
+    sale_return = SaleReturn.query.get_or_404(return_id)
+    
+    # Build return details JSON
+    return_data = {
+        'id': sale_return.id,
+        'return_number': sale_return.return_number,
+        'created_at': sale_return.created_at.isoformat(),
+        'original_receipt': sale_return.original_sale.receipt_number,
+        'customer_name': sale_return.original_sale.customer.name if sale_return.original_sale.customer else None,
+        'processed_by': sale_return.processed_by.full_name,
+        'return_reason': sale_return.return_reason,
+        'return_amount': float(sale_return.return_amount),
+        'status': sale_return.status,
+        'notes': sale_return.notes,
+        'items': []
+    }
+    
+    # Add return items
+    for item in sale_return.items:
+        return_data['items'].append({
+            'product_name': item.product.name,
+            'quantity_returned': item.quantity_returned,
+            'unit_price': float(item.unit_price),
+            'total_amount': float(item.total_amount)
+        })
+    
+    return jsonify(return_data)
+
+@admin_bp.route('/return/<int:return_id>/approve', methods=['POST'])
+@login_required
+@admin_required
+def approve_return(return_id):
+    """Approve a pending return"""
+    from flask import jsonify
+    
+    try:
+        sale_return = SaleReturn.query.get_or_404(return_id)
+        
+        if sale_return.status != 'Pending':
+            return jsonify({'error': 'Return is not in pending status'}), 400
+        
+        sale_return.status = 'Processed'
+        sale_return.processed_at = datetime.utcnow()
+        
+        db.session.commit()
+        
+        return jsonify({
+            'success': True,
+            'message': f'Return {sale_return.return_number} approved successfully'
+        })
+        
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'error': str(e)}), 500
+
+@admin_bp.route('/return/<int:return_id>/reject', methods=['POST'])
+@login_required
+@admin_required
+def reject_return(return_id):
+    """Reject a pending return"""
+    from flask import jsonify
+    
+    try:
+        data = request.get_json()
+        reason = data.get('reason', 'No reason provided')
+        
+        sale_return = SaleReturn.query.get_or_404(return_id)
+        
+        if sale_return.status != 'Pending':
+            return jsonify({'error': 'Return is not in pending status'}), 400
+        
+        sale_return.status = 'Rejected'
+        sale_return.notes = f"{sale_return.notes or ''}\n\nREJECTED: {reason}".strip()
+        
+        # Reverse stock adjustments if any were made
+        for item in sale_return.items:
+            product = item.product
+            if product:
+                product.stock_quantity -= item.quantity_returned
+        
+        db.session.commit()
+        
+        return jsonify({
+            'success': True,
+            'message': f'Return {sale_return.return_number} rejected'
+        })
+        
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'error': str(e)}), 500

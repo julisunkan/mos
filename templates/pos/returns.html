@@ -116,9 +116,222 @@
 </div>
 
 <script>
-function initiateReturn(saleId) {
-    // This would open a modal to select items for return
-    showInlineMessage('Return functionality will be implemented here for sale ID: ' + saleId, 'info');
+async function initiateReturn(saleId) {
+    try {
+        // Fetch sale details
+        const response = await fetch(`/pos/api/sale/${saleId}/details`);
+        const saleData = await response.json();
+        
+        if (response.ok) {
+            openReturnModal(saleData);
+        } else {
+            showInlineMessage(saleData.error || 'Error loading sale details', 'danger');
+        }
+    } catch (error) {
+        showInlineMessage('Network error: ' + error.message, 'danger');
+    }
+}
+
+function openReturnModal(sale) {
+    // Create or show return modal
+    showReturnModal(sale);
+}
+
+function showReturnModal(sale) {
+    // Check if modal already exists, if not create it
+    let modal = document.getElementById('returnModal');
+    if (!modal) {
+        const modalHtml = createReturnModalHTML();
+        document.body.insertAdjacentHTML('beforeend', modalHtml);
+        modal = document.getElementById('returnModal');
+    }
+    
+    // Populate modal with sale data
+    populateReturnModal(sale);
+    
+    // Show the modal
+    const bsModal = new bootstrap.Modal(modal);
+    bsModal.show();
+}
+
+function createReturnModalHTML() {
+    return `
+    <div class="modal fade" id="returnModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Process Return</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div id="returnModalContent">Loading...</div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-danger" id="processReturnBtn" onclick="processReturn()">
+                        <i class="fas fa-undo me-2"></i>Process Return
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>`;
+}
+
+function populateReturnModal(sale) {
+    const currencySymbol = window.currencySymbol || '$';
+    
+    const content = `
+        <div class="row mb-3">
+            <div class="col-md-6">
+                <h6>Sale Information</h6>
+                <p><strong>Receipt:</strong> ${sale.receipt_number}</p>
+                <p><strong>Date:</strong> ${new Date(sale.created_at).toLocaleDateString()}</p>
+                <p><strong>Customer:</strong> ${sale.customer_name || 'Walk-in'}</p>
+                <p><strong>Total:</strong> ${currencySymbol}${sale.total_amount.toLocaleString('en-US', {minimumFractionDigits: 2})}</p>
+            </div>
+            <div class="col-md-6">
+                <div class="mb-3">
+                    <label class="form-label">Return Reason</label>
+                    <select class="form-select" id="returnReason">
+                        <option value="Defective">Defective Product</option>
+                        <option value="Wrong Item">Wrong Item</option>
+                        <option value="Customer Changed Mind">Customer Changed Mind</option>
+                        <option value="Size Issue">Size Issue</option>
+                        <option value="Quality Issue">Quality Issue</option>
+                        <option value="Other">Other</option>
+                    </select>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Notes</label>
+                    <textarea class="form-control" id="returnNotes" rows="3" placeholder="Additional details..."></textarea>
+                </div>
+            </div>
+        </div>
+        
+        <h6>Items to Return</h6>
+        <div class="table-responsive">
+            <table class="table table-sm">
+                <thead>
+                    <tr>
+                        <th>Product</th>
+                        <th>Sold Qty</th>
+                        <th>Return Qty</th>
+                        <th>Unit Price</th>
+                        <th>Return Amount</th>
+                    </tr>
+                </thead>
+                <tbody id="returnItemsTable">
+                    ${sale.items.map(item => `
+                        <tr>
+                            <td>${item.product_name}</td>
+                            <td>${item.quantity}</td>
+                            <td>
+                                <input type="number" class="form-control form-control-sm return-qty" 
+                                       data-item-id="${item.id}" 
+                                       data-original-qty="${item.quantity}"
+                                       data-unit-price="${item.unit_price}"
+                                       min="0" max="${item.quantity}" value="${item.quantity}"
+                                       onchange="updateReturnAmount()">
+                            </td>
+                            <td>${currencySymbol}${item.unit_price.toLocaleString('en-US', {minimumFractionDigits: 2})}</td>
+                            <td class="return-amount">${currencySymbol}${item.total_price.toLocaleString('en-US', {minimumFractionDigits: 2})}</td>
+                        </tr>
+                    `).join('')}
+                </tbody>
+                <tfoot>
+                    <tr class="table-warning">
+                        <th colspan="4">Total Return Amount:</th>
+                        <th id="totalReturnAmount">${currencySymbol}${sale.total_amount.toLocaleString('en-US', {minimumFractionDigits: 2})}</th>
+                    </tr>
+                </tfoot>
+            </table>
+        </div>
+        
+        <input type="hidden" id="returnSaleId" value="${sale.id}">
+    `;
+    
+    document.getElementById('returnModalContent').innerHTML = content;
+    updateReturnAmount(); // Initialize amounts
+}
+
+function updateReturnAmount() {
+    const currencySymbol = window.currencySymbol || '$';
+    let totalReturn = 0;
+    
+    document.querySelectorAll('.return-qty').forEach(input => {
+        const returnQty = parseInt(input.value) || 0;
+        const unitPrice = parseFloat(input.dataset.unitPrice);
+        const itemTotal = returnQty * unitPrice;
+        
+        // Update row total
+        const row = input.closest('tr');
+        const amountCell = row.querySelector('.return-amount');
+        amountCell.textContent = `${currencySymbol}${itemTotal.toLocaleString('en-US', {minimumFractionDigits: 2})}`;
+        
+        totalReturn += itemTotal;
+    });
+    
+    // Update total
+    document.getElementById('totalReturnAmount').textContent = 
+        `${currencySymbol}${totalReturn.toLocaleString('en-US', {minimumFractionDigits: 2})}`;
+}
+
+async function processReturn() {
+    try {
+        const saleId = document.getElementById('returnSaleId').value;
+        const reason = document.getElementById('returnReason').value;
+        const notes = document.getElementById('returnNotes').value;
+        
+        // Collect return items
+        const returnItems = [];
+        document.querySelectorAll('.return-qty').forEach(input => {
+            const returnQty = parseInt(input.value) || 0;
+            if (returnQty > 0) {
+                returnItems.push({
+                    item_id: input.dataset.itemId,
+                    quantity: returnQty,
+                    unit_price: parseFloat(input.dataset.unitPrice)
+                });
+            }
+        });
+        
+        if (returnItems.length === 0) {
+            showInlineMessage('Please select at least one item to return', 'warning');
+            return;
+        }
+        
+        // Process the return
+        const response = await fetch('/pos/api/process_return', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                sale_id: saleId,
+                return_reason: reason,
+                notes: notes,
+                items: returnItems
+            })
+        });
+        
+        const result = await response.json();
+        
+        if (response.ok) {
+            // Close modal and reload page
+            bootstrap.Modal.getInstance(document.getElementById('returnModal')).hide();
+            showInlineMessage(`Return processed successfully! Return #: ${result.return_number}`, 'success');
+            
+            // Reload page after a short delay
+            setTimeout(() => {
+                location.reload();
+            }, 2000);
+        } else {
+            showInlineMessage(result.error || 'Error processing return', 'danger');
+        }
+        
+    } catch (error) {
+        showInlineMessage('Network error: ' + error.message, 'danger');
+    }
 }
 
 // Inline message functions
