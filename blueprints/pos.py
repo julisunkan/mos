@@ -2,6 +2,7 @@ from flask import Blueprint, render_template, redirect, url_for, flash, request,
 from flask_login import login_required, current_user
 from forms import SaleForm, CashRegisterForm
 from models import Product, Customer, Sale, SaleItem, CashRegister, UserStore
+# from models_additional import SaleReturn, SaleReturnItem
 from app import db
 from utils import generate_receipt_number, calculate_tax, generate_hold_number, generate_return_number
 from datetime import datetime
@@ -331,3 +332,17 @@ def resume_sale(sale_id):
             'notes': held_sale.notes
         }
     })
+
+@pos_bp.route('/returns')
+@login_required
+def returns():
+    """Display returns and refunds page"""
+    from forms import ReturnForm
+    form = ReturnForm()
+    
+    # Get recent sales for returns
+    recent_sales = Sale.query.filter_by(user_id=current_user.id).order_by(Sale.created_at.desc()).limit(50).all()
+    
+    return render_template('pos/returns.html', 
+                         form=form, 
+                         recent_sales=recent_sales)

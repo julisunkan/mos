@@ -6,324 +6,112 @@
 <div class="container-fluid">
     <div class="row">
         <div class="col-12">
-            <div class="d-flex justify-content-between align-items-center mb-4">
-                <h2><i class="fas fa-undo-alt"></i> Returns & Refunds</h2>
-                <a href="{{ url_for('pos.index') }}" class="btn btn-outline-secondary">
-                    <i class="fas fa-arrow-left"></i> Back to POS
-                </a>
-            </div>
-
-            <!-- Sale Search Section -->
-            <div class="card mb-4">
-                <div class="card-header">
-                    <h5>Find Sale for Return</h5>
-                </div>
-                <div class="card-body">
-                    <div class="row">
-                        <div class="col-md-6">
-                            <label for="saleSearch" class="form-label">Search by Receipt Number</label>
-                            <div class="input-group">
-                                <input type="text" class="form-control" id="saleSearch" 
-                                       placeholder="Enter receipt number...">
-                                <button class="btn btn-primary" id="searchSaleBtn">
-                                    <i class="fas fa-search"></i> Search
-                                </button>
-                            </div>
-                        </div>
-                        <div class="col-md-6">
-                            <label class="form-label">Or scan receipt barcode</label>
-                            <button class="btn btn-outline-secondary w-100" id="scanReceiptBtn">
-                                <i class="fas fa-barcode"></i> Scan Receipt
-                            </button>
-                        </div>
-                    </div>
+            <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+                <h1 class="h2">Returns & Refunds</h1>
+                <div class="btn-toolbar mb-2 mb-md-0">
+                    <a href="{{ url_for('pos.index') }}" class="btn btn-outline-primary">
+                        <i class="fas fa-arrow-left me-2"></i>Back to POS
+                    </a>
                 </div>
             </div>
+        </div>
+    </div>
 
-            <!-- Sale Details Section -->
-            <div class="card mb-4" id="saleDetailsCard" style="display: none;">
+    <div class="row">
+        <div class="col-md-8">
+            <div class="card">
                 <div class="card-header">
-                    <h5>Sale Details</h5>
+                    <h5 class="card-title mb-0">Recent Sales</h5>
                 </div>
                 <div class="card-body">
-                    <div class="row">
-                        <div class="col-md-6">
-                            <p><strong>Receipt #:</strong> <span id="receiptNumber"></span></p>
-                            <p><strong>Date:</strong> <span id="saleDate"></span></p>
-                            <p><strong>Customer:</strong> <span id="customerName"></span></p>
-                        </div>
-                        <div class="col-md-6">
-                            <p><strong>Cashier:</strong> <span id="cashierName"></span></p>
-                            <p><strong>Payment Method:</strong> <span id="paymentMethod"></span></p>
-                            <p><strong>Total Amount:</strong> $<span id="totalAmount"></span></p>
-                        </div>
-                    </div>
-                    
-                    <!-- Sale Items -->
-                    <h6 class="mt-3">Items in Sale</h6>
                     <div class="table-responsive">
-                        <table class="table table-sm" id="saleItemsTable">
+                        <table class="table table-hover">
                             <thead>
                                 <tr>
-                                    <th>Select</th>
-                                    <th>Product</th>
-                                    <th>SKU</th>
-                                    <th>Qty Sold</th>
-                                    <th>Unit Price</th>
+                                    <th>Receipt #</th>
+                                    <th>Date</th>
+                                    <th>Customer</th>
                                     <th>Total</th>
-                                    <th>Return Qty</th>
+                                    <th>Payment</th>
+                                    <th>Action</th>
                                 </tr>
                             </thead>
                             <tbody>
+                                {% for sale in recent_sales %}
+                                <tr>
+                                    <td>{{ sale.receipt_number }}</td>
+                                    <td>{{ sale.created_at.strftime('%m/%d/%Y %H:%M') }}</td>
+                                    <td>{{ sale.customer.name if sale.customer else 'Walk-in' }}</td>
+                                    <td>${{ "%.2f"|format(sale.total_amount) }}</td>
+                                    <td>{{ sale.payment_method }}</td>
+                                    <td>
+                                        <button class="btn btn-sm btn-outline-danger" onclick="initiateReturn({{ sale.id }})">
+                                            <i class="fas fa-undo me-1"></i>Return
+                                        </button>
+                                    </td>
+                                </tr>
+                                {% else %}
+                                <tr>
+                                    <td colspan="6" class="text-center">No sales found</td>
+                                </tr>
+                                {% endfor %}
                             </tbody>
                         </table>
                     </div>
                 </div>
             </div>
+        </div>
 
-            <!-- Return Processing Section -->
-            <div class="card" id="returnProcessCard" style="display: none;">
+        <div class="col-md-4">
+            <div class="card">
                 <div class="card-header">
-                    <h5>Process Return</h5>
+                    <h5 class="card-title mb-0">Process Return</h5>
                 </div>
                 <div class="card-body">
-                    <form id="returnForm">
-                        <div class="row">
-                            <div class="col-md-6">
-                                <div class="mb-3">
-                                    <label for="returnReason" class="form-label">Return Reason</label>
-                                    <select class="form-control" id="returnReason" required>
-                                        <option value="">Select reason...</option>
-                                        <option value="Defective">Defective Product</option>
-                                        <option value="Wrong Item">Wrong Item</option>
-                                        <option value="Customer Changed Mind">Customer Changed Mind</option>
-                                        <option value="Size Issue">Size Issue</option>
-                                        <option value="Quality Issue">Quality Issue</option>
-                                        <option value="Other">Other</option>
-                                    </select>
-                                </div>
-                            </div>
-                            <div class="col-md-6">
-                                <div class="mb-3">
-                                    <label class="form-label">Return Amount</label>
-                                    <div class="input-group">
-                                        <span class="input-group-text">$</span>
-                                        <input type="number" class="form-control" id="returnAmount" 
-                                               step="0.01" readonly>
-                                    </div>
-                                </div>
-                            </div>
+                    <form method="POST">
+                        {{ form.hidden_tag() }}
+                        
+                        <div class="mb-3">
+                            {{ form.return_reason.label(class="form-label") }}
+                            {{ form.return_reason(class="form-select") }}
                         </div>
                         
                         <div class="mb-3">
-                            <label for="returnNotes" class="form-label">Additional Notes</label>
-                            <textarea class="form-control" id="returnNotes" rows="3" 
-                                    placeholder="Enter any additional notes about the return..."></textarea>
+                            {{ form.notes.label(class="form-label") }}
+                            {{ form.notes(class="form-control", rows="3") }}
                         </div>
                         
-                        <div class="d-flex justify-content-between">
-                            <button type="button" class="btn btn-secondary" id="cancelReturnBtn">
-                                Cancel
-                            </button>
-                            <button type="submit" class="btn btn-danger">
-                                <i class="fas fa-undo"></i> Process Return
-                            </button>
+                        <div class="d-grid">
+                            {{ form.submit(class="btn btn-danger") }}
                         </div>
                     </form>
                 </div>
             </div>
-        </div>
-    </div>
-</div>
 
-<!-- Success Modal -->
-<div class="modal fade" id="returnSuccessModal" tabindex="-1">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header bg-success text-white">
-                <h5 class="modal-title">Return Processed Successfully</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-            </div>
-            <div class="modal-body text-center">
-                <i class="fas fa-check-circle fa-3x text-success mb-3"></i>
-                <h5>Return #<span id="successReturnNumber"></span></h5>
-                <p>The return has been processed successfully and inventory has been updated.</p>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                <button type="button" class="btn btn-primary" id="printReturnReceiptBtn">
-                    <i class="fas fa-print"></i> Print Return Receipt
-                </button>
+            <div class="card mt-3">
+                <div class="card-header">
+                    <h6 class="card-title mb-0">Return Instructions</h6>
+                </div>
+                <div class="card-body">
+                    <small class="text-muted">
+                        <ol>
+                            <li>Find the sale in the list above</li>
+                            <li>Click "Return" to start the process</li>
+                            <li>Select items to return</li>
+                            <li>Choose return reason</li>
+                            <li>Process the return</li>
+                        </ol>
+                    </small>
+                </div>
             </div>
         </div>
     </div>
 </div>
 
 <script>
-document.addEventListener('DOMContentLoaded', function() {
-    let currentSale = null;
-    
-    // Search for sale
-    document.getElementById('searchSaleBtn').addEventListener('click', function() {
-        const receiptNumber = document.getElementById('saleSearch').value.trim();
-        if (!receiptNumber) {
-            alert('Please enter a receipt number');
-            return;
-        }
-        
-        // Mock API call - replace with actual endpoint
-        fetch(`/api/sales/search?receipt=${receiptNumber}`)
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    displaySaleDetails(data.sale);
-                } else {
-                    alert('Sale not found or cannot be returned');
-                }
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                alert('Error searching for sale');
-            });
-    });
-    
-    function displaySaleDetails(sale) {
-        currentSale = sale;
-        
-        // Populate sale details
-        document.getElementById('receiptNumber').textContent = sale.receipt_number;
-        document.getElementById('saleDate').textContent = new Date(sale.created_at).toLocaleString();
-        document.getElementById('customerName').textContent = sale.customer_name || 'Walk-in Customer';
-        document.getElementById('cashierName').textContent = sale.cashier_name;
-        document.getElementById('paymentMethod').textContent = sale.payment_method;
-        document.getElementById('totalAmount').textContent = sale.total_amount.toFixed(2);
-        
-        // Populate items table
-        const tbody = document.querySelector('#saleItemsTable tbody');
-        tbody.innerHTML = '';
-        
-        sale.items.forEach(item => {
-            const row = document.createElement('tr');
-            row.innerHTML = `
-                <td>
-                    <input type="checkbox" class="form-check-input item-checkbox" 
-                           data-item-id="${item.id}" data-max-qty="${item.quantity}">
-                </td>
-                <td>${item.product_name}</td>
-                <td>${item.product_sku}</td>
-                <td>${item.quantity}</td>
-                <td>$${item.unit_price.toFixed(2)}</td>
-                <td>$${item.total_price.toFixed(2)}</td>
-                <td>
-                    <input type="number" class="form-control form-control-sm return-qty" 
-                           min="1" max="${item.quantity}" value="${item.quantity}" disabled>
-                </td>
-            `;
-            tbody.appendChild(row);
-        });
-        
-        // Show sale details
-        document.getElementById('saleDetailsCard').style.display = 'block';
-        
-        // Handle item selection
-        document.querySelectorAll('.item-checkbox').forEach(checkbox => {
-            checkbox.addEventListener('change', function() {
-                const qtyInput = this.closest('tr').querySelector('.return-qty');
-                qtyInput.disabled = !this.checked;
-                updateReturnAmount();
-                
-                // Show/hide return process card
-                const anyChecked = document.querySelectorAll('.item-checkbox:checked').length > 0;
-                document.getElementById('returnProcessCard').style.display = anyChecked ? 'block' : 'none';
-            });
-        });
-        
-        // Handle quantity changes
-        document.querySelectorAll('.return-qty').forEach(input => {
-            input.addEventListener('input', updateReturnAmount);
-        });
-    }
-    
-    function updateReturnAmount() {
-        let totalReturn = 0;
-        
-        document.querySelectorAll('.item-checkbox:checked').forEach(checkbox => {
-            const row = checkbox.closest('tr');
-            const qtyInput = row.querySelector('.return-qty');
-            const unitPrice = parseFloat(row.cells[4].textContent.replace('$', ''));
-            const returnQty = parseInt(qtyInput.value) || 0;
-            
-            totalReturn += unitPrice * returnQty;
-        });
-        
-        document.getElementById('returnAmount').value = totalReturn.toFixed(2);
-    }
-    
-    // Process return
-    document.getElementById('returnForm').addEventListener('submit', function(e) {
-        e.preventDefault();
-        
-        const returnItems = [];
-        document.querySelectorAll('.item-checkbox:checked').forEach(checkbox => {
-            const row = checkbox.closest('tr');
-            const qtyInput = row.querySelector('.return-qty');
-            const itemId = checkbox.getAttribute('data-item-id');
-            const returnQty = parseInt(qtyInput.value);
-            
-            const originalItem = currentSale.items.find(item => item.id == itemId);
-            
-            returnItems.push({
-                product_id: originalItem.product_id,
-                sale_item_id: itemId,
-                quantity: returnQty,
-                unit_price: originalItem.unit_price,
-                total_amount: originalItem.unit_price * returnQty
-            });
-        });
-        
-        const returnData = {
-            sale_id: currentSale.id,
-            items: returnItems,
-            return_amount: parseFloat(document.getElementById('returnAmount').value),
-            return_reason: document.getElementById('returnReason').value,
-            notes: document.getElementById('returnNotes').value
-        };
-        
-        // Process return
-        fetch('/pos/process-return', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify(returnData)
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                document.getElementById('successReturnNumber').textContent = data.return_number;
-                new bootstrap.Modal(document.getElementById('returnSuccessModal')).show();
-                
-                // Reset form
-                document.getElementById('returnForm').reset();
-                document.getElementById('saleDetailsCard').style.display = 'none';
-                document.getElementById('returnProcessCard').style.display = 'none';
-                document.getElementById('saleSearch').value = '';
-            } else {
-                alert('Error processing return: ' + data.message);
-            }
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            alert('Error processing return');
-        });
-    });
-    
-    // Cancel return
-    document.getElementById('cancelReturnBtn').addEventListener('click', function() {
-        document.getElementById('returnProcessCard').style.display = 'none';
-        document.querySelectorAll('.item-checkbox').forEach(cb => cb.checked = false);
-        document.querySelectorAll('.return-qty').forEach(input => input.disabled = true);
-    });
-});
+function initiateReturn(saleId) {
+    // This would open a modal to select items for return
+    alert('Return functionality will be implemented here for sale ID: ' + saleId);
+}
 </script>
 {% endblock %}

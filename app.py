@@ -92,6 +92,24 @@ def dashboard():
                          recent_sales=recent_sales,
                          low_stock_products=low_stock_products)
 
+@app.route('/api/dashboard/stats')
+@login_required
+def dashboard_stats_api():
+    """API endpoint for dashboard statistics refresh"""
+    from models import Product, Sale, Customer
+    
+    total_products = Product.query.count()
+    total_customers = Customer.query.count()
+    total_sales = Sale.query.count()
+    low_stock_count = Product.query.filter(Product.stock_quantity <= Product.low_stock_threshold).count()
+    
+    return jsonify({
+        'total_products': total_products,
+        'total_customers': total_customers,
+        'total_sales': total_sales,
+        'low_stock_count': low_stock_count
+    })
+
 # Create tables and default data
 with app.app_context():
     db.create_all()

@@ -1,4 +1,6 @@
 # Additional models needed for missing features
+from app import db
+from datetime import datetime
 
 class ProductBatch(db.Model):
     __tablename__ = 'product_batches'
