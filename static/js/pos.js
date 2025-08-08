@@ -89,6 +89,12 @@ class POSSystem {
         if (scanBarcodeBtn) {
             scanBarcodeBtn.addEventListener('click', this.scanBarcode.bind(this));
         }
+
+        // Print receipt button
+        const printReceiptBtn = document.getElementById('printReceipt');
+        if (printReceiptBtn) {
+            printReceiptBtn.addEventListener('click', this.printReceipt.bind(this));
+        }
     }
 
     debounce(func, wait) {
@@ -154,7 +160,9 @@ class POSSystem {
         const productName = productCard.dataset.productName;
         const productPrice = parseFloat(productCard.dataset.productPrice);
         const productStock = parseInt(productCard.dataset.productStock);
-        const productTax = parseFloat(productCard.dataset.productTax);
+        const productTax = parseFloat(productCard.dataset.productTax) || 0;
+
+        console.log('Adding product to cart:', { productId, productName, productPrice, productStock, productTax }); // Debug log
 
         if (productStock <= 0) {
             this.showAlert('Product is out of stock!', 'warning');
@@ -181,6 +189,7 @@ class POSSystem {
             });
         }
 
+        console.log('Cart after adding product:', this.cart); // Debug log
         this.updateCartDisplay();
         this.updateTotals();
     }
@@ -253,21 +262,31 @@ class POSSystem {
     }
 
     updateTotals() {
+        console.log('Updating totals, cart:', this.cart); // Debug log
+        
         let subtotal = 0;
         let taxTotal = 0;
 
         this.cart.forEach(item => {
             const itemTotal = item.price * item.quantity;
             subtotal += itemTotal;
-            taxTotal += (itemTotal * item.tax_rate) / 100;
+            taxTotal += (itemTotal * (item.tax_rate || 0)) / 100;
         });
 
-        const discount = parseFloat(document.getElementById('discount').value) || 0;
+        const discountElement = document.getElementById('discount');
+        const discount = discountElement ? parseFloat(discountElement.value) || 0 : 0;
         const total = subtotal + taxTotal - discount;
 
-        document.getElementById('subtotal').textContent = `$${subtotal.toFixed(2)}`;
-        document.getElementById('taxAmount').textContent = `$${taxTotal.toFixed(2)}`;
-        document.getElementById('total').textContent = `$${total.toFixed(2)}`;
+        console.log('Calculated totals:', { subtotal, taxTotal, discount, total }); // Debug log
+
+        // Update DOM elements
+        const subtotalElement = document.getElementById('subtotal');
+        const taxElement = document.getElementById('taxAmount');
+        const totalElement = document.getElementById('total');
+
+        if (subtotalElement) subtotalElement.textContent = `$${subtotal.toFixed(2)}`;
+        if (taxElement) taxElement.textContent = `$${taxTotal.toFixed(2)}`;
+        if (totalElement) totalElement.textContent = `$${total.toFixed(2)}`;
     }
 
     async processSale() {
@@ -314,6 +333,16 @@ class POSSystem {
     showSaleSuccess(receiptNumber, totalAmount) {
         document.getElementById('receiptNumber').textContent = `Receipt: ${receiptNumber}`;
         document.getElementById('saleTotal').textContent = `Total: $${totalAmount.toFixed(2)}`;
+        
+        // Store receipt data for printing
+        this.lastReceiptData = {
+            receiptNumber,
+            totalAmount,
+            items: [...this.cart],
+            customer: this.currentCustomer,
+            paymentMethod: document.getElementById('paymentMethod').value,
+            timestamp: new Date()
+        };
         
         const modal = new bootstrap.Modal(document.getElementById('saleSuccessModal'));
         modal.show();
@@ -363,6 +392,68 @@ class POSSystem {
     getCSRFToken() {
         // CSRF disabled for API endpoints
         return '';
+    }
+
+    printReceipt() {
+        if (!this.lastReceiptData) {
+            this.showAlert('No receipt data available!', 'warning');
+            return;
+        }
+
+        const data = this.lastReceiptData;
+        let receiptContent = `
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Receipt ${data.receiptNumber}</title>
+    <style>
+        body { font-family: monospace; width: 300px; margin: 0 auto; }
+        .header { text-align: center; border-bottom: 1px dashed #000; padding-bottom: 10px; }
+        .item { display: flex; justify-content: space-between; margin: 5px 0; }
+        .total { border-top: 1px dashed #000; padding-top: 10px; font-weight: bold; }
+        .footer { text-align: center; margin-top: 20px; font-size: 12px; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h2>Cloud POS</h2>
+        <p>Receipt: ${data.receiptNumber}</p>
+        <p>${data.timestamp.toLocaleString()}</p>
+    </div>
+    <div class="items">`;
+
+        data.items.forEach(item => {
+            receiptContent += `
+        <div class="item">
+            <span>${item.name} x${item.quantity}</span>
+            <span>$${(item.price * item.quantity).toFixed(2)}</span>
+        </div>`;
+        });
+
+        receiptContent += `
+    </div>
+    <div class="total">
+        <div class="item">
+            <span>Total:</span>
+            <span>$${data.totalAmount.toFixed(2)}</span>
+        </div>
+        <div class="item">
+            <span>Payment:</span>
+            <span>${data.paymentMethod}</span>
+        </div>
+    </div>
+    <div class="footer">
+        <p>Thank you for your business!</p>
+    </div>
+</body>
+</html>`;
+
+        const printWindow = window.open('', '_blank');
+        printWindow.document.write(receiptContent);
+        printWindow.document.close();
+        printWindow.focus();
+        printWindow.print();
+        printWindow.close();
     }
 
     showAlert(message, type) {
