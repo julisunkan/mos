@@ -1,9 +1,10 @@
-from flask import Blueprint, render_template, redirect, url_for, flash, request
+from flask import Blueprint, render_template, redirect, url_for, flash, request, jsonify
 from flask_login import login_required, current_user
 from forms import ProductForm, CategoryForm
 from models import Product, Category
 from app import db
 from utils import generate_sku
+from datetime import datetime
 
 inventory_bp = Blueprint('inventory', __name__)
 
@@ -190,6 +191,25 @@ def edit_category(id):
             flash(f'Error updating category: {str(e)}', 'error')
     
     return render_template('inventory/category_form.html', form=form, title='Edit Category', category=category)
+
+@inventory_bp.route('/categories/<int:id>/delete', methods=['POST'])
+@login_required
+def delete_category(id):
+    category = Category.query.get_or_404(id)
+    
+    if category.products:
+        flash('Cannot delete category with existing products.', 'error')
+        return redirect(url_for('inventory.categories'))
+    
+    try:
+        db.session.delete(category)
+        db.session.commit()
+        flash(f'Category {category.name} deleted successfully!', 'success')
+    except Exception as e:
+        db.session.rollback()
+        flash(f'Error deleting category: {str(e)}', 'error')
+    
+    return redirect(url_for('inventory.categories'))
 
 # Product Image Management
 @inventory_bp.route('/products/<int:product_id>/images')
