@@ -123,6 +123,7 @@
     
     <!-- Custom JS with cache busting -->
     <script src="{{ url_for('static', filename='js/dashboard.js') }}?v={{ range(1, 10000) | random }}"></script>
+    <script src="{{ url_for('static', filename='js/pos.js') }}?v={{ range(1, 10000) | random }}"></script>
     
     <!-- Mobile App JS -->
     <script>
