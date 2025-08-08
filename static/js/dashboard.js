@@ -94,10 +94,10 @@ function initializeSalesChart(canvas) {
 }
 
 // Utility functions
-function formatCurrency(amount) {
+function formatCurrency(amount, currency = 'USD') {
     return new Intl.NumberFormat('en-US', {
         style: 'currency',
-        currency: 'USD'
+        currency: currency
     }).format(amount);
 }
 

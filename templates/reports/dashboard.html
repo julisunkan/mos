@@ -118,7 +118,7 @@
                                     <small class="text-muted">{{ product.total_sold }} units sold</small>
                                 </div>
                                 <span class="badge bg-primary rounded-pill">
-                                    ${{ "%.0f"|format(product.total_revenue) }}
+                                    {{ product.total_revenue|format_currency }}
                                 </span>
                             </div>
                             {% endfor %}
@@ -157,8 +157,8 @@
                                     <tr>
                                         <td>{{ day.date.strftime('%m/%d/%Y') }}</td>
                                         <td>{{ day.count }}</td>
-                                        <td>${{ "%.2f"|format(day.total) }}</td>
-                                        <td>${{ "%.2f"|format(day.total / day.count if day.count > 0 else 0) }}</td>
+                                        <td>{{ day.total|format_currency }}</td>
+                                        <td>{{ (day.total / day.count if day.count > 0 else 0)|format_currency }}</td>
                                     </tr>
                                     {% endfor %}
                                 </tbody>
@@ -188,7 +188,7 @@ document.addEventListener('DOMContentLoaded', function() {
         data: {
             labels: dailySalesLabels.map(date => new Date(date).toLocaleDateString()),
             datasets: [{
-                label: 'Daily Sales ($)',
+                label: 'Daily Sales ({{ get_currency_symbol() }})',
                 data: dailySalesData,
                 borderColor: 'rgb(75, 192, 192)',
                 backgroundColor: 'rgba(75, 192, 192, 0.2)',
@@ -207,7 +207,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     beginAtZero: true,
                     ticks: {
                         callback: function(value) {
-                            return '$' + value.toFixed(2);
+                            return '{{ get_currency_symbol() }}' + value.toFixed(2);
                         }
                     }
                 }

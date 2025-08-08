@@ -169,6 +169,12 @@
         });
     </script>
     
+    <script>
+        // Global currency configuration for all JavaScript files
+        window.currencySymbol = '{{ get_currency_symbol() }}';
+        window.defaultCurrency = '{{ get_default_currency() }}';
+    </script>
+    
     {% block scripts %}{% endblock %}
 </body>
 </html>

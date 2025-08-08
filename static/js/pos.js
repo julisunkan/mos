@@ -1,4 +1,7 @@
 // POS JavaScript functionality
+// Get currency symbol from global configuration (should be set in template)
+const CURRENCY_SYMBOL = window.currencySymbol || '$';
+
 class POSSystem {
     constructor() {
         this.cart = [];
@@ -144,7 +147,7 @@ class POSSystem {
                     <div class="card-body text-center p-2">
                         <h6 class="card-title mb-1">${product.name}</h6>
                         <p class="card-text mb-1">
-                            <strong>$${product.price.toFixed(2)}</strong>
+                            <strong>${CURRENCY_SYMBOL}${product.price.toFixed(2)}</strong>
                         </p>
                         <small class="text-muted">Stock: ${product.stock}</small>
                     </div>
@@ -213,7 +216,7 @@ class POSSystem {
                 <div class="d-flex justify-content-between align-items-start">
                     <div class="flex-grow-1">
                         <h6 class="mb-1">${item.name}</h6>
-                        <small class="text-muted">$${item.price.toFixed(2)} each</small>
+                        <small class="text-muted">${CURRENCY_SYMBOL}${item.price.toFixed(2)} each</small>
                     </div>
                     <button type="button" class="btn btn-sm btn-outline-danger remove-cart-item" 
                             data-index="${index}">
@@ -226,7 +229,7 @@ class POSSystem {
                                value="${item.quantity}" min="1" max="${item.max_stock}"
                                data-index="${index}">
                     </div>
-                    <strong>$${(item.price * item.quantity).toFixed(2)}</strong>
+                    <strong>${CURRENCY_SYMBOL}${(item.price * item.quantity).toFixed(2)}</strong>
                 </div>
             </div>
         `).join('');
@@ -284,9 +287,9 @@ class POSSystem {
         const taxElement = document.getElementById('taxAmount');
         const totalElement = document.getElementById('total');
 
-        if (subtotalElement) subtotalElement.textContent = `$${subtotal.toFixed(2)}`;
-        if (taxElement) taxElement.textContent = `$${taxTotal.toFixed(2)}`;
-        if (totalElement) totalElement.textContent = `$${total.toFixed(2)}`;
+        if (subtotalElement) subtotalElement.textContent = `${CURRENCY_SYMBOL}${subtotal.toFixed(2)}`;
+        if (taxElement) taxElement.textContent = `${CURRENCY_SYMBOL}${taxTotal.toFixed(2)}`;
+        if (totalElement) totalElement.textContent = `${CURRENCY_SYMBOL}${total.toFixed(2)}`;
     }
 
     async processSale() {
@@ -332,7 +335,7 @@ class POSSystem {
 
     showSaleSuccess(receiptNumber, totalAmount) {
         document.getElementById('receiptNumber').textContent = `Receipt: ${receiptNumber}`;
-        document.getElementById('saleTotal').textContent = `Total: $${totalAmount.toFixed(2)}`;
+        document.getElementById('saleTotal').textContent = `Total: ${CURRENCY_SYMBOL}${totalAmount.toFixed(2)}`;
         
         // Store receipt data for printing
         this.lastReceiptData = {
