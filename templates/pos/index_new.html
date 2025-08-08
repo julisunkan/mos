@@ -254,6 +254,8 @@ function addToCart(productCard) {
     const productStock = parseInt(productCard.dataset.stock);
     const productTax = parseFloat(productCard.dataset.tax || 0);
     
+    console.log('Adding to cart:', { productId, productName, productPrice, productStock }); // Debug
+    
     if (productStock <= 0) {
         showAlert('Product is out of stock!', 'warning');
         return;
@@ -279,8 +281,10 @@ function addToCart(productCard) {
         });
     }
     
+    console.log('Cart after adding:', cart); // Debug
     updateCartDisplay();
     updateTotals();
+    showAlert(`${productName} added to cart!`, 'success');
 }
 
 // Update cart display
@@ -289,14 +293,17 @@ function updateCartDisplay() {
     const emptyCart = document.getElementById('emptyCart');
     const processSaleBtn = document.getElementById('processSale');
     
+    console.log('Updating cart display, cart length:', cart.length); // Debug
+    
     if (cart.length === 0) {
-        emptyCart.style.display = 'block';
-        processSaleBtn.disabled = true;
-        cartContainer.innerHTML = '<div class="text-center text-muted py-4" id="emptyCart"><i class="fas fa-shopping-cart fa-2x mb-2"></i><p>No items in cart</p></div>';
+        if (emptyCart) emptyCart.style.display = 'block';
+        if (processSaleBtn) processSaleBtn.disabled = true;
+        cartContainer.innerHTML = '';
         return;
     }
     
-    processSaleBtn.disabled = false;
+    if (emptyCart) emptyCart.style.display = 'none';
+    if (processSaleBtn) processSaleBtn.disabled = false;
     
     const cartHtml = cart.map((item, index) => `
         <div class="cart-item border-bottom pb-2 mb-2">
@@ -383,8 +390,11 @@ function clearCart() {
 
 // Process sale
 async function processSale() {
+    console.log('Processing sale, cart length:', cart.length); // Debug
+    console.log('Cart contents:', cart); // Debug
+    
     if (cart.length === 0) {
-        showAlert('Cart is empty!', 'warning');
+        showAlert('Cart is empty! Please add items before processing the sale.', 'warning');
         return;
     }
     
