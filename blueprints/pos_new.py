@@ -181,13 +181,33 @@ def process_sale():
         
         # Process each item
         for item_data in data['items']:
-            product = Product.query.get(item_data['product_id'])
-            if not product:
-                return jsonify({'error': f'Product not found: {item_data["product_id"]}'}), 400
+            # Validate product_id
+            product_id = item_data.get('product_id')
+            if not product_id:
+                return jsonify({'error': 'Missing product ID in cart item'}), 400
             
-            quantity = int(item_data['quantity'])
+            try:
+                product_id = int(product_id)
+            except (ValueError, TypeError):
+                return jsonify({'error': f'Invalid product ID: {product_id}'}), 400
+            
+            product = Product.query.filter_by(id=product_id).first()
+            if not product:
+                return jsonify({'error': f'Product not found: {product_id}'}), 400
+            
+            if not product.is_active:
+                return jsonify({'error': f'Product {product.name} is not available'}), 400
+            
+            # Validate quantity
+            try:
+                quantity = int(item_data.get('quantity', 0))
+                if quantity <= 0:
+                    return jsonify({'error': f'Invalid quantity for {product.name}'}), 400
+            except (ValueError, TypeError):
+                return jsonify({'error': f'Invalid quantity for {product.name}'}), 400
+            
             if product.stock_quantity < quantity:
-                return jsonify({'error': f'Insufficient stock for {product.name}'}), 400
+                return jsonify({'error': f'Insufficient stock for {product.name}. Available: {product.stock_quantity}'}), 400
             
             unit_price = float(item_data.get('unit_price', product.selling_price))
             total_price = unit_price * quantity

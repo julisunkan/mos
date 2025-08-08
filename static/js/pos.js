@@ -183,12 +183,12 @@ class POSSystem {
             existingItem.quantity++;
         } else {
             this.cart.push({
-                id: productId,
+                id: parseInt(productId),
                 name: productName,
-                price: productPrice,
+                price: parseFloat(productPrice),
                 quantity: 1,
-                tax_rate: productTax,
-                max_stock: productStock
+                tax_rate: parseFloat(productTax),
+                max_stock: parseInt(productStock)
             });
         }
 
@@ -300,9 +300,9 @@ class POSSystem {
 
         const saleData = {
             items: this.cart.map(item => ({
-                product_id: item.id,
-                quantity: item.quantity,
-                unit_price: item.price
+                product_id: parseInt(item.id),
+                quantity: parseInt(item.quantity),
+                unit_price: parseFloat(item.price)
             })),
             customer_id: this.currentCustomer,
             payment_method: document.getElementById('paymentMethod').value,
