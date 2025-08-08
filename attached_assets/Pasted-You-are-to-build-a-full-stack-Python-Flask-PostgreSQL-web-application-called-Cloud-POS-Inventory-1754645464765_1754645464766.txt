@@ -1,0 +1,152 @@
+You are to build a full-stack Python/Flask/PostgreSQL web application called **Cloud POS & Inventory Manager**.
+
+Overview:
+This is a modern, cloud-based Point of Sale (POS) and Inventory Management system for businesses of all sizes. 
+It must be responsive, secure, multi-currency, and role-based. 
+There is NO public signup — only Admin can add users from the dashboard.
+
+---
+
+Core Requirements:
+- Backend: Python 3, Flask
+- Database: PostgreSQL with SQLAlchemy ORM + Alembic migrations
+- Auth: Flask-Login + bcrypt password hashing
+- Forms: Flask-WTF + CSRF protection
+- Frontend: Bootstrap 5 or TailwindCSS + Jinja2 templates
+- REST API for POS operations
+- Role-Based Access Control (RBAC) for permissions
+
+---
+
+Authentication Rules:
+- No public registration
+- Only Admin can create/edit/delete users
+- Roles: Admin, Manager, Cashier, Accountant
+- Login required for all routes (except login page)
+- Passwords hashed with bcrypt
+- 2FA optional for all users
+
+---
+
+Admin Dashboard Features:
+1. **User Management**
+   - Create/edit/delete users
+   - Reset/change passwords
+   - Activate/deactivate accounts
+   - Assign roles & permissions
+   - View user activity logs
+
+2. **Role & Permission Management**
+   - Create/edit/delete roles
+   - Set granular permissions per role
+   - Restrict access to certain stores, products, or actions
+
+3. **Store & Location Management**
+   - Create/edit/delete stores & warehouses
+   - Assign users to specific stores
+   - Track per-store sales & inventory
+
+4. **Product & Category Management**
+   - Add/edit/delete products
+   - Manage categories, brands, and product variants
+   - Upload product images
+   - Assign SKU/barcodes (generate if needed)
+   - Set cost price, sale price, tax rate
+   - Batch & expiry date tracking
+   - Serial number tracking
+   - Bulk import/export via CSV
+
+5. **Inventory Management**
+   - Real-time stock tracking
+   - View stock per store/location
+   - Adjust stock quantities
+   - Transfer stock between stores
+   - Create/receive purchase orders
+   - Supplier management
+   - Automatic low-stock alerts
+   - Stock valuation methods (FIFO, LIFO, Avg Cost)
+
+6. **POS Features**
+   - Barcode scanner support
+   - Offline mode (cache sales locally, sync later)
+   - Multi-payment split (cash, card, bank transfer, mobile money)
+   - Apply discounts (percentage or fixed amount)
+   - Hold/Resume sales
+   - Returns & refunds with reason codes
+   - Multiple registers per store
+   - Print/email/WhatsApp receipts
+   - Cash register management (open/close, cash-in/out)
+   - Multi-currency transactions (support all ISO currencies, live exchange rate API)
+
+7. **Customer Management**
+   - Add/edit/delete customers
+   - Customer groups (VIP, Wholesale, Retail)
+   - Credit sales & customer balances
+   - Transaction history
+   - Loyalty points/reward system
+   - Marketing integration (send promotions via SMS/Email/WhatsApp)
+
+8. **Reports & Analytics**
+   - Real-time sales dashboard with charts & KPIs
+   - Sales by product/category/brand/store/user
+   - Top-selling products
+   - Dead stock report (unsold items)
+   - Profit & loss analysis
+   - Tax reports
+   - Low-stock report
+   - Export reports to Excel/PDF
+   - Custom report builder
+
+9. **System & Settings**
+   - Company profile (name, logo, contact info)
+   - Multi-language support
+   - Multi-currency display & transactions (all countries)
+   - Tax rate configuration
+   - Currency formatting
+   - Backup & restore database
+   - Email/SMS/WhatsApp settings
+   - Custom receipt & invoice templates
+   - Theme customization (light/dark mode)
+   - Audit logs for all actions
+
+10. **Integrations**
+    - Payment gateways (Stripe, Paystack, Flutterwave, PayPal)
+    - E-commerce sync (Shopify, WooCommerce)
+    - Accounting integration (QuickBooks, Xero)
+    - SMS/Email APIs (Twilio, SendinBlue, Mailgun)
+    - WhatsApp Business API for receipts & alerts
+
+---
+
+Security:
+- 2FA support
+- Session timeout
+- Failed login lockout
+- IP-based access restriction for roles
+- All passwords hashed (bcrypt)
+- Sensitive fields encrypted
+
+---
+
+Technical Structure:
+- `app/` folder with blueprints:
+  * `auth` (login/logout only)
+  * `admin` (all CRUD and settings)
+  * `pos` (sales transactions)
+  * `inventory` (stock & products)
+  * `reports` (analytics & exports)
+  * `customers` (customer management)
+- Models in `app/models/`
+- Templates in `app/templates/`
+- Static files in `app/static/`
+- `migrations/` for Alembic
+- `requirements.txt` listing all dependencies
+
+---
+
+Deliverables:
+- Fully functional Flask + PostgreSQL app
+- Seed script for default roles & first super admin account
+- Sample data for demo
+- README with setup instructions for Replit
+- Instructions for database migration and admin account creation
