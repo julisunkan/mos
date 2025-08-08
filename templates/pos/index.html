@@ -193,6 +193,7 @@
 // POS System Variables
 let cart = [];
 let lastReceiptNumber = null;
+const currencySymbol = '{{ get_currency_symbol() }}';
 
 // Initialize POS
 document.addEventListener('DOMContentLoaded', function() {
@@ -238,7 +239,7 @@ async function searchProducts() {
                     <div class="card-body text-center p-2">
                         <h6 class="card-title mb-1">${product.name}</h6>
                         <p class="card-text mb-1">
-                            <strong>$${product.price.toFixed(2)}</strong>
+                            <strong>${currencySymbol}${product.price.toFixed(2)}</strong>
                         </p>
                         <small class="text-muted">Stock: ${product.stock}</small>
                     </div>
@@ -310,7 +311,7 @@ function updateCartDisplay() {
             <div class="d-flex justify-content-between align-items-start">
                 <div class="flex-grow-1">
                     <h6 class="mb-1">${item.name}</h6>
-                    <small class="text-muted">$${item.price.toFixed(2)} each</small>
+                    <small class="text-muted">${currencySymbol}${item.price.toFixed(2)} each</small>
                 </div>
                 <button type="button" class="btn btn-sm btn-outline-danger" onclick="removeFromCart(${index})">
                     <i class="fas fa-times"></i>
@@ -322,7 +323,7 @@ function updateCartDisplay() {
                            value="${item.quantity}" min="1" max="${item.max_stock}"
                            onchange="updateQuantity(${index}, this.value)">
                 </div>
-                <strong>$${(item.price * item.quantity).toFixed(2)}</strong>
+                <strong>${currencySymbol}${(item.price * item.quantity).toFixed(2)}</strong>
             </div>
         </div>
     `).join('');
@@ -372,9 +373,9 @@ function updateTotals() {
     const discount = parseFloat(document.getElementById('discount').value) || 0;
     const total = subtotal + taxTotal - discount;
     
-    document.getElementById('subtotal').textContent = `$${subtotal.toFixed(2)}`;
-    document.getElementById('taxAmount').textContent = `$${taxTotal.toFixed(2)}`;
-    document.getElementById('total').textContent = `$${total.toFixed(2)}`;
+    document.getElementById('subtotal').textContent = `${currencySymbol}${subtotal.toFixed(2)}`;
+    document.getElementById('taxAmount').textContent = `${currencySymbol}${taxTotal.toFixed(2)}`;
+    document.getElementById('total').textContent = `${currencySymbol}${total.toFixed(2)}`;
 }
 
 // Clear cart
@@ -422,7 +423,7 @@ async function processSale() {
         if (response.ok && result.success) {
             lastReceiptNumber = result.receipt_number;
             document.getElementById('receiptNumber').textContent = `Receipt: ${result.receipt_number}`;
-            document.getElementById('saleTotal').textContent = `Total: $${result.total_amount.toFixed(2)}`;
+            document.getElementById('saleTotal').textContent = `Total: ${currencySymbol}${result.total_amount.toFixed(2)}`;
             
             const modal = new bootstrap.Modal(document.getElementById('saleSuccessModal'));
             modal.show();
