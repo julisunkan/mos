@@ -174,7 +174,8 @@ def process_sale():
             product.stock_quantity -= quantity
             
             subtotal += total_price
-            tax_total += calculate_tax(total_price, product.tax_rate)
+            if product.tax_rate:
+                tax_total += total_price * (product.tax_rate / 100)
         
         # Update sale totals
         sale.subtotal = subtotal

@@ -113,6 +113,12 @@ def format_number(number):
         number = 0
     return f"{number:,}"
 
+def calculate_tax(amount, tax_rate):
+    """Calculate tax amount for a given amount and rate"""
+    if not amount or not tax_rate:
+        return 0
+    return amount * (tax_rate / 100)
+
 def log_audit_action(action, entity_type, entity_id=None, old_values=None, new_values=None):
     """Log an audit action"""
     from models import AuditLog
