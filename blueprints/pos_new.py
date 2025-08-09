@@ -214,7 +214,7 @@ def process_sale():
             if product.stock_quantity < quantity:
                 return jsonify({'error': f'Insufficient stock for {product.name}. Available: {product.stock_quantity}'}), 400
             
-            unit_price = float(item_data.get('unit_price', product.selling_price))
+            unit_price = float(item_data.get('unit_price', float(product.selling_price)))
             total_price = unit_price * quantity
             
             # Create sale item
@@ -232,7 +232,7 @@ def process_sale():
             
             subtotal += total_price
             if product.tax_rate:
-                tax_total += total_price * (product.tax_rate / 100)
+                tax_total += total_price * (float(product.tax_rate) / 100)
         
         # Update sale totals
         sale.subtotal = subtotal

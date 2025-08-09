@@ -176,11 +176,11 @@ class POSSystem {
     }
 
     addProductToCart(productCard) {
-        const productId = parseInt(productCard.dataset.productId);
-        const productName = productCard.dataset.productName;
-        const productPrice = parseFloat(productCard.dataset.productPrice);
-        const productStock = parseInt(productCard.dataset.productStock);
-        const productTax = parseFloat(productCard.dataset.productTax) || 0;
+        const productId = parseInt(productCard.dataset.id);
+        const productName = productCard.dataset.name;
+        const productPrice = parseFloat(productCard.dataset.price);
+        const productStock = parseInt(productCard.dataset.stock);
+        const productTax = parseFloat(productCard.dataset.tax) || 0;
 
         console.log('Adding product to cart:', { productId, productName, productPrice, productStock, productTax }); // Debug log
 
