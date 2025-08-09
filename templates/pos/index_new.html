@@ -194,7 +194,8 @@
 
 {% block scripts %}
 <script>
-// Get currency configuration from server
+// Global configuration
+window.currencySymbol = '{{ get_currency_symbol() }}';
 const defaultCurrency = '{{ get_default_currency() }}';
 const currencySymbols = {
     'USD': '$',
@@ -211,62 +212,39 @@ function formatCurrency(amount) {
     return symbol + parseFloat(amount).toFixed(2).replace(/\d(?=(\d{3})+\.)/g, '$&,');
 }
 
-// POS System Variables
+// Simple POS System Variables
 let cart = [];
 let lastReceiptNumber = null;
 
-// Initialize POS System
-const posSystem = new POSSystem();
-
-// Additional functions for template compatibility
-function addToCart(element) {
-    posSystem.addProductToCart(element);
-}
-
-function processSale() {
-    posSystem.processSale();
-}
-
-function clearCart() {
-    posSystem.clearCart();
-}
-
-function updateTotals() {
-    posSystem.updateTotals();
-}
-
-function closeRegister() {
-    if (confirm('Are you sure you want to close the register?')) {
-        document.getElementById('closeRegisterForm').submit();
+// Initialize POS when page loads
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('POS system initialized');
+    updateCartDisplay();
+    updateTotals();
+    
+    // Set up search event listener
+    const searchInput = document.getElementById('productSearch');
+    if (searchInput) {
+        searchInput.addEventListener('input', searchProducts);
     }
-}
-
-function searchProducts() {
-    posSystem.searchProducts();
-}
-
-function printReceipt() {
-    if (posSystem.lastReceiptData) {
-        window.print();
-    } else {
-        showMessage('No recent sale to print', 'warning');
+    
+    // Set up discount input listener
+    const discountInput = document.getElementById('discount');
+    if (discountInput) {
+        discountInput.addEventListener('input', updateTotals);
     }
-}
-
-function downloadReceipt() {
-    if (posSystem.lastReceiptData) {
-        const receiptNumber = posSystem.lastReceiptData.receiptNumber;
-        window.open(`/pos/receipt/${receiptNumber}/pdf`, '_blank');
-    } else {
-        showMessage('No recent sale to download', 'warning');
-    }
-}
+});
 
 // Search products
 async function searchProducts() {
-    const query = document.getElementById('productSearch').value.trim();
+    const searchInput = document.getElementById('productSearch');
+    if (!searchInput) return;
+    
+    const query = searchInput.value.trim();
     const resultsContainer = document.getElementById('searchResults');
     const defaultProducts = document.getElementById('defaultProducts');
+    
+    if (!resultsContainer || !defaultProducts) return;
     
     if (query.length < 2) {
         resultsContainer.innerHTML = '';
@@ -292,7 +270,7 @@ async function searchProducts() {
                      data-name="${product.name}" 
                      data-price="${product.price}"
                      data-stock="${product.stock}"
-                     data-tax="${product.tax_rate}"
+                     data-tax="${product.tax_rate || 0}"
                      onclick="addToCart(this)">
                     <div class="card-body text-center p-2">
                         <h6 class="card-title mb-1">${product.name}</h6>
@@ -427,9 +405,13 @@ function updateQuantity(index, newQuantity) {
 
 // Remove item from cart
 function removeFromCart(index) {
-    cart.splice(index, 1);
-    updateCartDisplay();
-    updateTotals();
+    if (index >= 0 && index < cart.length) {
+        const removedItem = cart[index];
+        cart.splice(index, 1);
+        updateCartDisplay();
+        updateTotals();
+        showAlert(removedItem.name + ' removed from cart', 'info');
+    }
 }
 
 // Update totals
@@ -440,26 +422,38 @@ function updateTotals() {
     cart.forEach(item => {
         const itemTotal = item.price * item.quantity;
         subtotal += itemTotal;
-        taxTotal += (itemTotal * item.tax_rate) / 100;
+        taxTotal += (itemTotal * (item.tax_rate || 0)) / 100;
     });
     
-    const discount = parseFloat(document.getElementById('discount').value) || 0;
+    const discountEl = document.getElementById('discount');
+    const discount = discountEl ? parseFloat(discountEl.value) || 0 : 0;
     const total = subtotal + taxTotal - discount;
     
-    document.getElementById('subtotal').textContent = formatCurrency(subtotal);
-    document.getElementById('taxAmount').textContent = formatCurrency(taxTotal);
-    document.getElementById('total').textContent = formatCurrency(total);
+    const subtotalEl = document.getElementById('subtotal');
+    const taxEl = document.getElementById('taxAmount');
+    const totalEl = document.getElementById('total');
+    
+    if (subtotalEl) subtotalEl.textContent = formatCurrency(subtotal);
+    if (taxEl) taxEl.textContent = formatCurrency(taxTotal);
+    if (totalEl) totalEl.textContent = formatCurrency(total);
 }
 
 // Clear cart
 function clearCart() {
     cart = [];
-    document.getElementById('customerSelect').value = '';
-    document.getElementById('discount').value = '0';
-    document.getElementById('saleNotes').value = '';
-    document.getElementById('paymentMethod').value = 'Cash';
+    const customerSelect = document.getElementById('customerSelect');
+    const discountInput = document.getElementById('discount');
+    const notesInput = document.getElementById('saleNotes');
+    const paymentSelect = document.getElementById('paymentMethod');
+    
+    if (customerSelect) customerSelect.value = '';
+    if (discountInput) discountInput.value = '0';
+    if (notesInput) notesInput.value = '';
+    if (paymentSelect) paymentSelect.value = 'Cash';
+    
     updateCartDisplay();
     updateTotals();
+    showAlert('Cart cleared', 'info');
 }
 
 // Process sale
@@ -478,10 +472,10 @@ async function processSale() {
             quantity: item.quantity,
             unit_price: item.price
         })),
-        customer_id: document.getElementById('customerSelect').value || null,
-        payment_method: document.getElementById('paymentMethod').value,
-        discount: parseFloat(document.getElementById('discount').value) || 0,
-        notes: document.getElementById('saleNotes').value
+        customer_id: document.getElementById('customerSelect') ? document.getElementById('customerSelect').value || null : null,
+        payment_method: document.getElementById('paymentMethod') ? document.getElementById('paymentMethod').value : 'Cash',
+        discount: document.getElementById('discount') ? parseFloat(document.getElementById('discount').value) || 0 : 0,
+        notes: document.getElementById('saleNotes') ? document.getElementById('saleNotes').value : ''
     };
     
     console.log('Sale data being sent:', JSON.stringify(saleData, null, 2)); // Debug
@@ -499,11 +493,17 @@ async function processSale() {
         
         if (response.ok && result.success) {
             lastReceiptNumber = result.receipt_number;
-            document.getElementById('receiptNumber').textContent = `Receipt: ${result.receipt_number}`;
-            document.getElementById('saleTotal').textContent = `Total: ${formatCurrency(result.total_amount)}`;
+            const receiptEl = document.getElementById('receiptNumber');
+            const totalEl = document.getElementById('saleTotal');
             
-            const modal = new bootstrap.Modal(document.getElementById('saleSuccessModal'));
-            modal.show();
+            if (receiptEl) receiptEl.textContent = 'Receipt: ' + result.receipt_number;
+            if (totalEl) totalEl.textContent = 'Total: ' + formatCurrency(result.total_amount);
+            
+            const modalEl = document.getElementById('saleSuccessModal');
+            if (modalEl && typeof bootstrap !== 'undefined') {
+                const modal = new bootstrap.Modal(modalEl);
+                modal.show();
+            }
             
             clearCart();
             showAlert('Sale processed successfully!', 'success');
