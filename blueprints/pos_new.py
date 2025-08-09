@@ -1,10 +1,15 @@
 from flask import Blueprint, render_template, redirect, url_for, flash, request, jsonify, make_response
 from flask_login import login_required, current_user
-from models import Product, Customer, Sale, SaleItem, CashRegister, UserStore
+from models import Product, Customer, Sale, SaleItem, CashRegister, UserStore, SaleReturn, SaleReturnItem
 from app import db
-from utils import generate_receipt_number, get_default_currency, format_currency, calculate_tax
+from utils import generate_receipt_number, generate_return_number, get_default_currency, format_currency, get_currency_symbol
 from datetime import datetime
 import io
+from reportlab.lib import colors
+from reportlab.lib.pagesizes import letter
+from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle
+from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+from reportlab.lib.units import inch
 
 pos_bp = Blueprint('pos', __name__)
 
@@ -546,6 +551,381 @@ def print_receipt(receipt_number):
         <script>
             // Auto-print when page loads (optional)
             // window.onload = function() {{ window.print(); }}
+        </script>
+    </body>
+    </html>"""
+    
+    return html_content
+
+# Returns functionality for cashiers and admins
+@pos_bp.route('/returns')
+@login_required
+def returns_interface():
+    """Returns interface for cashiers and admins"""
+    # Check if user has permission to process returns
+    if not (current_user.role in ['Admin', 'Manager', 'Cashier']):
+        flash('You do not have permission to process returns.', 'error')
+        return redirect(url_for('dashboard'))
+    
+    # Check if user has an open cash register (for cash refunds)
+    register = CashRegister.query.filter_by(
+        user_id=current_user.id,
+        is_open=True
+    ).first()
+    
+    if not register:
+        flash('You must have an open cash register to process returns.', 'warning')
+        return redirect(url_for('pos.open_register'))
+    
+    return render_template('pos/returns.html', register=register)
+
+@pos_bp.route('/api/lookup-receipt', methods=['POST'])
+@login_required
+def lookup_receipt():
+    """Lookup sale by receipt number"""
+    data = request.get_json()
+    receipt_number = data.get('receipt_number', '').strip()
+    
+    if not receipt_number:
+        return jsonify({'error': 'Receipt number is required'}), 400
+    
+    # Find the sale
+    sale = Sale.query.filter_by(receipt_number=receipt_number).first()
+    if not sale:
+        return jsonify({'error': f'Receipt {receipt_number} not found'}), 404
+    
+    # Check if sale has any existing returns
+    existing_returns = SaleReturn.query.filter_by(original_sale_id=sale.id).all()
+    
+    # Calculate returned quantities for each item
+    returned_quantities = {}
+    for sale_return in existing_returns:
+        if sale_return.status == 'Processed':
+            for return_item in sale_return.items:
+                original_item_id = return_item.original_sale_item_id
+                if original_item_id not in returned_quantities:
+                    returned_quantities[original_item_id] = 0
+                returned_quantities[original_item_id] += return_item.quantity_returned
+    
+    # Build response data
+    sale_data = {
+        'id': sale.id,
+        'receipt_number': sale.receipt_number,
+        'created_at': sale.created_at.strftime('%Y-%m-%d %H:%M:%S'),
+        'total_amount': float(sale.total_amount),
+        'payment_method': sale.payment_method,
+        'customer_name': sale.customer.name if sale.customer else 'Walk-in Customer',
+        'cashier': sale.user.full_name,
+        'currency': sale.currency,
+        'items': []
+    }
+    
+    for item in sale.sale_items:
+        returned_qty = returned_quantities.get(item.id, 0)
+        available_qty = item.quantity - returned_qty
+        
+        sale_data['items'].append({
+            'id': item.id,
+            'product_id': item.product_id,
+            'product_name': item.product.name,
+            'quantity_sold': item.quantity,
+            'quantity_returned': returned_qty,
+            'quantity_available': available_qty,
+            'unit_price': float(item.unit_price),
+            'total_price': float(item.total_price),
+            'can_return': available_qty > 0
+        })
+    
+    return jsonify({'success': True, 'sale': sale_data})
+
+@pos_bp.route('/api/process-return', methods=['POST'])
+@login_required  
+def process_return():
+    """Process a return and generate refund receipt"""
+    try:
+        data = request.get_json()
+        sale_id = data.get('sale_id')
+        return_items = data.get('items', [])
+        return_reason = data.get('reason', '').strip()
+        notes = data.get('notes', '').strip()
+        
+        if not sale_id or not return_items:
+            return jsonify({'error': 'Sale ID and return items are required'}), 400
+        
+        if not return_reason:
+            return jsonify({'error': 'Return reason is required'}), 400
+        
+        # Find the original sale
+        original_sale = Sale.query.get(sale_id)
+        if not original_sale:
+            return jsonify({'error': 'Original sale not found'}), 404
+        
+        # Check if user has an open cash register
+        register = CashRegister.query.filter_by(
+            user_id=current_user.id,
+            is_open=True
+        ).first()
+        
+        if not register:
+            return jsonify({'error': 'No open cash register found'}), 400
+        
+        # Calculate total return amount and validate items
+        total_return_amount = 0
+        valid_items = []
+        
+        for item_data in return_items:
+            item_id = item_data.get('id')
+            quantity_to_return = int(item_data.get('quantity', 0))
+            
+            if quantity_to_return <= 0:
+                continue
+                
+            # Find the original sale item
+            original_item = SaleItem.query.filter_by(
+                id=item_id,
+                sale_id=sale_id
+            ).first()
+            
+            if not original_item:
+                return jsonify({'error': f'Sale item {item_id} not found'}), 404
+            
+            # Check available quantity to return
+            existing_returns = db.session.query(db.func.sum(SaleReturnItem.quantity_returned)).filter_by(
+                original_sale_item_id=item_id
+            ).join(SaleReturn).filter(
+                SaleReturn.status == 'Processed'
+            ).scalar() or 0
+            
+            available_qty = original_item.quantity - existing_returns
+            
+            if quantity_to_return > available_qty:
+                return jsonify({'error': f'Cannot return {quantity_to_return} of {original_item.product.name}. Only {available_qty} available.'}), 400
+            
+            # Calculate return amount for this item
+            item_return_amount = (original_item.unit_price * quantity_to_return)
+            total_return_amount += item_return_amount
+            
+            valid_items.append({
+                'original_item': original_item,
+                'quantity': quantity_to_return,
+                'amount': item_return_amount
+            })
+        
+        if not valid_items:
+            return jsonify({'error': 'No valid items to return'}), 400
+        
+        # Create the return record
+        sale_return = SaleReturn()
+        sale_return.return_number = generate_return_number()
+        sale_return.original_sale_id = original_sale.id
+        sale_return.user_id = current_user.id
+        sale_return.return_amount = total_return_amount
+        sale_return.return_reason = return_reason
+        sale_return.notes = notes
+        sale_return.status = 'Processed'  # Auto-approve for cashier/admin returns
+        sale_return.created_at = datetime.utcnow()
+        sale_return.processed_at = datetime.utcnow()
+        
+        db.session.add(sale_return)
+        db.session.flush()  # Get the ID
+        
+        # Create return items and restore inventory
+        for item_info in valid_items:
+            original_item = item_info['original_item']
+            quantity = item_info['quantity']
+            amount = item_info['amount']
+            
+            # Create return item record
+            return_item = SaleReturnItem()
+            return_item.return_id = sale_return.id
+            return_item.product_id = original_item.product_id
+            return_item.original_sale_item_id = original_item.id
+            return_item.quantity_returned = quantity
+            return_item.unit_price = original_item.unit_price
+            return_item.total_amount = amount
+            
+            db.session.add(return_item)
+            
+            # Restore inventory
+            product = original_item.product
+            product.stock_quantity += quantity
+        
+        # Deduct from cash register (for cash refunds)
+        if original_sale.payment_method == 'Cash':
+            register.cash_out += total_return_amount
+            register.total_sales -= total_return_amount
+        
+        db.session.commit()
+        
+        return jsonify({
+            'success': True,
+            'message': f'Return processed successfully. Refund amount: {get_currency_symbol()}{total_return_amount:.2f}',
+            'return_number': sale_return.return_number,
+            'return_amount': float(total_return_amount),
+            'items_returned': len(valid_items)
+        })
+        
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'error': f'Failed to process return: {str(e)}'}), 500
+
+@pos_bp.route('/return/<return_number>/print')
+@login_required
+def print_return_receipt(return_number):
+    """Generate HTML refund receipt for printing"""
+    sale_return = SaleReturn.query.filter_by(return_number=return_number).first()
+    if not sale_return:
+        return jsonify({'error': 'Return record not found'}), 404
+    
+    currency_symbol = get_currency_symbol()
+    
+    html_content = f"""
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <title>Refund Receipt {return_number}</title>
+        <style>
+            @media print {{
+                body {{ margin: 0; padding: 20px; font-family: monospace; }}
+                .no-print {{ display: none; }}
+            }}
+            body {{ 
+                font-family: monospace; 
+                width: 350px; 
+                margin: 0 auto; 
+                padding: 20px;
+                background: white;
+                color: black;
+            }}
+            .header {{ 
+                text-align: center; 
+                border-bottom: 2px dashed #000; 
+                padding-bottom: 15px; 
+                margin-bottom: 15px;
+            }}
+            .header h2 {{ margin: 0 0 10px 0; font-size: 18px; }}
+            .refund-header {{ 
+                text-align: center; 
+                font-size: 16px; 
+                font-weight: bold; 
+                background: #000; 
+                color: white; 
+                padding: 10px; 
+                margin: 15px 0; 
+            }}
+            .item {{ 
+                display: flex; 
+                justify-content: space-between; 
+                margin: 8px 0; 
+                padding: 2px 0;
+            }}
+            .item-name {{ flex: 1; }}
+            .item-qty {{ width: 60px; text-align: center; }}
+            .item-price {{ width: 80px; text-align: right; }}
+            .total-section {{ 
+                border-top: 2px dashed #000; 
+                padding-top: 15px; 
+                margin-top: 15px;
+            }}
+            .total-line {{ 
+                display: flex; 
+                justify-content: space-between; 
+                margin: 5px 0;
+                font-weight: bold;
+            }}
+            .footer {{ 
+                text-align: center; 
+                margin-top: 20px; 
+                font-size: 12px; 
+                border-top: 1px dashed #000;
+                padding-top: 15px;
+            }}
+            .print-btn {{
+                background: #dc3545;
+                color: white;
+                border: none;
+                padding: 10px 20px;
+                border-radius: 5px;
+                cursor: pointer;
+                margin: 10px 5px;
+            }}
+            .print-controls {{
+                text-align: center;
+                margin: 20px 0;
+            }}
+            .detail-line {{ 
+                display: flex; 
+                justify-content: space-between; 
+                margin: 3px 0; 
+                font-size: 12px;
+            }}
+        </style>
+    </head>
+    <body>
+        <div class="print-controls no-print">
+            <button class="print-btn" onclick="window.print()">🖨️ Print Refund Receipt</button>
+            <button class="print-btn" onclick="window.close()">❌ Close</button>
+        </div>
+        
+        <div class="refund-header">*** REFUND RECEIPT ***</div>
+        
+        <div class="header">
+            <h2>Cloud POS & Inventory Manager</h2>
+            <div>Return #: {return_number}</div>
+            <div>Original Receipt: {sale_return.original_sale.receipt_number}</div>
+            <div>Date: {sale_return.created_at.strftime('%Y-%m-%d %H:%M:%S')}</div>
+            <div>Processed By: {sale_return.processed_by.full_name}</div>
+            <div>Customer: {sale_return.original_sale.customer.name if sale_return.original_sale.customer else 'Walk-in'}</div>
+        </div>
+        
+        <div class="detail-line">
+            <span>Reason:</span>
+            <span>{sale_return.return_reason}</span>
+        </div>
+        
+        <div class="items">
+            <div class="item" style="font-weight: bold; border-bottom: 1px solid #000;">
+                <div class="item-name">Returned Item</div>
+                <div class="item-qty">Qty</div>
+                <div class="item-price">Refund</div>
+            </div>"""
+    
+    for item in sale_return.items:
+        html_content += f"""
+            <div class="item">
+                <div class="item-name">{item.product.name}</div>
+                <div class="item-qty">{item.quantity_returned}</div>
+                <div class="item-price">{currency_symbol}{item.total_amount:.2f}</div>
+            </div>"""
+    
+    html_content += f"""
+        </div>
+        
+        <div class="total-section">
+            <div class="total-line">
+                <span>TOTAL REFUND:</span>
+                <span>{currency_symbol}{sale_return.return_amount:.2f}</span>
+            </div>
+            <div class="total-line">
+                <span>Refund Method:</span>
+                <span>{sale_return.original_sale.payment_method}</span>
+            </div>
+        </div>
+        
+        <div class="footer">
+            <div>Items returned to inventory</div>
+            <div>Thank you for your business!</div>
+            <div style="margin-top: 10px; font-size: 10px;">
+                Processed: {sale_return.processed_at.strftime('%Y-%m-%d %H:%M:%S') if sale_return.processed_at else 'N/A'}
+            </div>
+        </div>
+        
+        <script>
+            window.onload = function() {{
+                setTimeout(function() {{
+                    window.print();
+                }}, 500);
+            }};
         </script>
     </body>
     </html>"""

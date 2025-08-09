@@ -1,364 +1,402 @@
 {% extends "base.html" %}
 
-{% block title %}Returns & Refunds{% endblock %}
+{% block title %}Process Returns - Cloud POS{% endblock %}
 
 {% block content %}
-<!-- Inline Message Area -->
-<div id="messageArea" class="container-fluid d-none mt-2">
-    <div id="messageContent" class="alert alert-dismissible fade show" role="alert">
-        <span id="messageText"></span>
-        <button type="button" class="btn-close" onclick="hideMessage()"></button>
-    </div>
-</div>
-<div class="container-fluid">
+<div class="container mt-4">
     <div class="row">
         <div class="col-12">
-            <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
-                <h1 class="h2">Returns & Refunds</h1>
-                <div class="btn-toolbar mb-2 mb-md-0">
-                    <a href="{{ url_for('pos.index') }}" class="btn btn-outline-primary">
-                        <i class="fas fa-arrow-left me-2"></i>Back to POS
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h1 class="h3 mb-0">
+                    <i class="fas fa-undo me-2"></i>Process Returns
+                </h1>
+                <div>
+                    <a href="{{ url_for('pos.index') }}" class="btn btn-secondary">
+                        <i class="fas fa-cash-register me-2"></i>Back to POS
                     </a>
                 </div>
             </div>
         </div>
     </div>
 
-    <div class="row">
-        <div class="col-md-8">
+    <!-- Receipt Lookup Section -->
+    <div class="row mb-4">
+        <div class="col-12">
             <div class="card">
                 <div class="card-header">
-                    <h5 class="card-title mb-0">Recent Sales</h5>
+                    <h5 class="mb-0">
+                        <i class="fas fa-search me-2"></i>Lookup Receipt
+                    </h5>
                 </div>
                 <div class="card-body">
+                    <form id="receiptLookupForm">
+                        <div class="row">
+                            <div class="col-md-8">
+                                <label for="receiptNumber" class="form-label">Receipt Number</label>
+                                <input type="text" class="form-control" id="receiptNumber" 
+                                       placeholder="Enter receipt number (e.g. RCP-20250809112345-123)" required>
+                            </div>
+                            <div class="col-md-4 d-flex align-items-end">
+                                <button type="submit" class="btn btn-primary w-100">
+                                    <i class="fas fa-search me-2"></i>Lookup Receipt
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Sale Details Section (Initially Hidden) -->
+    <div id="saleDetailsSection" class="row mb-4" style="display: none;">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-receipt me-2"></i>Sale Details
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div id="saleInfo" class="row mb-3">
+                        <!-- Sale information will be populated here -->
+                    </div>
+                    
+                    <h6>Items Available for Return:</h6>
                     <div class="table-responsive">
-                        <table class="table table-hover">
+                        <table class="table table-striped">
                             <thead>
                                 <tr>
-                                    <th>Receipt #</th>
-                                    <th>Date</th>
-                                    <th>Customer</th>
-                                    <th>Total</th>
-                                    <th>Payment</th>
-                                    <th>Action</th>
+                                    <th>Item</th>
+                                    <th>Sold Qty</th>
+                                    <th>Returned</th>
+                                    <th>Available</th>
+                                    <th>Unit Price</th>
+                                    <th>Return Qty</th>
+                                    <th>Select</th>
                                 </tr>
                             </thead>
-                            <tbody>
-                                {% for sale in recent_sales %}
-                                <tr>
-                                    <td>{{ sale.receipt_number }}</td>
-                                    <td>{{ sale.created_at.strftime('%m/%d/%Y %H:%M') }}</td>
-                                    <td>{{ sale.customer.name if sale.customer else 'Walk-in' }}</td>
-                                    <td>{{ sale.total_amount|format_currency }}</td>
-                                    <td>{{ sale.payment_method }}</td>
-                                    <td>
-                                        <button class="btn btn-sm btn-outline-danger" onclick="initiateReturn({{ sale.id }})">
-                                            <i class="fas fa-undo me-1"></i>Return
-                                        </button>
-                                    </td>
-                                </tr>
-                                {% else %}
-                                <tr>
-                                    <td colspan="6" class="text-center">No sales found</td>
-                                </tr>
-                                {% endfor %}
+                            <tbody id="itemsTable">
+                                <!-- Items will be populated here -->
                             </tbody>
                         </table>
                     </div>
                 </div>
             </div>
         </div>
+    </div>
 
-        <div class="col-md-4">
+    <!-- Return Processing Section (Initially Hidden) -->
+    <div id="returnProcessSection" class="row mb-4" style="display: none;">
+        <div class="col-12">
             <div class="card">
                 <div class="card-header">
-                    <h5 class="card-title mb-0">Process Return</h5>
+                    <h5 class="mb-0">
+                        <i class="fas fa-clipboard-list me-2"></i>Process Return
+                    </h5>
                 </div>
                 <div class="card-body">
-                    <form method="POST">
-                        {{ form.hidden_tag() }}
-                        
-                        <div class="mb-3">
-                            {{ form.return_reason.label(class="form-label") }}
-                            {{ form.return_reason(class="form-select") }}
+                    <form id="returnForm">
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label for="returnReason" class="form-label">Return Reason *</label>
+                                <select class="form-select" id="returnReason" required>
+                                    <option value="">Select reason...</option>
+                                    <option value="Defective Product">Defective Product</option>
+                                    <option value="Wrong Item">Wrong Item</option>
+                                    <option value="Customer Changed Mind">Customer Changed Mind</option>
+                                    <option value="Size/Fit Issue">Size/Fit Issue</option>
+                                    <option value="Damaged in Transit">Damaged in Transit</option>
+                                    <option value="Not as Described">Not as Described</option>
+                                    <option value="Store Error">Store Error</option>
+                                    <option value="Other">Other</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="returnNotes" class="form-label">Additional Notes</label>
+                                <textarea class="form-control" id="returnNotes" rows="2" 
+                                          placeholder="Optional additional notes..."></textarea>
+                            </div>
                         </div>
                         
-                        <div class="mb-3">
-                            {{ form.notes.label(class="form-label") }}
-                            {{ form.notes(class="form-control", rows="3") }}
-                        </div>
-                        
-                        <div class="d-grid">
-                            {{ form.submit(class="btn btn-danger") }}
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <div class="card bg-light">
+                                    <div class="card-body">
+                                        <h6>Return Summary:</h6>
+                                        <div id="returnSummary">
+                                            <div>Items to return: <span id="returnItemCount">0</span></div>
+                                            <div>Total refund: <span id="totalRefundAmount">{{ get_currency_symbol() }}0.00</span></div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6 d-flex align-items-end">
+                                <button type="submit" class="btn btn-success w-100" id="processReturnBtn" disabled>
+                                    <i class="fas fa-check-circle me-2"></i>Process Return & Print Receipt
+                                </button>
+                            </div>
                         </div>
                     </form>
                 </div>
             </div>
+        </div>
+    </div>
 
-            <div class="card mt-3">
-                <div class="card-header">
-                    <h6 class="card-title mb-0">Return Instructions</h6>
+    <!-- Messages -->
+    <div id="messagesContainer"></div>
+</div>
+
+<!-- Loading Modal -->
+<div class="modal fade" id="loadingModal" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-body text-center">
+                <div class="spinner-border text-primary" role="status">
+                    <span class="visually-hidden">Loading...</span>
                 </div>
-                <div class="card-body">
-                    <small class="text-muted">
-                        <ol>
-                            <li>Find the sale in the list above</li>
-                            <li>Click "Return" to start the process</li>
-                            <li>Select items to return</li>
-                            <li>Choose return reason</li>
-                            <li>Process the return</li>
-                        </ol>
-                    </small>
-                </div>
+                <p class="mt-3 mb-0">Processing return...</p>
             </div>
         </div>
     </div>
 </div>
 
 <script>
-async function initiateReturn(saleId) {
-    try {
-        // Fetch sale details
-        const response = await fetch(`/pos/api/sale/${saleId}/details`);
-        const saleData = await response.json();
-        
-        if (response.ok) {
-            openReturnModal(saleData);
-        } else {
-            showInlineMessage(saleData.error || 'Error loading sale details', 'danger');
-        }
-    } catch (error) {
-        showInlineMessage('Network error: ' + error.message, 'danger');
-    }
-}
+let currentSale = null;
+let selectedItems = [];
 
-function openReturnModal(sale) {
-    // Create or show return modal
-    showReturnModal(sale);
-}
+document.addEventListener('DOMContentLoaded', function() {
+    const receiptForm = document.getElementById('receiptLookupForm');
+    const returnForm = document.getElementById('returnForm');
+    
+    receiptForm.addEventListener('submit', lookupReceipt);
+    returnForm.addEventListener('submit', processReturn);
+});
 
-function showReturnModal(sale) {
-    // Check if modal already exists, if not create it
-    let modal = document.getElementById('returnModal');
-    if (!modal) {
-        const modalHtml = createReturnModalHTML();
-        document.body.insertAdjacentHTML('beforeend', modalHtml);
-        modal = document.getElementById('returnModal');
+async function lookupReceipt(e) {
+    e.preventDefault();
+    
+    const receiptNumber = document.getElementById('receiptNumber').value.trim();
+    if (!receiptNumber) {
+        showMessage('Please enter a receipt number', 'warning');
+        return;
     }
     
-    // Populate modal with sale data
-    populateReturnModal(sale);
-    
-    // Show the modal
-    const bsModal = new bootstrap.Modal(modal);
-    bsModal.show();
-}
-
-function createReturnModalHTML() {
-    return `
-    <div class="modal fade" id="returnModal" tabindex="-1">
-        <div class="modal-dialog modal-lg">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title">Process Return</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                </div>
-                <div class="modal-body">
-                    <div id="returnModalContent">Loading...</div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                    <button type="button" class="btn btn-danger" id="processReturnBtn" onclick="processReturn()">
-                        <i class="fas fa-undo me-2"></i>Process Return
-                    </button>
-                </div>
-            </div>
-        </div>
-    </div>`;
-}
-
-function populateReturnModal(sale) {
-    const currencySymbol = window.currencySymbol || '$';
-    
-    const content = `
-        <div class="row mb-3">
-            <div class="col-md-6">
-                <h6>Sale Information</h6>
-                <p><strong>Receipt:</strong> ${sale.receipt_number}</p>
-                <p><strong>Date:</strong> ${new Date(sale.created_at).toLocaleDateString()}</p>
-                <p><strong>Customer:</strong> ${sale.customer_name || 'Walk-in'}</p>
-                <p><strong>Total:</strong> ${currencySymbol}${sale.total_amount.toLocaleString('en-US', {minimumFractionDigits: 2})}</p>
-            </div>
-            <div class="col-md-6">
-                <div class="mb-3">
-                    <label class="form-label">Return Reason</label>
-                    <select class="form-select" id="returnReason">
-                        <option value="Defective">Defective Product</option>
-                        <option value="Wrong Item">Wrong Item</option>
-                        <option value="Customer Changed Mind">Customer Changed Mind</option>
-                        <option value="Size Issue">Size Issue</option>
-                        <option value="Quality Issue">Quality Issue</option>
-                        <option value="Other">Other</option>
-                    </select>
-                </div>
-                <div class="mb-3">
-                    <label class="form-label">Notes</label>
-                    <textarea class="form-control" id="returnNotes" rows="3" placeholder="Additional details..."></textarea>
-                </div>
-            </div>
-        </div>
-        
-        <h6>Items to Return</h6>
-        <div class="table-responsive">
-            <table class="table table-sm">
-                <thead>
-                    <tr>
-                        <th>Product</th>
-                        <th>Sold Qty</th>
-                        <th>Return Qty</th>
-                        <th>Unit Price</th>
-                        <th>Return Amount</th>
-                    </tr>
-                </thead>
-                <tbody id="returnItemsTable">
-                    ${sale.items.map(item => `
-                        <tr>
-                            <td>${item.product_name}</td>
-                            <td>${item.quantity}</td>
-                            <td>
-                                <input type="number" class="form-control form-control-sm return-qty" 
-                                       data-item-id="${item.id}" 
-                                       data-original-qty="${item.quantity}"
-                                       data-unit-price="${item.unit_price}"
-                                       min="0" max="${item.quantity}" value="${item.quantity}"
-                                       onchange="updateReturnAmount()">
-                            </td>
-                            <td>${currencySymbol}${item.unit_price.toLocaleString('en-US', {minimumFractionDigits: 2})}</td>
-                            <td class="return-amount">${currencySymbol}${item.total_price.toLocaleString('en-US', {minimumFractionDigits: 2})}</td>
-                        </tr>
-                    `).join('')}
-                </tbody>
-                <tfoot>
-                    <tr class="table-warning">
-                        <th colspan="4">Total Return Amount:</th>
-                        <th id="totalReturnAmount">${currencySymbol}${sale.total_amount.toLocaleString('en-US', {minimumFractionDigits: 2})}</th>
-                    </tr>
-                </tfoot>
-            </table>
-        </div>
-        
-        <input type="hidden" id="returnSaleId" value="${sale.id}">
-    `;
-    
-    document.getElementById('returnModalContent').innerHTML = content;
-    updateReturnAmount(); // Initialize amounts
-}
-
-function updateReturnAmount() {
-    const currencySymbol = window.currencySymbol || '$';
-    let totalReturn = 0;
-    
-    document.querySelectorAll('.return-qty').forEach(input => {
-        const returnQty = parseInt(input.value) || 0;
-        const unitPrice = parseFloat(input.dataset.unitPrice);
-        const itemTotal = returnQty * unitPrice;
-        
-        // Update row total
-        const row = input.closest('tr');
-        const amountCell = row.querySelector('.return-amount');
-        amountCell.textContent = `${currencySymbol}${itemTotal.toLocaleString('en-US', {minimumFractionDigits: 2})}`;
-        
-        totalReturn += itemTotal;
-    });
-    
-    // Update total
-    document.getElementById('totalReturnAmount').textContent = 
-        `${currencySymbol}${totalReturn.toLocaleString('en-US', {minimumFractionDigits: 2})}`;
-}
-
-async function processReturn() {
     try {
-        const saleId = document.getElementById('returnSaleId').value;
-        const reason = document.getElementById('returnReason').value;
-        const notes = document.getElementById('returnNotes').value;
-        
-        // Collect return items
-        const returnItems = [];
-        document.querySelectorAll('.return-qty').forEach(input => {
-            const returnQty = parseInt(input.value) || 0;
-            if (returnQty > 0) {
-                returnItems.push({
-                    item_id: input.dataset.itemId,
-                    quantity: returnQty,
-                    unit_price: parseFloat(input.dataset.unitPrice)
-                });
-            }
+        const response = await fetch('/pos/api/lookup-receipt', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ receipt_number: receiptNumber })
         });
         
-        if (returnItems.length === 0) {
-            showInlineMessage('Please select at least one item to return', 'warning');
-            return;
-        }
+        const data = await response.json();
         
-        // Process the return
-        const response = await fetch('/pos/api/process_return', {
+        if (data.success) {
+            currentSale = data.sale;
+            displaySaleDetails(data.sale);
+            document.getElementById('saleDetailsSection').style.display = 'block';
+        } else {
+            showMessage(data.error || 'Receipt not found', 'danger');
+            hideSaleDetails();
+        }
+    } catch (error) {
+        showMessage('Error looking up receipt: ' + error.message, 'danger');
+        hideSaleDetails();
+    }
+}
+
+function displaySaleDetails(sale) {
+    // Display sale information
+    const saleInfo = document.getElementById('saleInfo');
+    saleInfo.innerHTML = `
+        <div class="col-md-6">
+            <p><strong>Receipt:</strong> ${sale.receipt_number}</p>
+            <p><strong>Date:</strong> ${sale.created_at}</p>
+            <p><strong>Customer:</strong> ${sale.customer_name}</p>
+        </div>
+        <div class="col-md-6">
+            <p><strong>Cashier:</strong> ${sale.cashier}</p>
+            <p><strong>Total:</strong> {{ get_currency_symbol() }}${sale.total_amount.toFixed(2)}</p>
+            <p><strong>Payment:</strong> ${sale.payment_method}</p>
+        </div>
+    `;
+    
+    // Display items
+    const itemsTable = document.getElementById('itemsTable');
+    itemsTable.innerHTML = '';
+    
+    sale.items.forEach(item => {
+        if (item.can_return) {
+            const row = document.createElement('tr');
+            row.innerHTML = `
+                <td>${item.product_name}</td>
+                <td>${item.quantity_sold}</td>
+                <td>${item.quantity_returned}</td>
+                <td>${item.quantity_available}</td>
+                <td>{{ get_currency_symbol() }}${item.unit_price.toFixed(2)}</td>
+                <td>
+                    <input type="number" class="form-control quantity-input" 
+                           data-item-id="${item.id}" min="0" max="${item.quantity_available}" 
+                           value="0" style="width: 80px;">
+                </td>
+                <td>
+                    <div class="form-check">
+                        <input class="form-check-input item-checkbox" type="checkbox" 
+                               data-item-id="${item.id}" data-max-qty="${item.quantity_available}"
+                               data-unit-price="${item.unit_price}">
+                    </div>
+                </td>
+            `;
+            itemsTable.appendChild(row);
+        }
+    });
+    
+    // Add event listeners for quantity inputs and checkboxes
+    document.querySelectorAll('.quantity-input').forEach(input => {
+        input.addEventListener('input', updateReturnSummary);
+    });
+    
+    document.querySelectorAll('.item-checkbox').forEach(checkbox => {
+        checkbox.addEventListener('change', function() {
+            const itemId = this.getAttribute('data-item-id');
+            const quantityInput = document.querySelector(`input[data-item-id="${itemId}"].quantity-input`);
+            const maxQty = parseInt(this.getAttribute('data-max-qty'));
+            
+            if (this.checked) {
+                quantityInput.value = maxQty;
+            } else {
+                quantityInput.value = 0;
+            }
+            updateReturnSummary();
+        });
+    });
+}
+
+function updateReturnSummary() {
+    selectedItems = [];
+    let totalRefund = 0;
+    let itemCount = 0;
+    
+    document.querySelectorAll('.quantity-input').forEach(input => {
+        const quantity = parseInt(input.value) || 0;
+        if (quantity > 0) {
+            const itemId = input.getAttribute('data-item-id');
+            const checkbox = document.querySelector(`input[data-item-id="${itemId}"].item-checkbox`);
+            const unitPrice = parseFloat(checkbox.getAttribute('data-unit-price'));
+            
+            selectedItems.push({
+                id: itemId,
+                quantity: quantity
+            });
+            
+            totalRefund += quantity * unitPrice;
+            itemCount += quantity;
+            
+            // Check the checkbox
+            checkbox.checked = true;
+        }
+    });
+    
+    document.getElementById('returnItemCount').textContent = itemCount;
+    document.getElementById('totalRefundAmount').textContent = '{{ get_currency_symbol() }}' + totalRefund.toFixed(2);
+    
+    // Enable/disable process button
+    const processBtn = document.getElementById('processReturnBtn');
+    processBtn.disabled = selectedItems.length === 0;
+    
+    // Show/hide return process section
+    const returnSection = document.getElementById('returnProcessSection');
+    returnSection.style.display = selectedItems.length > 0 ? 'block' : 'none';
+}
+
+async function processReturn(e) {
+    e.preventDefault();
+    
+    const reason = document.getElementById('returnReason').value;
+    const notes = document.getElementById('returnNotes').value;
+    
+    if (!reason) {
+        showMessage('Please select a return reason', 'warning');
+        return;
+    }
+    
+    if (selectedItems.length === 0) {
+        showMessage('Please select items to return', 'warning');
+        return;
+    }
+    
+    // Show loading modal
+    const loadingModal = new bootstrap.Modal(document.getElementById('loadingModal'));
+    loadingModal.show();
+    
+    try {
+        const response = await fetch('/pos/api/process-return', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
             },
             body: JSON.stringify({
-                sale_id: saleId,
-                return_reason: reason,
-                notes: notes,
-                items: returnItems
+                sale_id: currentSale.id,
+                items: selectedItems,
+                reason: reason,
+                notes: notes
             })
         });
         
-        const result = await response.json();
+        const data = await response.json();
         
-        if (response.ok) {
-            // Close modal and reload page
-            bootstrap.Modal.getInstance(document.getElementById('returnModal')).hide();
-            showInlineMessage(`Return processed successfully! Return #: ${result.return_number}`, 'success');
+        loadingModal.hide();
+        
+        if (data.success) {
+            showMessage(`Return processed successfully! Return #${data.return_number}. Refund amount: {{ get_currency_symbol() }}${data.return_amount.toFixed(2)}`, 'success');
             
-            // Reload page after a short delay
+            // Open receipt in new window
             setTimeout(() => {
-                location.reload();
-            }, 2000);
+                window.open(`/pos/return/${data.return_number}/print`, '_blank');
+            }, 1000);
+            
+            // Reset form
+            resetForm();
         } else {
-            showInlineMessage(result.error || 'Error processing return', 'danger');
+            showMessage(data.error || 'Failed to process return', 'danger');
         }
-        
     } catch (error) {
-        showInlineMessage('Network error: ' + error.message, 'danger');
+        loadingModal.hide();
+        showMessage('Error processing return: ' + error.message, 'danger');
     }
 }
 
-// Inline message functions
-function showInlineMessage(message, type) {
-    const messageArea = document.getElementById('messageArea');
-    const messageContent = document.getElementById('messageContent');
-    const messageText = document.getElementById('messageText');
+function showMessage(message, type) {
+    const container = document.getElementById('messagesContainer');
+    const alertDiv = document.createElement('div');
+    alertDiv.className = `alert alert-${type} alert-dismissible fade show`;
+    alertDiv.innerHTML = `
+        ${message}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    `;
+    container.appendChild(alertDiv);
     
-    if (!messageArea || !messageContent || !messageText) {
-        console.log(`${type.toUpperCase()}: ${message}`);
-        return;
-    }
-    
-    messageText.textContent = message;
-    messageContent.className = `alert alert-${type} alert-dismissible fade show`;
-    messageArea.classList.remove('d-none');
-    
+    // Auto-dismiss after 5 seconds
     setTimeout(() => {
-        hideMessage();
+        if (alertDiv.parentNode) {
+            alertDiv.remove();
+        }
     }, 5000);
 }
 
-function hideMessage() {
-    const messageArea = document.getElementById('messageArea');
-    if (messageArea) {
-        messageArea.classList.add('d-none');
-    }
+function hideSaleDetails() {
+    document.getElementById('saleDetailsSection').style.display = 'none';
+    document.getElementById('returnProcessSection').style.display = 'none';
+}
+
+function resetForm() {
+    document.getElementById('receiptLookupForm').reset();
+    document.getElementById('returnForm').reset();
+    hideSaleDetails();
+    currentSale = null;
+    selectedItems = [];
 }
 </script>
 {% endblock %}
