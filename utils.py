@@ -64,14 +64,21 @@ def manager_required(f):
 
 def get_default_currency():
     """Get the default currency from company profile"""
-    from models import CompanyProfile
-    profile = CompanyProfile.query.first()
-    return profile.default_currency if profile else 'USD'
+    try:
+        from models import CompanyProfile
+        profile = CompanyProfile.query.first()
+        return profile.default_currency if profile else 'USD'
+    except Exception:
+        # Return default currency if database is not available
+        return 'USD'
 
 def get_currency_symbol(currency_code=None):
     """Get currency symbol for a given currency code"""
     if currency_code is None:
-        currency_code = get_default_currency()
+        try:
+            currency_code = get_default_currency()
+        except Exception:
+            currency_code = 'USD'
     
     currency_symbols = {
         'USD': '$',

@@ -6,6 +6,8 @@ Cloud POS & Inventory Manager is a comprehensive Point of Sale and Inventory Man
 
 [x] **Migration Status: COMPLETED** - Successfully migrated from Replit Agent to Replit environment on August 9, 2025. All packages installed, PostgreSQL database configured, admin user created, and application running successfully on port 5000. **Login functionality verified** - User can successfully log in with admin/admin123 credentials and access the full POS dashboard. **Data persistence confirmed** - all user credentials and database data are preserved across application restarts.
 
+✅ **Route Error Fixes: COMPLETED** - Fixed critical route error in admin blueprint UserStoreAssignmentForm where store_ids.choices was not being populated, causing "TypeError: 'NoneType' object is not iterable" errors. Added proper form choice population for both assign_user_stores and edit_user_stores routes. All routes now working correctly.
+
 ✅ **Thousand Separator Formatting: COMPLETED** - Implemented comma separators for all monetary values throughout the application (e.g., $1,234.56 instead of $1234.56). Updated format_currency() function, added format_number() filter, and enhanced JavaScript formatting functions. Fixed sales report modal template literals that were displaying raw code instead of formatted currency values.
 
 ✅ **Inline Message System: COMPLETED** - Replaced all popup notifications (alert/confirm dialogs) with modern inline message system across the entire application. Messages now appear at the top of pages with auto-hide functionality and better user experience.

@@ -166,6 +166,10 @@ def assign_user_stores():
     """Assign or reassign user to stores"""
     form = UserStoreAssignmentForm()
     
+    # Populate form choices
+    form.user_id.choices = [(u.id, f"{u.username} ({u.email})") for u in User.query.filter_by(is_active=True).all()]
+    form.store_ids.choices = [(s.id, s.name) for s in Store.query.filter_by(is_active=True).all()]
+    
     if form.validate_on_submit():
         user_id = form.user_id.data
         store_ids = form.store_ids.data
@@ -206,6 +210,10 @@ def edit_user_stores(user_id):
     """Edit store assignments for a specific user"""
     user = User.query.get_or_404(user_id)
     form = UserStoreAssignmentForm()
+    
+    # Populate form choices
+    form.user_id.choices = [(u.id, f"{u.username} ({u.email})") for u in User.query.filter_by(is_active=True).all()]
+    form.store_ids.choices = [(s.id, s.name) for s in Store.query.filter_by(is_active=True).all()]
     
     if request.method == 'GET':
         # Pre-populate form with current assignments

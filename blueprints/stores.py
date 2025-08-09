@@ -8,25 +8,24 @@ from datetime import datetime
 
 stores_bp = Blueprint('stores', __name__)
 
-@stores_bp.route('/stores')
+@stores_bp.route('/')
 @login_required
 @admin_required
 def index():
     stores = Store.query.filter_by(is_active=True).all()
     return render_template('stores/index.html', stores=stores)
 
-@stores_bp.route('/stores/new', methods=['GET', 'POST'])
+@stores_bp.route('/new', methods=['GET', 'POST'])
 @login_required
 @admin_required
 def new_store():
     form = StoreForm()
     if form.validate_on_submit():
-        store = Store(
-            name=form.name.data,
-            address=form.address.data,
-            phone=form.phone.data,
-            email=form.email.data
-        )
+        store = Store()
+        store.name = form.name.data
+        store.address = form.address.data
+        store.phone = form.phone.data
+        store.email = form.email.data
         
         try:
             db.session.add(store)
@@ -39,7 +38,7 @@ def new_store():
     
     return render_template('stores/form.html', form=form, title='New Store')
 
-@stores_bp.route('/stores/<int:id>/edit', methods=['GET', 'POST'])
+@stores_bp.route('/<int:id>/edit', methods=['GET', 'POST'])
 @login_required
 @admin_required
 def edit_store(id):
@@ -62,7 +61,7 @@ def edit_store(id):
     
     return render_template('stores/form.html', form=form, title='Edit Store', store=store)
 
-@stores_bp.route('/stores/<int:id>/stock')
+@stores_bp.route('/<int:id>/stock')
 @login_required
 def store_stock(id):
     store = Store.query.get_or_404(id)
@@ -82,13 +81,12 @@ def suppliers():
 def new_supplier():
     form = SupplierForm()
     if form.validate_on_submit():
-        supplier = Supplier(
-            name=form.name.data,
-            contact_person=form.contact_person.data,
-            email=form.email.data,
-            phone=form.phone.data,
-            address=form.address.data
-        )
+        supplier = Supplier()
+        supplier.name = form.name.data
+        supplier.contact_person = form.contact_person.data
+        supplier.email = form.email.data
+        supplier.phone = form.phone.data
+        supplier.address = form.address.data
         
         try:
             db.session.add(supplier)
@@ -125,13 +123,12 @@ def new_stock_transfer():
     form.to_store_id.choices = [(s.id, s.name) for s in Store.query.filter_by(is_active=True).all()]
     
     if form.validate_on_submit():
-        transfer = StockTransfer(
-            transfer_number=generate_transfer_number(),
-            from_store_id=form.from_store_id.data,
-            to_store_id=form.to_store_id.data,
-            user_id=current_user.id,
-            notes=form.notes.data
-        )
+        transfer = StockTransfer()
+        transfer.transfer_number = generate_transfer_number()
+        transfer.from_store_id = form.from_store_id.data
+        transfer.to_store_id = form.to_store_id.data
+        transfer.user_id = current_user.id
+        transfer.notes = form.notes.data
         
         try:
             db.session.add(transfer)
@@ -150,14 +147,13 @@ def new_stock_transfer():
 def new_purchase_order():
     form = PurchaseOrderForm()
     if form.validate_on_submit():
-        po = PurchaseOrder(
-            po_number=generate_po_number(),
-            supplier_id=form.supplier_id.data,
-            user_id=current_user.id,
-            expected_date=form.expected_date.data,
-            notes=form.notes.data,
-            status='Draft'
-        )
+        po = PurchaseOrder()
+        po.po_number = generate_po_number()
+        po.supplier_id = form.supplier_id.data
+        po.user_id = current_user.id
+        po.expected_date = form.expected_date.data
+        po.notes = form.notes.data
+        po.status = 'Draft'
         
         try:
             db.session.add(po)

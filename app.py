@@ -31,11 +31,15 @@ if database_url.startswith("postgres://"):
 
 app.config["SQLALCHEMY_DATABASE_URI"] = database_url
 app.config["SQLALCHEMY_ENGINE_OPTIONS"] = {
-    "pool_recycle": 300,
+    "pool_recycle": 200,
     "pool_pre_ping": True,
-    "pool_timeout": 20,
-    "pool_size": 10,
-    "max_overflow": 20
+    "pool_timeout": 5,
+    "pool_size": 3,
+    "max_overflow": 5,
+    "connect_args": {
+        "sslmode": "prefer",
+        "connect_timeout": 5
+    }
 }
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 app.config["WTF_CSRF_ENABLED"] = False  # Disable CSRF for API endpoints

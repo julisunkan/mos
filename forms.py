@@ -77,6 +77,7 @@ class StoreForm(FlaskForm):
     name = StringField('Store Name', validators=[DataRequired(), Length(max=100)])
     address = TextAreaField('Address', validators=[Optional(), Length(max=500)])
     phone = StringField('Phone', validators=[Optional(), Length(max=20)])
+    email = StringField('Email', validators=[Optional(), Email()])
     manager_id = SelectField('Store Manager', coerce=int, validators=[Optional()])
     is_active = BooleanField('Active', default=True)
 
