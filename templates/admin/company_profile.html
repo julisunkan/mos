@@ -69,17 +69,34 @@
                         </div>
                     </div>
 
-                    <div class="mb-3">
-                        {{ form.default_tax_rate.label(class="form-label") }}
-                        <div class="input-group">
-                            {{ form.default_tax_rate(class="form-control") }}
-                            <span class="input-group-text">%</span>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                {{ form.default_currency.label(class="form-label") }}
+                                {{ form.default_currency(class="form-control") }}
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                {{ form.default_tax_rate.label(class="form-label") }}
+                                <div class="input-group">
+                                    {{ form.default_tax_rate(class="form-control") }}
+                                    <span class="input-group-text">%</span>
+                                </div>
+                            </div>
                         </div>
                     </div>
 
                     <div class="mb-3">
                         {{ form.receipt_footer.label(class="form-label") }}
                         {{ form.receipt_footer(class="form-control", rows="3") }}
+                        <div class="form-text">Text to appear at the bottom of receipts</div>
+                    </div>
+
+                    <div class="mb-3">
+                        {{ form.logo_url.label(class="form-label") }}
+                        {{ form.logo_url(class="form-control", placeholder="https://example.com/logo.png") }}
+                        <div class="form-text">Optional: URL to your company logo</div>
                     </div>
 
                     <div class="d-grid gap-2 d-md-flex justify-content-md-end">

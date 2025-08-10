@@ -32,7 +32,8 @@ class CompanyProfileForm(FlaskForm):
     address = TextAreaField('Address', validators=[Optional(), Length(max=500)])
     phone = StringField('Phone', validators=[Optional(), Length(max=20)])
     email = StringField('Email', validators=[Optional(), Email()])
-    tax_id = StringField('Tax ID', validators=[Optional(), Length(max=50)])
+    tax_number = StringField('Tax Number', validators=[Optional(), Length(max=50)])
+    registration_number = StringField('Registration Number', validators=[Optional(), Length(max=50)])
     website = StringField('Website', validators=[Optional(), Length(max=200)])
     default_currency = SelectField('Default Currency', choices=[
         ('USD', 'US Dollar ($)'),
@@ -42,6 +43,8 @@ class CompanyProfileForm(FlaskForm):
         ('KES', 'Kenyan Shilling (KSh)'),
         ('GHS', 'Ghanaian Cedi (₵)')
     ], default='USD')
+    default_tax_rate = FloatField('Default Tax Rate (%)', validators=[Optional(), NumberRange(min=0, max=100)], default=0.0)
+    receipt_footer = TextAreaField('Receipt Footer', validators=[Optional(), Length(max=500)])
     logo_url = StringField('Logo URL', validators=[Optional(), Length(max=500)])
 
 class MultiCheckboxField(SelectMultipleField):
