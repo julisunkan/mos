@@ -18,6 +18,9 @@ Cloud POS & Inventory Manager is a comprehensive Point of Sale and Inventory Man
 - **Multiple Payment Methods**: Cash, Card, and Digital Wallet support with change calculation
 - **Real-time Updates**: Live product search, cart management, and stock level tracking
 - **Fixed All Routes**: Updated all template references from pos.index to pos_clean.index
+- **Receipt Generation**: Success modal with receipt details and print functionality
+- **Fixed API Endpoints**: Corrected all JavaScript API calls to use proper /pos/ URLs
+- **Store Stock Setup**: Added inventory for all products in Main Store with proper quantities
 
 ✅ **Multi-Store Product Selection: COMPLETED** - Implemented selective store availability for products. Admins can now choose which specific stores a product should appear in during product creation/editing. Features include:
 - SelectMultipleField in ProductForm for store selection with validation
