@@ -1,6 +1,6 @@
 from flask import Blueprint, render_template, request, flash, redirect, url_for, jsonify
 from flask_login import login_required, current_user
-from models import Sale, Product, Customer, User, SaleItem
+from models import Sale, Product, Customer, User, SaleItem, SaleReturn
 from app import db
 from datetime import datetime, timedelta
 from sqlalchemy import func, desc
@@ -109,10 +109,36 @@ def sales():
         ] if condition is not None]
     ).scalar() or 0
     
+    # Calculate refund totals for the same period
+    refund_query = SaleReturn.query.filter(SaleReturn.status == 'Approved')
+    
+    if start_date:
+        refund_query = refund_query.filter(SaleReturn.created_at >= start_date)
+    if end_date:
+        refund_query = refund_query.filter(SaleReturn.created_at < end_date)
+    if user_id:
+        refund_query = refund_query.filter(SaleReturn.user_id == user_id)
+    
+    total_refunds = refund_query.count()
+    total_refund_amount = db.session.query(func.sum(SaleReturn.return_amount)).filter(
+        SaleReturn.status == 'Approved',
+        *[condition for condition in [
+            SaleReturn.created_at >= start_date if start_date else None,
+            SaleReturn.created_at < end_date if end_date else None,
+            SaleReturn.user_id == user_id if user_id else None
+        ] if condition is not None]
+    ).scalar() or 0
+    
+    # Get recent refunds for the same period
+    refunds = refund_query.order_by(SaleReturn.created_at.desc()).limit(10).all()
+    
     return render_template('reports/sales.html',
                          sales=sales,
                          users=users,
                          total_amount=total_amount,
+                         total_refunds=total_refunds,
+                         total_refund_amount=total_refund_amount,
+                         refunds=refunds,
                          filters={
                              'start_date': start_date.strftime('%Y-%m-%d') if start_date else '',
                              'end_date': (end_date - timedelta(days=1)).strftime('%Y-%m-%d') if end_date else '',

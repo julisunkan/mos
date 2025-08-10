@@ -65,17 +65,21 @@
         <div class="col-12">
             <div class="alert alert-info">
                 <div class="row text-center">
-                    <div class="col-md-4">
+                    <div class="col-md-3">
                         <h5>{{ total_amount|format_currency }}</h5>
                         <small>Total Revenue</small>
                     </div>
-                    <div class="col-md-4">
+                    <div class="col-md-3">
                         <h5>{{ sales.total }}</h5>
-                        <small>Total Transactions</small>
+                        <small>Total Sales</small>
                     </div>
-                    <div class="col-md-4">
-                        <h5>{{ (total_amount / sales.total if sales.total > 0 else 0)|format_currency }}</h5>
-                        <small>Average Sale</small>
+                    <div class="col-md-3">
+                        <h5>{{ total_refund_amount|format_currency }}</h5>
+                        <small>Total Refunds</small>
+                    </div>
+                    <div class="col-md-3">
+                        <h5>{{ (total_amount - total_refund_amount)|format_currency }}</h5>
+                        <small>Net Revenue</small>
                     </div>
                 </div>
             </div>
@@ -241,6 +245,59 @@
             </div>
         </div>
     </div>
+
+    <!-- Recent Refunds Section -->
+    {% if refunds %}
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-undo me-2"></i>Recent Refunds ({{ total_refunds }} total)
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Return #</th>
+                                    <th>Date</th>
+                                    <th>Original Receipt</th>
+                                    <th>Processed By</th>
+                                    <th>Reason</th>
+                                    <th>Amount</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for refund in refunds %}
+                                <tr>
+                                    <td><code>{{ refund.return_number }}</code></td>
+                                    <td>{{ refund.created_at.strftime('%m/%d/%Y %I:%M %p') }}</td>
+                                    <td>
+                                        <a href="#" onclick="viewSaleDetails({{ refund.original_sale_id }})">
+                                            {{ refund.original_sale.receipt_number }}
+                                        </a>
+                                    </td>
+                                    <td>{{ refund.processed_by.full_name }}</td>
+                                    <td>{{ refund.return_reason }}</td>
+                                    <td><strong>{{ format_currency(refund.return_amount) }}</strong></td>
+                                    <td>
+                                        <span class="badge bg-{{ 'success' if refund.status == 'Approved' else 'warning' if refund.status == 'Pending' else 'danger' }}">
+                                            {{ refund.status }}
+                                        </span>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
 </div>
 
 <!-- Sale Details Modal -->
