@@ -36,21 +36,21 @@
                                     <p class="product-sku">SKU: {{ product.sku }}</p>
                                     <p class="product-price">{{ product.selling_price|format_currency }}</p>
                                     <p class="product-stock">Stock: 
+                                        {% set stock_found = false %}
                                         {% for stock in product.store_stocks %}
-                                            {% if stock.store_id == store.id %}
+                                            {% if stock.store_id == store.id and not stock_found %}
                                                 {{ stock.quantity }}
-                                                {% break %}
+                                                {% set stock_found = true %}
                                             {% endif %}
-                                        {% else %}
-                                            0
                                         {% endfor %}
+                                        {% if not stock_found %}0{% endif %}
                                     </p>
                                 </div>
                                 <button class="btn btn-primary btn-sm add-to-cart-btn" 
                                         data-product-id="{{ product.id }}"
                                         data-product-name="{{ product.name }}"
                                         data-product-price="{{ product.selling_price }}"
-                                        data-product-stock="{% for stock in product.store_stocks %}{% if stock.store_id == store.id %}{{ stock.quantity }}{% break %}{% endif %}{% else %}0{% endfor %}">
+                                        data-product-stock="{% set stock_qty = 0 %}{% for stock in product.store_stocks %}{% if stock.store_id == store.id %}{% set stock_qty = stock.quantity %}{% endif %}{% endfor %}{{ stock_qty }}">
                                     <i class="fas fa-plus"></i> Add
                                 </button>
                             </div>
