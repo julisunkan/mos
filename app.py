@@ -31,15 +31,8 @@ if database_url.startswith("postgres://"):
 
 app.config["SQLALCHEMY_DATABASE_URI"] = database_url
 app.config["SQLALCHEMY_ENGINE_OPTIONS"] = {
-    "pool_recycle": 200,
+    "pool_recycle": 300,
     "pool_pre_ping": True,
-    "pool_timeout": 5,
-    "pool_size": 3,
-    "max_overflow": 5,
-    "connect_args": {
-        "sslmode": "prefer",
-        "connect_timeout": 5
-    }
 }
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 app.config["WTF_CSRF_ENABLED"] = False  # Disable CSRF for API endpoints
@@ -140,15 +133,15 @@ def dashboard_stats_api():
 # Create tables and default data
 with app.app_context():
     db.create_all()
+    
+    # Create default roles and admin user if they don't exist
+    from utils import create_default_data
+    create_default_data()
 
 # Make utility functions available in templates
 @app.context_processor
 def utility_processor():
     return dict(format_currency=format_currency, format_number=format_number, get_default_currency=get_default_currency)
-    
-    # Create default roles and admin user if they don't exist
-    from utils import create_default_data
-    create_default_data()
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=True)
