@@ -129,7 +129,7 @@ def process_sale():
             # Calculate item totals
             item_subtotal = quantity * unit_price
             item_tax = item_subtotal * (float(product.tax_rate) / 100 if product.tax_rate else 0)
-            item_total = item_subtotal + item_tax
+            item_total = item_subtotal
             
             # Create sale item
             sale_item = SaleItem()

@@ -191,7 +191,6 @@ class SaleItem(db.Model):
     quantity = db.Column(db.Integer, nullable=False)
     unit_price = db.Column(db.Numeric(10, 2), nullable=False)
     total_price = db.Column(db.Numeric(10, 2), nullable=False)
-    tax_amount = db.Column(db.Numeric(10, 2), default=0.00)
     
     def __repr__(self):
         return f'<SaleItem Product ID:{self.product_id} x{self.quantity}>'
