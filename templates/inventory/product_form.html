@@ -148,12 +148,12 @@
                         </div>
                         
                         <div class="mb-3">
-                            {{ form.store_ids.label(class="form-label") }}
+                            {{ form.store_ids.label(class="form-label") }}<span class="text-danger">*</span>
                             <div class="border rounded p-3" style="max-height: 200px; overflow-y: auto;">
                                 {% for value, label in form.store_ids.choices %}
                                 <div class="form-check">
-                                    <input class="form-check-input" type="checkbox" name="store_ids" value="{{ value }}" id="store_{{ value }}" 
-                                           {% if value in form.store_ids.data %}checked{% endif %}>
+                                    <input class="form-check-input store-checkbox" type="checkbox" name="store_ids" value="{{ value }}" id="store_{{ value }}" 
+                                           {% if form.store_ids.data and value in form.store_ids.data %}checked{% endif %}>
                                     <label class="form-check-label" for="store_{{ value }}">
                                         {{ label }}
                                     </label>
@@ -167,7 +167,7 @@
                                     {% endfor %}
                                 </div>
                             {% endif %}
-                            <small class="form-text text-muted">Select the stores where this product will be available</small>
+                            <small class="form-text text-muted">Select at least one store where this product will be available</small>
                         </div>
                         
                         <div class="mb-3">
@@ -184,6 +184,34 @@
                             </button>
                         </div>
                     </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Handle store selection validation
+    const storeCheckboxes = document.querySelectorAll('.store-checkbox');
+    const form = document.querySelector('form');
+    
+    function validateStoreSelection() {
+        const checkedStores = document.querySelectorAll('.store-checkbox:checked');
+        return checkedStores.length > 0;
+    }
+    
+    if (form) {
+        form.addEventListener('submit', function(e) {
+            if (!validateStoreSelection()) {
+                e.preventDefault();
+                alert('Please select at least one store for this product.');
+                return false;
+            }
+        });
+    }
+});
+</script>
                 </div>
             </div>
         </div>

@@ -58,6 +58,11 @@ def new_product():
     form.store_ids.choices = [(s.id, s.name) for s in stores]
     
     if form.validate_on_submit():
+        # Validate that at least one store is selected
+        if not form.store_ids.data:
+            flash('Please select at least one store for this product.', 'error')
+            return render_template('inventory/product_form.html', form=form, title='New Product')
+            
         product = Product(
             name=form.name.data,
             description=form.description.data,
@@ -113,11 +118,17 @@ def edit_product(id):
     stores = Store.query.filter_by(is_active=True).all()
     form.store_ids.choices = [(s.id, s.name) for s in stores]
     
-    # Set current stores where this product is available
-    current_stores = db.session.query(StoreStock.store_id).filter_by(product_id=product.id).all()
-    form.store_ids.data = [store_id[0] for store_id in current_stores]
+    # Set current stores where this product is available (only for GET requests)
+    if request.method == 'GET':
+        current_stores = db.session.query(StoreStock.store_id).filter_by(product_id=product.id).all()
+        form.store_ids.data = [store_id[0] for store_id in current_stores]
     
     if form.validate_on_submit():
+        # Validate that at least one store is selected
+        if not form.store_ids.data:
+            flash('Please select at least one store for this product.', 'error')
+            return render_template('inventory/product_form.html', form=form, title='Edit Product', product=product)
+            
         product.name = form.name.data
         product.description = form.description.data
         product.sku = form.sku.data
