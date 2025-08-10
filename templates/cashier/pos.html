@@ -236,33 +236,35 @@ document.addEventListener('DOMContentLoaded', function() {
     
     if (!searchInput || !productsGrid) {
         console.error('Search elements not found:', { searchInput, productsGrid });
-        return;
-    }
+        // Don't return, continue with cart functionality
+    } else {
+        // Only set up search if elements exist
     
-    searchInput.addEventListener('input', function() {
-        const searchTerm = this.value.toLowerCase();
-        const productCards = productsGrid.querySelectorAll('.product-card');
-        
-        productCards.forEach(card => {
-            const productNameEl = card.querySelector('.product-name');
-            const productSkuEl = card.querySelector('.product-sku');
-            const parentCol = card.closest('.col-xl-3');
+        searchInput.addEventListener('input', function() {
+            const searchTerm = this.value.toLowerCase();
+            const productCards = productsGrid.querySelectorAll('.product-card');
             
-            if (!productNameEl || !productSkuEl || !parentCol) {
-                console.warn('Missing elements in product card');
-                return;
-            }
-            
-            const productName = productNameEl.textContent.toLowerCase();
-            const productSku = productSkuEl.textContent.toLowerCase();
-            
-            if (productName.includes(searchTerm) || productSku.includes(searchTerm)) {
-                parentCol.style.display = 'block';
-            } else {
-                parentCol.style.display = 'none';
-            }
+            productCards.forEach(card => {
+                const productNameEl = card.querySelector('.product-name');
+                const productSkuEl = card.querySelector('.product-sku');
+                const parentCol = card.closest('.col-xl-3');
+                
+                if (!productNameEl || !productSkuEl || !parentCol) {
+                    console.warn('Missing elements in product card');
+                    return;
+                }
+                
+                const productName = productNameEl.textContent.toLowerCase();
+                const productSku = productSkuEl.textContent.toLowerCase();
+                
+                if (productName.includes(searchTerm) || productSku.includes(searchTerm)) {
+                    parentCol.style.display = 'block';
+                } else {
+                    parentCol.style.display = 'none';
+                }
+            });
         });
-    });
+    } // End of search setup
     
     // Simplified Add to cart functionality
     function setupAddToCartButtons() {
