@@ -74,10 +74,12 @@ from blueprints.stores import stores_bp
 from blueprints.inventory import inventory_bp
 from blueprints.customers import customers_bp
 from blueprints.reports import reports_bp
+from blueprints.pos_api import pos_api_bp
 
 app.register_blueprint(auth_bp, url_prefix='/auth')
 app.register_blueprint(admin_bp, url_prefix='/admin')
 app.register_blueprint(pos_bp, url_prefix='/pos')
+app.register_blueprint(pos_api_bp)  # No prefix as it has /pos/api in blueprint
 app.register_blueprint(inventory_bp, url_prefix='/inventory')
 app.register_blueprint(customers_bp, url_prefix='/customers')
 app.register_blueprint(reports_bp, url_prefix='/reports')

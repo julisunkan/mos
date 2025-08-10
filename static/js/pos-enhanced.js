@@ -22,12 +22,15 @@ class EnhancedPOS {
         this.searchTimeout = null;
         
         // Set up event listeners
-        document.getElementById('productSearch').addEventListener('input', (e) => {
-            clearTimeout(this.searchTimeout);
-            this.searchTimeout = setTimeout(() => {
-                this.searchProducts(e.target.value);
-            }, 300);
-        });
+        const productSearch = document.getElementById('productSearch');
+        if (productSearch) {
+            productSearch.addEventListener('input', (e) => {
+                clearTimeout(this.searchTimeout);
+                this.searchTimeout = setTimeout(() => {
+                    this.searchProducts(e.target.value);
+                }, 300);
+            });
+        }
         
         // Initialize payment method
         this.selectPaymentMethod('cash');
@@ -739,15 +742,22 @@ class EnhancedPOS {
     }
     
     getCSRFToken() {
-        return document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+        const csrfMeta = document.querySelector('meta[name="csrf-token"]');
+        return csrfMeta ? csrfMeta.getAttribute('content') : '';
     }
     
     showLoading(elementId) {
-        document.getElementById(elementId).style.display = 'block';
+        const element = document.getElementById(elementId);
+        if (element) {
+            element.style.display = 'block';
+        }
     }
     
     hideLoading(elementId) {
-        document.getElementById(elementId).style.display = 'none';
+        const element = document.getElementById(elementId);
+        if (element) {
+            element.style.display = 'none';
+        }
     }
     
     showSuccess(message) {

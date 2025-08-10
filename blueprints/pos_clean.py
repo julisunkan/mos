@@ -466,3 +466,4 @@ def get_products():
     except Exception as e:
         logging.error(f'Error getting products: {e}')
         return jsonify({'error': 'Failed to load products'}), 500
+
