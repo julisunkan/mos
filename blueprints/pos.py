@@ -122,7 +122,7 @@ def close_register():
     
     return redirect(url_for('pos.open_register'))
 
-@pos_bp.route('/sale/process', methods=['POST'])
+@pos_bp.route('/api/sale/process', methods=['POST'])
 @login_required
 def process_sale():
     try:
@@ -342,7 +342,39 @@ def returns():
                          form=form, 
                          recent_sales=recent_sales)
 
-@pos_bp.route('/product/search')
+@pos_bp.route('/api/products')
+@login_required
+def get_products():
+    """Get all products available in user's store"""
+    # Get user's current register to find their store
+    register = CashRegister.query.filter_by(
+        user_id=current_user.id,
+        is_open=True
+    ).first()
+    
+    if not register:
+        return jsonify([])
+    
+    # Get products available in the user's store with stock
+    products = db.session.query(Product, StoreStock.quantity).join(StoreStock).filter(
+        Product.is_active == True,
+        StoreStock.store_id == register.store_id
+    ).all()
+    
+    results = []
+    for product, stock_quantity in products:
+        results.append({
+            'id': product.id,
+            'name': product.name,
+            'sku': product.sku,
+            'price': float(product.selling_price),
+            'stock': stock_quantity,  # Use store-specific stock
+            'tax_rate': float(product.tax_rate or 0)
+        })
+    
+    return jsonify(results)
+
+@pos_bp.route('/api/products/search')
 @login_required
 def search_products():
     """Search products for POS (filtered by user's store)"""
@@ -377,6 +409,7 @@ def search_products():
         results.append({
             'id': product.id,
             'name': product.name,
+            'sku': product.sku,
             'price': float(product.selling_price),
             'stock': stock_quantity,  # Use store-specific stock
             'tax_rate': float(product.tax_rate or 0)
