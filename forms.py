@@ -25,7 +25,6 @@ class UserForm(FlaskForm):
 class CategoryForm(FlaskForm):
     name = StringField('Category Name', validators=[DataRequired(), Length(max=100)])
     description = TextAreaField('Description', validators=[Optional(), Length(max=255)])
-    parent_id = SelectField('Parent Category', coerce=int, validators=[Optional()])
     is_active = BooleanField('Active', default=True)
 
 class CompanyProfileForm(FlaskForm):
@@ -106,7 +105,7 @@ class ProductForm(FlaskForm):
     name = StringField('Product Name', validators=[DataRequired(), Length(max=200)])
     sku = StringField('SKU', validators=[Optional(), Length(max=50)])
     barcode = StringField('Barcode', validators=[Optional(), Length(max=100)])
-    category_id = SelectField('Category', coerce=int, validators=[Optional()])
+    category_id = SelectField('Category', coerce=int, validators=[DataRequired()])
     description = TextAreaField('Description', validators=[Optional(), Length(max=1000)])
     cost_price = FloatField('Cost Price', validators=[DataRequired(), NumberRange(min=0)])
     selling_price = FloatField('Selling Price', validators=[DataRequired(), NumberRange(min=0)])

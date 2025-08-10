@@ -51,18 +51,15 @@ def new_product():
     
     # Populate category choices
     categories = Category.query.filter_by(is_active=True).all()
-    form.category_id.choices = [(0, '--- No Category ---')] + [(c.id, c.name) for c in categories]
+    form.category_id.choices = [(c.id, c.name) for c in categories]
     
     if form.validate_on_submit():
-        # Handle category_id (0 means no category)
-        category_id = form.category_id.data if form.category_id.data != 0 else None
-        
         product = Product(
             name=form.name.data,
             description=form.description.data,
             sku=form.sku.data,
             barcode=form.barcode.data,
-            category_id=category_id,
+            category_id=form.category_id.data,
             cost_price=form.cost_price.data,
             selling_price=form.selling_price.data,
             stock_quantity=form.stock_quantity.data,
@@ -94,17 +91,14 @@ def edit_product(id):
     
     # Populate category choices
     categories = Category.query.filter_by(is_active=True).all()
-    form.category_id.choices = [(0, '--- No Category ---')] + [(c.id, c.name) for c in categories]
+    form.category_id.choices = [(c.id, c.name) for c in categories]
     
     if form.validate_on_submit():
-        # Handle category_id (0 means no category)
-        category_id = form.category_id.data if form.category_id.data != 0 else None
-        
         product.name = form.name.data
         product.description = form.description.data
         product.sku = form.sku.data
         product.barcode = form.barcode.data
-        product.category_id = category_id
+        product.category_id = form.category_id.data
         product.cost_price = form.cost_price.data
         product.selling_price = form.selling_price.data
         product.stock_quantity = form.stock_quantity.data
@@ -175,18 +169,10 @@ def categories():
 def new_category():
     form = CategoryForm()
     
-    # Populate parent category choices
-    categories = Category.query.filter_by(is_active=True).all()
-    form.parent_id.choices = [(0, '--- No Parent ---')] + [(c.id, c.name) for c in categories]
-    
     if form.validate_on_submit():
-        # Handle parent_id (0 means no parent)
-        parent_id = form.parent_id.data if form.parent_id.data != 0 else None
-        
         category = Category(
             name=form.name.data,
             description=form.description.data,
-            parent_id=parent_id,
             is_active=form.is_active.data
         )
         
@@ -207,17 +193,9 @@ def edit_category(id):
     category = Category.query.get_or_404(id)
     form = CategoryForm(obj=category)
     
-    # Populate parent category choices (excluding self to prevent circular reference)
-    categories = Category.query.filter(Category.is_active == True, Category.id != id).all()
-    form.parent_id.choices = [(0, '--- No Parent ---')] + [(c.id, c.name) for c in categories]
-    
     if form.validate_on_submit():
-        # Handle parent_id (0 means no parent)
-        parent_id = form.parent_id.data if form.parent_id.data != 0 else None
-        
         category.name = form.name.data
         category.description = form.description.data
-        category.parent_id = parent_id
         category.is_active = form.is_active.data
         
         try:
