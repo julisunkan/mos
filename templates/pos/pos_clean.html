@@ -1007,11 +1007,15 @@ function showSuccessModal(saleData) {
         </div>
         
         <div style="margin: 15px 0;">
-            <div style="display: flex; justify-content: space-between; font-weight: bold; border-bottom: 1px dashed #000; padding-bottom: 5px;">
-                <span>ITEM</span>
-                <span>QTY</span>
-                <span>PRICE</span>
-                <span>TOTAL</span>
+            <div style="font-weight: bold; border-bottom: 1px dashed #000; padding-bottom: 5px; margin-bottom: 8px;">
+                <table style="width: 100%; border-collapse: collapse;">
+                    <tr>
+                        <td style="width: 50%; text-align: left;">ITEM</td>
+                        <td style="width: 15%; text-align: center;">QTY</td>
+                        <td style="width: 20%; text-align: right;">PRICE</td>
+                        <td style="width: 15%; text-align: right;">TOTAL</td>
+                    </tr>
+                </table>
             </div>
     `;
     
@@ -1020,12 +1024,17 @@ function showSuccessModal(saleData) {
     cart.forEach(item => {
         const itemTotal = item.price * item.quantity;
         subtotal += itemTotal;
+        const itemName = item.name.length > 20 ? item.name.substring(0, 20) + '...' : item.name;
         receiptHTML += `
-            <div style="display: flex; justify-content: space-between; margin: 8px 0; font-size: 13px;">
-                <span style="flex: 2; padding-right: 10px;">${item.name}</span>
-                <span style="width: 40px; text-align: center;">${item.quantity}</span>
-                <span style="width: 60px; text-align: right;">${formatCurrency(item.price)}</span>
-                <span style="width: 70px; text-align: right;">${formatCurrency(itemTotal)}</span>
+            <div style="margin: 6px 0; font-size: 13px;">
+                <table style="width: 100%; border-collapse: collapse;">
+                    <tr>
+                        <td style="width: 50%; text-align: left; padding-right: 8px;">${itemName}</td>
+                        <td style="width: 15%; text-align: center;">${item.quantity}</td>
+                        <td style="width: 20%; text-align: right;">${formatCurrency(item.price)}</td>
+                        <td style="width: 15%; text-align: right;">${formatCurrency(itemTotal)}</td>
+                    </tr>
+                </table>
             </div>
         `;
     });
@@ -1039,34 +1048,38 @@ function showSuccessModal(saleData) {
         </div>
         
         <div style="border-top: 1px dashed #000; padding-top: 10px; margin-top: 15px;">
-            <div style="display: flex; justify-content: space-between; margin: 5px 0;">
-                <span>Subtotal:</span>
-                <span>${formatCurrency(subtotal)}</span>
-            </div>
-            <div style="display: flex; justify-content: space-between; margin: 5px 0;">
-                <span>Tax:</span>
-                <span>${formatCurrency(0)}</span>
-            </div>
-            <div style="display: flex; justify-content: space-between; margin: 5px 0; font-weight: bold; font-size: 16px; border-top: 1px solid #000; padding-top: 5px;">
-                <span>TOTAL:</span>
-                <span>${formatCurrency(saleData.total_amount)}</span>
-            </div>
+            <table style="width: 100%; border-collapse: collapse;">
+                <tr>
+                    <td style="text-align: left; padding: 3px 0;">Subtotal:</td>
+                    <td style="text-align: right; padding: 3px 0;">${formatCurrency(subtotal)}</td>
+                </tr>
+                <tr>
+                    <td style="text-align: left; padding: 3px 0;">Tax:</td>
+                    <td style="text-align: right; padding: 3px 0;">${formatCurrency(0)}</td>
+                </tr>
+                <tr style="border-top: 1px solid #000;">
+                    <td style="text-align: left; padding: 8px 0 3px 0; font-weight: bold; font-size: 16px;">TOTAL:</td>
+                    <td style="text-align: right; padding: 8px 0 3px 0; font-weight: bold; font-size: 16px;">${formatCurrency(saleData.total_amount)}</td>
+                </tr>
+            </table>
             
             <div style="margin-top: 15px; border-top: 1px dashed #000; padding-top: 10px;">
-                <div style="display: flex; justify-content: space-between;">
-                    <span>Payment Method:</span>
-                    <span>${paymentMethod}</span>
-                </div>
-                ${paymentMethod === 'Cash' ? `
-                <div style="display: flex; justify-content: space-between;">
-                    <span>Amount Tendered:</span>
-                    <span>${formatCurrency(amountTendered)}</span>
-                </div>
-                <div style="display: flex; justify-content: space-between; font-weight: bold;">
-                    <span>Change:</span>
-                    <span>${formatCurrency(changeAmount)}</span>
-                </div>
-                ` : ''}
+                <table style="width: 100%; border-collapse: collapse;">
+                    <tr>
+                        <td style="text-align: left; padding: 3px 0;">Payment Method:</td>
+                        <td style="text-align: right; padding: 3px 0;">${paymentMethod}</td>
+                    </tr>
+                    ${paymentMethod === 'Cash' ? `
+                    <tr>
+                        <td style="text-align: left; padding: 3px 0;">Amount Tendered:</td>
+                        <td style="text-align: right; padding: 3px 0;">${formatCurrency(amountTendered)}</td>
+                    </tr>
+                    <tr>
+                        <td style="text-align: left; padding: 3px 0; font-weight: bold;">Change:</td>
+                        <td style="text-align: right; padding: 3px 0; font-weight: bold;">${formatCurrency(changeAmount)}</td>
+                    </tr>
+                    ` : ''}
+                </table>
             </div>
         </div>
         
