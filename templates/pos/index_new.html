@@ -211,7 +211,7 @@
                 <button type="button" class="btn btn-primary" onclick="downloadReceipt()">
                     <i class="fas fa-download me-2"></i>Download PDF
                 </button>
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" onclick="closeSaleModal()">Close</button>
+                <button type="button" class="btn btn-secondary" onclick="closeSaleModal()">Close</button>
             </div>
         </div>
     </div>
@@ -727,36 +727,36 @@ document.addEventListener('DOMContentLoaded', function() {
         clearCartBtn.addEventListener('click', clearCart);
     }
     
+    // Add event listener for modal close events
+    const saleSuccessModal = document.getElementById('saleSuccessModal');
+    if (saleSuccessModal) {
+        saleSuccessModal.addEventListener('hidden.bs.modal', function (event) {
+            // This fires when the modal is completely hidden
+            // Only refresh if modal was closed without explicit close button
+            if (!event.detail || event.detail.trigger !== 'closeButton') {
+                setTimeout(() => {
+                    window.location.href = '/pos/';
+                }, 100);
+            }
+        });
+    }
+    
     // Initialize payment fields
     togglePaymentFields();
 });
 
 // Close sale modal and refresh page
 function closeSaleModal() {
-    // Clear the cart
-    cart = [];
-    updateCartDisplay();
-    
-    // Reset payment fields
-    document.getElementById('discount').value = '0';
-    document.getElementById('saleNotes').value = '';
-    
-    // Reset payment method to Cash and show appropriate fields
-    document.getElementById('paymentMethod').value = 'Cash';
-    togglePaymentFields();
-    
-    // Hide any messages
-    hideMessage();
-    
-    // Update totals
-    updateCartTotals();
-    
-    // Focus on search input for next sale
-    const searchInput = document.getElementById('productSearch');
-    if (searchInput) {
-        searchInput.focus();
-        searchInput.value = '';
+    // Hide the modal first
+    const modal = bootstrap.Modal.getInstance(document.getElementById('saleSuccessModal'));
+    if (modal) {
+        modal.hide();
     }
+    
+    // Give modal time to close, then refresh the page
+    setTimeout(() => {
+        window.location.href = '/pos/';
+    }, 300);
 }
 </script>
 {% endblock %}
