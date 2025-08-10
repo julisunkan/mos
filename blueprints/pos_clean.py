@@ -75,6 +75,38 @@ def index():
                          store=user_store,
                          cash_register=cash_register)
 
+@pos_bp.route('/enhanced')
+@login_required
+def enhanced():
+    """Enhanced POS interface with advanced features"""
+    # Check if user has a store assignment
+    user_store = get_user_store()
+    if not user_store:
+        flash('You are not assigned to any store. Please contact your administrator.', 'error')
+        return redirect(url_for('dashboard'))
+    
+    # Check if user has an open cash register
+    cash_register = get_user_cash_register()
+    if not cash_register:
+        return redirect(url_for('pos_clean.open_register'))
+    
+    # Get products available in this store
+    products = get_store_products(user_store.id)
+    
+    # Get customers
+    customers = Customer.query.filter_by(is_active=True).order_by(Customer.name).all()
+    
+    # Get today's date for sales history default
+    from datetime import date
+    today = date.today().isoformat()
+    
+    return render_template('pos/pos_enhanced.html', 
+                         products=products,
+                         customers=customers,
+                         store=user_store,
+                         cash_register=cash_register,
+                         today=today)
+
 @pos_bp.route('/register/open', methods=['GET', 'POST'])
 @login_required
 def open_register():
@@ -309,6 +341,101 @@ def process_sale():
         db.session.rollback()
         logging.error(f'Error processing sale: {e}')
         return jsonify({'success': False, 'error': 'Sale processing failed'}), 500
+
+@pos_bp.route('/api/promo-code/validate', methods=['POST'])
+@login_required
+def validate_promo_code():
+    """Validate a promo code"""
+    try:
+        data = request.get_json()
+        code = data.get('code', '').strip().upper()
+        subtotal = Decimal(str(data.get('subtotal', 0)))
+        
+        if not code:
+            return jsonify({'error': 'Promo code is required'}), 400
+        
+        user_store = get_user_store()
+        if not user_store:
+            return jsonify({'error': 'No store assigned'}), 400
+        
+        # Import PromotionCode here to avoid circular imports
+        from models import PromotionCode
+        
+        # Find promo code
+        promo = PromotionCode.query.filter_by(code=code, is_active=True).first()
+        
+        if not promo:
+            return jsonify({'error': 'Invalid promo code'}), 400
+        
+        if not promo.is_valid():
+            return jsonify({'error': 'Promo code has expired or reached usage limit'}), 400
+        
+        if promo.store_id and promo.store_id != user_store.id:
+            return jsonify({'error': 'Promo code not valid for this store'}), 400
+        
+        if subtotal < promo.min_purchase_amount:
+            return jsonify({'error': f'Minimum purchase amount is ${promo.min_purchase_amount}'}), 400
+        
+        # Calculate discount
+        if promo.discount_type == 'percentage':
+            discount_amount = (subtotal * promo.discount_value) / 100
+            if promo.max_discount_amount:
+                discount_amount = min(discount_amount, promo.max_discount_amount)
+        else:  # fixed
+            discount_amount = min(promo.discount_value, subtotal)
+        
+        return jsonify({
+            'valid': True,
+            'discount_type': promo.discount_type,
+            'discount_value': float(promo.discount_value),
+            'discount_amount': float(discount_amount),
+            'description': promo.description
+        })
+        
+    except Exception as e:
+        logging.error(f'Error validating promo code: {e}')
+        return jsonify({'error': 'Validation failed'}), 500
+
+@pos_bp.route('/api/sales/history')
+@login_required
+def get_sales_history():
+    """Get sales history for current store"""
+    try:
+        user_store = get_user_store()
+        if not user_store:
+            return jsonify({'error': 'No store assigned'}), 400
+        
+        start_date = request.args.get('start_date')
+        end_date = request.args.get('end_date')
+        
+        query = Sale.query.filter_by(store_id=user_store.id)
+        
+        if start_date:
+            query = query.filter(Sale.created_at >= start_date)
+        if end_date:
+            from datetime import datetime, timedelta
+            end_datetime = datetime.strptime(end_date, '%Y-%m-%d') + timedelta(days=1)
+            query = query.filter(Sale.created_at < end_datetime)
+        
+        sales = query.order_by(Sale.created_at.desc()).limit(50).all()
+        
+        results = []
+        for sale in sales:
+            results.append({
+                'id': sale.id,
+                'receipt_number': sale.receipt_number,
+                'created_at': sale.created_at.isoformat(),
+                'customer_name': sale.customer.name if sale.customer else None,
+                'total_amount': float(sale.total_amount),
+                'payment_method': sale.payment_method,
+                'item_count': len(sale.sale_items)
+            })
+        
+        return jsonify(results)
+        
+    except Exception as e:
+        logging.error(f'Error getting sales history: {e}')
+        return jsonify({'error': 'Failed to load sales history'}), 500
 
 @pos_bp.route('/api/products')
 @login_required

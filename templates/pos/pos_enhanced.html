@@ -1,0 +1,722 @@
+{% extends "base.html" %}
+
+{% block title %}Enhanced POS System - {{ store.name }}{% endblock %}
+
+{% block head %}
+<meta name="csrf-token" content="{{ csrf_token() }}">
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    :root {
+        --primary: #4f46e5;
+        --secondary: #06b6d4;
+        --success: #10b981;
+        --danger: #ef4444;
+        --warning: #f59e0b;
+        --dark: #1f2937;
+        --light: #f8fafc;
+        --border-radius: 12px;
+        --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+    }
+    
+    body {
+        background: linear-gradient(135deg, #f0f9ff 0%, #e0e7ff 50%, #f3e8ff 100%);
+        font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+        min-height: 100vh;
+    }
+    
+    /* Header */
+    .pos-header {
+        background: linear-gradient(135deg, var(--primary), var(--secondary));
+        color: white;
+        padding: 1.5rem;
+        margin-bottom: 1.5rem;
+        border-radius: var(--border-radius);
+        box-shadow: var(--shadow-lg);
+    }
+    
+    /* Main Layout */
+    .pos-container {
+        display: grid;
+        grid-template-columns: 1fr 400px;
+        gap: 1.5rem;
+        height: calc(100vh - 200px);
+        padding: 0 1.5rem;
+    }
+    
+    /* Product Section */
+    .products-section {
+        background: white;
+        border-radius: var(--border-radius);
+        padding: 1.5rem;
+        box-shadow: var(--shadow);
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+    }
+    
+    .search-controls {
+        display: flex;
+        gap: 1rem;
+        margin-bottom: 1.5rem;
+    }
+    
+    .search-input {
+        flex: 1;
+        padding: 0.75rem;
+        border: 2px solid #e5e7eb;
+        border-radius: var(--border-radius);
+        font-size: 1rem;
+        transition: border-color 0.3s;
+    }
+    
+    .search-input:focus {
+        outline: none;
+        border-color: var(--primary);
+    }
+    
+    .barcode-btn {
+        padding: 0.75rem 1.5rem;
+        background: var(--secondary);
+        color: white;
+        border: none;
+        border-radius: var(--border-radius);
+        cursor: pointer;
+        font-weight: 600;
+        transition: background 0.3s;
+    }
+    
+    .barcode-btn:hover {
+        background: #0891b2;
+    }
+    
+    .products-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+        gap: 1rem;
+        overflow-y: auto;
+        flex: 1;
+        padding-right: 0.5rem;
+    }
+    
+    .product-card {
+        background: white;
+        border: 2px solid #e5e7eb;
+        border-radius: var(--border-radius);
+        padding: 1rem;
+        cursor: pointer;
+        transition: all 0.3s;
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .product-card:hover {
+        border-color: var(--primary);
+        transform: translateY(-2px);
+        box-shadow: var(--shadow);
+    }
+    
+    .product-card.low-stock {
+        border-color: var(--warning);
+        background: #fffbeb;
+    }
+    
+    .product-info h4 {
+        font-size: 1rem;
+        font-weight: 600;
+        margin: 0 0 0.5rem 0;
+        color: var(--dark);
+    }
+    
+    .product-price {
+        font-size: 1.25rem;
+        font-weight: 700;
+        color: var(--primary);
+    }
+    
+    .product-stock {
+        font-size: 0.875rem;
+        color: #6b7280;
+        margin-top: 0.25rem;
+    }
+    
+    .product-sku {
+        font-size: 0.75rem;
+        color: #9ca3af;
+        margin-top: 0.25rem;
+    }
+    
+    /* Cart Section */
+    .cart-section {
+        background: white;
+        border-radius: var(--border-radius);
+        padding: 1.5rem;
+        box-shadow: var(--shadow);
+        display: flex;
+        flex-direction: column;
+        max-height: 100%;
+    }
+    
+    .cart-header {
+        border-bottom: 2px solid #e5e7eb;
+        padding-bottom: 1rem;
+        margin-bottom: 1rem;
+    }
+    
+    .cart-title {
+        font-size: 1.25rem;
+        font-weight: 700;
+        color: var(--dark);
+        margin: 0;
+    }
+    
+    .cart-items {
+        flex: 1;
+        overflow-y: auto;
+        margin-bottom: 1rem;
+        max-height: 300px;
+    }
+    
+    .cart-item {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        padding: 0.75rem;
+        border: 1px solid #e5e7eb;
+        border-radius: var(--border-radius);
+        margin-bottom: 0.5rem;
+        background: #f9fafb;
+    }
+    
+    .item-info {
+        flex: 1;
+    }
+    
+    .item-name {
+        font-weight: 600;
+        color: var(--dark);
+        font-size: 0.875rem;
+    }
+    
+    .item-price {
+        color: var(--primary);
+        font-weight: 600;
+        font-size: 0.875rem;
+    }
+    
+    .quantity-controls {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    
+    .qty-btn {
+        width: 32px;
+        height: 32px;
+        border: none;
+        border-radius: 50%;
+        background: var(--primary);
+        color: white;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: bold;
+        transition: background 0.3s;
+    }
+    
+    .qty-btn:hover {
+        background: #3730a3;
+    }
+    
+    .qty-display {
+        font-weight: 600;
+        min-width: 30px;
+        text-align: center;
+    }
+    
+    .remove-btn {
+        background: var(--danger);
+        color: white;
+        border: none;
+        border-radius: 50%;
+        width: 32px;
+        height: 32px;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: background 0.3s;
+    }
+    
+    .remove-btn:hover {
+        background: #dc2626;
+    }
+    
+    /* Customer & Discounts */
+    .customer-section {
+        margin-bottom: 1rem;
+        padding: 1rem;
+        background: #f8fafc;
+        border-radius: var(--border-radius);
+        border: 1px solid #e5e7eb;
+    }
+    
+    .customer-select {
+        width: 100%;
+        padding: 0.5rem;
+        border: 1px solid #d1d5db;
+        border-radius: var(--border-radius);
+        font-size: 0.875rem;
+    }
+    
+    .discount-section {
+        margin-bottom: 1rem;
+        padding: 1rem;
+        background: #fef3c7;
+        border-radius: var(--border-radius);
+        border: 1px solid #f59e0b;
+    }
+    
+    .discount-controls {
+        display: flex;
+        gap: 0.5rem;
+        margin-bottom: 0.5rem;
+    }
+    
+    .discount-type {
+        flex: 1;
+        padding: 0.5rem;
+        border: 1px solid #d1d5db;
+        border-radius: var(--border-radius);
+        font-size: 0.875rem;
+    }
+    
+    .discount-value {
+        width: 80px;
+        padding: 0.5rem;
+        border: 1px solid #d1d5db;
+        border-radius: var(--border-radius);
+        font-size: 0.875rem;
+    }
+    
+    .promo-code-input {
+        width: 100%;
+        padding: 0.5rem;
+        border: 1px solid #d1d5db;
+        border-radius: var(--border-radius);
+        font-size: 0.875rem;
+        margin-top: 0.5rem;
+    }
+    
+    /* Cart Summary */
+    .cart-summary {
+        border-top: 2px solid #e5e7eb;
+        padding-top: 1rem;
+        margin-bottom: 1rem;
+    }
+    
+    .summary-line {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 0.5rem;
+        font-size: 0.875rem;
+    }
+    
+    .summary-line.total {
+        font-size: 1.125rem;
+        font-weight: 700;
+        color: var(--primary);
+        border-top: 1px solid #e5e7eb;
+        padding-top: 0.5rem;
+        margin-top: 0.5rem;
+    }
+    
+    /* Payment Section */
+    .payment-section {
+        margin-bottom: 1rem;
+    }
+    
+    .payment-methods {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 0.5rem;
+        margin-bottom: 1rem;
+    }
+    
+    .payment-method {
+        padding: 0.75rem;
+        border: 2px solid #e5e7eb;
+        border-radius: var(--border-radius);
+        cursor: pointer;
+        text-align: center;
+        font-weight: 600;
+        transition: all 0.3s;
+        background: white;
+    }
+    
+    .payment-method.active {
+        border-color: var(--primary);
+        background: var(--primary);
+        color: white;
+    }
+    
+    .payment-details {
+        display: none;
+        margin-top: 1rem;
+    }
+    
+    .payment-details.active {
+        display: block;
+    }
+    
+    .payment-input {
+        width: 100%;
+        padding: 0.75rem;
+        border: 1px solid #d1d5db;
+        border-radius: var(--border-radius);
+        font-size: 1rem;
+        margin-bottom: 0.5rem;
+    }
+    
+    .change-amount {
+        font-size: 1.125rem;
+        font-weight: 700;
+        color: var(--success);
+        text-align: center;
+        padding: 0.5rem;
+        background: #f0fdf4;
+        border-radius: var(--border-radius);
+        margin-top: 0.5rem;
+    }
+    
+    /* Action Buttons */
+    .action-buttons {
+        display: flex;
+        gap: 0.75rem;
+    }
+    
+    .btn {
+        flex: 1;
+        padding: 1rem;
+        border: none;
+        border-radius: var(--border-radius);
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s;
+        font-size: 1rem;
+    }
+    
+    .btn-clear {
+        background: #f3f4f6;
+        color: var(--dark);
+    }
+    
+    .btn-clear:hover {
+        background: #e5e7eb;
+    }
+    
+    .btn-checkout {
+        background: var(--success);
+        color: white;
+    }
+    
+    .btn-checkout:hover {
+        background: #059669;
+    }
+    
+    .btn-checkout:disabled {
+        background: #9ca3af;
+        cursor: not-allowed;
+    }
+    
+    /* Loading State */
+    .loading {
+        opacity: 0.6;
+        pointer-events: none;
+    }
+    
+    .spinner {
+        border: 2px solid #f3f3f3;
+        border-top: 2px solid var(--primary);
+        border-radius: 50%;
+        width: 20px;
+        height: 20px;
+        animation: spin 1s linear infinite;
+        margin: 0 auto;
+    }
+    
+    @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+    }
+    
+    /* Empty State */
+    .empty-cart {
+        text-align: center;
+        padding: 2rem;
+        color: #6b7280;
+    }
+    
+    .empty-cart i {
+        font-size: 3rem;
+        margin-bottom: 1rem;
+        color: #d1d5db;
+    }
+    
+    /* Responsive */
+    @media (max-width: 1024px) {
+        .pos-container {
+            grid-template-columns: 1fr;
+            grid-template-rows: 1fr auto;
+        }
+        
+        .cart-section {
+            max-height: 400px;
+        }
+    }
+    
+    @media (max-width: 768px) {
+        .products-grid {
+            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+        }
+        
+        .payment-methods {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Header -->
+    <div class="pos-header">
+        <div class="d-flex justify-content-between align-items-center">
+            <div>
+                <h1 class="mb-2">🏪 {{ store.name }} - POS System</h1>
+                <p class="mb-0">Cashier: {{ current_user.full_name }} | Register: Open</p>
+            </div>
+            <div>
+                <button class="btn btn-outline-light me-2" onclick="viewSalesHistory()">
+                    <i class="fas fa-history"></i> Sales History
+                </button>
+                <button class="btn btn-outline-light" onclick="closeCashRegister()">
+                    <i class="fas fa-cash-register"></i> Close Register
+                </button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Main POS Interface -->
+    <div class="pos-container">
+        <!-- Products Section -->
+        <div class="products-section">
+            <div class="search-controls">
+                <input type="text" id="productSearch" class="search-input" 
+                       placeholder="Search products by name, SKU, or barcode..." 
+                       onkeyup="searchProducts(this.value)">
+                <button class="barcode-btn" onclick="startBarcodeScanner()">
+                    <i class="fas fa-barcode"></i> Scan
+                </button>
+            </div>
+            
+            <div id="productsGrid" class="products-grid">
+                <!-- Products will be loaded here -->
+            </div>
+            
+            <div id="loadingProducts" class="text-center mt-3" style="display: none;">
+                <div class="spinner"></div>
+                <p class="mt-2">Loading products...</p>
+            </div>
+        </div>
+        
+        <!-- Cart Section -->
+        <div class="cart-section">
+            <div class="cart-header">
+                <h3 class="cart-title">🛒 Shopping Cart</h3>
+            </div>
+            
+            <!-- Customer Selection -->
+            <div class="customer-section">
+                <label class="form-label">👤 Customer:</label>
+                <select id="customerSelect" class="customer-select" onchange="updateCustomer()">
+                    <option value="">Walk-in Customer</option>
+                    {% for customer in customers %}
+                    <option value="{{ customer.id }}" data-type="{{ customer.customer_type }}" 
+                            data-loyalty="{{ customer.loyalty_program.points_balance if customer.loyalty_program else 0 }}">
+                        {{ customer.name }}
+                        {% if customer.loyalty_program %}({{ customer.loyalty_program.points_balance }} pts){% endif %}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+            
+            <!-- Discounts & Promotions -->
+            <div class="discount-section">
+                <label class="form-label">💰 Discounts & Promotions:</label>
+                <div class="discount-controls">
+                    <select id="discountType" class="discount-type" onchange="updateDiscountType()">
+                        <option value="none">No Discount</option>
+                        <option value="percentage">Percentage (%)</option>
+                        <option value="fixed">Fixed Amount</option>
+                        <option value="promo_code">Promo Code</option>
+                    </select>
+                    <input type="number" id="discountValue" class="discount-value" 
+                           placeholder="0" step="0.01" min="0" onchange="calculateDiscount()">
+                </div>
+                <input type="text" id="promoCodeInput" class="promo-code-input" 
+                       placeholder="Enter promo code..." style="display: none;" 
+                       onchange="applyPromoCode()">
+            </div>
+            
+            <!-- Cart Items -->
+            <div class="cart-items" id="cartItems">
+                <div class="empty-cart">
+                    <i class="fas fa-shopping-cart"></i>
+                    <p>Your cart is empty<br>Add products to get started</p>
+                </div>
+            </div>
+            
+            <!-- Cart Summary -->
+            <div class="cart-summary">
+                <div class="summary-line">
+                    <span>Subtotal:</span>
+                    <span id="subtotal">$0.00</span>
+                </div>
+                <div class="summary-line">
+                    <span>Discount:</span>
+                    <span id="discountAmount">-$0.00</span>
+                </div>
+                <div class="summary-line">
+                    <span>Tax:</span>
+                    <span id="taxAmount">$0.00</span>
+                </div>
+                <div class="summary-line total">
+                    <span>Total:</span>
+                    <span id="totalAmount">$0.00</span>
+                </div>
+            </div>
+            
+            <!-- Payment Section -->
+            <div class="payment-section">
+                <label class="form-label">💳 Payment Method:</label>
+                <div class="payment-methods">
+                    <div class="payment-method active" data-method="cash" onclick="selectPaymentMethod('cash')">
+                        <i class="fas fa-money-bills"></i><br>Cash
+                    </div>
+                    <div class="payment-method" data-method="card" onclick="selectPaymentMethod('card')">
+                        <i class="fas fa-credit-card"></i><br>Card
+                    </div>
+                    <div class="payment-method" data-method="digital" onclick="selectPaymentMethod('digital')">
+                        <i class="fas fa-mobile-alt"></i><br>Digital
+                    </div>
+                    <div class="payment-method" data-method="split" onclick="selectPaymentMethod('split')">
+                        <i class="fas fa-coins"></i><br>Split
+                    </div>
+                </div>
+                
+                <!-- Cash Payment Details -->
+                <div id="cashPayment" class="payment-details active">
+                    <input type="number" id="amountTendered" class="payment-input" 
+                           placeholder="Amount tendered..." step="0.01" min="0" 
+                           onchange="calculateChange()">
+                    <div id="changeAmount" class="change-amount" style="display: none;">
+                        Change: $0.00
+                    </div>
+                </div>
+                
+                <!-- Card Payment Details -->
+                <div id="cardPayment" class="payment-details">
+                    <input type="text" id="cardReference" class="payment-input" 
+                           placeholder="Transaction reference...">
+                </div>
+                
+                <!-- Digital Payment Details -->
+                <div id="digitalPayment" class="payment-details">
+                    <input type="text" id="digitalReference" class="payment-input" 
+                           placeholder="Digital wallet reference...">
+                </div>
+                
+                <!-- Split Payment Details -->
+                <div id="splitPayment" class="payment-details">
+                    <button class="btn btn-outline-primary w-100" onclick="manageSplitPayment()">
+                        <i class="fas fa-plus"></i> Add Payment Method
+                    </button>
+                    <div id="splitPaymentList" class="mt-2"></div>
+                </div>
+            </div>
+            
+            <!-- Action Buttons -->
+            <div class="action-buttons">
+                <button class="btn btn-clear" onclick="clearCart()">
+                    <i class="fas fa-trash"></i> Clear
+                </button>
+                <button id="checkoutBtn" class="btn btn-checkout" onclick="processCheckout()" disabled>
+                    <i class="fas fa-cash-register"></i> Checkout
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Receipt Modal -->
+<div class="modal fade" id="receiptModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">🧾 Sale Receipt</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" id="receiptContent">
+                <!-- Receipt content will be generated here -->
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-primary" onclick="printReceipt()">
+                    <i class="fas fa-print"></i> Print
+                </button>
+                <button class="btn btn-success" onclick="emailReceipt()">
+                    <i class="fas fa-envelope"></i> Email
+                </button>
+                <button class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Sales History Modal -->
+<div class="modal fade" id="salesHistoryModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-xl">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">📊 Sales History</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="row mb-3">
+                    <div class="col-md-3">
+                        <input type="date" id="startDate" class="form-control" value="{{ today }}">
+                    </div>
+                    <div class="col-md-3">
+                        <input type="date" id="endDate" class="form-control" value="{{ today }}">
+                    </div>
+                    <div class="col-md-3">
+                        <button class="btn btn-primary" onclick="loadSalesHistory()">
+                            <i class="fas fa-search"></i> Filter
+                        </button>
+                    </div>
+                </div>
+                <div id="salesHistoryContent">
+                    <!-- Sales history will be loaded here -->
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="/static/js/pos-enhanced.js"></script>
+{% endblock %}

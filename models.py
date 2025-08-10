@@ -170,6 +170,12 @@ class Sale(db.Model):
     notes = db.Column(db.Text)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     
+    # Additional fields for enhanced POS features
+    discount_percentage = db.Column(db.Numeric(5, 2), default=0.00)
+    discount_type = db.Column(db.String(20), default='none')  # none, percentage, fixed, promo_code
+    promo_code = db.Column(db.String(50))
+    split_payments = db.Column(db.JSON)  # For multiple payment methods
+    
     # Relationships
     sale_items = db.relationship('SaleItem', backref='sale', lazy=True, cascade='all, delete-orphan')
     store = db.relationship('Store', backref='sales')
@@ -317,6 +323,69 @@ class LoyaltyTransaction(db.Model):
     points = db.Column(db.Integer, nullable=False)
     description = db.Column(db.String(200))
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+# Enhanced POS Features Models
+class PromotionCode(db.Model):
+    __tablename__ = 'promotion_codes'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    code = db.Column(db.String(50), unique=True, nullable=False, index=True)
+    description = db.Column(db.String(200))
+    discount_type = db.Column(db.String(20), nullable=False)  # percentage, fixed
+    discount_value = db.Column(db.Numeric(10, 2), nullable=False)
+    min_purchase_amount = db.Column(db.Numeric(10, 2), default=0.00)
+    max_discount_amount = db.Column(db.Numeric(10, 2))  # For percentage discounts
+    usage_limit = db.Column(db.Integer)  # null = unlimited
+    usage_count = db.Column(db.Integer, default=0)
+    start_date = db.Column(db.DateTime, nullable=False)
+    end_date = db.Column(db.DateTime, nullable=False)
+    is_active = db.Column(db.Boolean, default=True)
+    store_id = db.Column(db.Integer, db.ForeignKey('stores.id'))  # null = all stores
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    
+    # Relationships
+    store = db.relationship('Store', backref='promotion_codes')
+    
+    def is_valid(self):
+        now = datetime.utcnow()
+        return (self.is_active and 
+                self.start_date <= now <= self.end_date and
+                (self.usage_limit is None or self.usage_count < self.usage_limit))
+    
+    def __repr__(self):
+        return f'<PromotionCode {self.code}>'
+
+class PaymentMethod(db.Model):
+    __tablename__ = 'payment_methods'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(50), nullable=False)
+    type = db.Column(db.String(20), nullable=False)  # cash, card, digital_wallet, bank_transfer
+    is_active = db.Column(db.Boolean, default=True)
+    requires_reference = db.Column(db.Boolean, default=False)  # For card/digital payments
+    processing_fee_percentage = db.Column(db.Numeric(5, 2), default=0.00)
+    icon = db.Column(db.String(50))  # Icon class name
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    
+    def __repr__(self):
+        return f'<PaymentMethod {self.name}>'
+
+class SplitPayment(db.Model):
+    __tablename__ = 'split_payments'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    sale_id = db.Column(db.Integer, db.ForeignKey('sales.id'), nullable=False)
+    payment_method_id = db.Column(db.Integer, db.ForeignKey('payment_methods.id'), nullable=False)
+    amount = db.Column(db.Numeric(10, 2), nullable=False)
+    reference_number = db.Column(db.String(100))  # Transaction reference for non-cash
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    
+    # Relationships
+    sale = db.relationship('Sale', backref='split_payment_details')
+    payment_method = db.relationship('PaymentMethod', backref='split_payments')
+    
+    def __repr__(self):
+        return f'<SplitPayment Sale:{self.sale_id} {self.amount}>'
 
 class CompanyProfile(db.Model):
     __tablename__ = 'company_profile'

@@ -202,7 +202,7 @@ def calculate_tax(amount, tax_rate):
 def create_default_data():
     """Create default data for the application"""
     from models import (User, Store, Category, Product, Customer, CompanyProfile, 
-                       UserStore, LoyaltyProgram, Supplier)
+                       UserStore, LoyaltyProgram, Supplier, PaymentMethod, PromotionCode)
     from app import db
     
     try:
@@ -328,6 +328,59 @@ def create_default_data():
                 product.low_stock_threshold = threshold
                 product.tax_rate = 8.25
                 db.session.add(product)
+        
+        # Create default payment methods
+        payment_methods_data = [
+            ('Cash', 'cash', True, False, 0.00, 'fas fa-money-bills'),
+            ('Credit Card', 'card', True, True, 2.90, 'fas fa-credit-card'),
+            ('Debit Card', 'card', True, True, 1.50, 'fas fa-credit-card'),
+            ('PayPal', 'digital_wallet', True, True, 3.49, 'fab fa-paypal'),
+            ('Apple Pay', 'digital_wallet', True, True, 2.90, 'fab fa-apple-pay'),
+            ('Google Pay', 'digital_wallet', True, True, 2.90, 'fab fa-google-pay'),
+            ('Bank Transfer', 'bank_transfer', True, True, 0.50, 'fas fa-university')
+        ]
+        
+        for name, type_val, is_active, requires_ref, fee, icon in payment_methods_data:
+            if not PaymentMethod.query.filter_by(name=name).first():
+                payment_method = PaymentMethod()
+                payment_method.name = name
+                payment_method.type = type_val
+                payment_method.is_active = is_active
+                payment_method.requires_reference = requires_ref
+                payment_method.processing_fee_percentage = fee
+                payment_method.icon = icon
+                db.session.add(payment_method)
+        
+        # Create sample promotion codes
+        from datetime import datetime, timedelta
+        
+        promotion_codes_data = [
+            ('WELCOME10', '10% off for new customers', 'percentage', 10.00, 0.00, 25.00, None, 
+             datetime.utcnow(), datetime.utcnow() + timedelta(days=365)),
+            ('SAVE5', '$5 off any purchase', 'fixed', 5.00, 20.00, None, 100, 
+             datetime.utcnow(), datetime.utcnow() + timedelta(days=30)),
+            ('BIGDEAL', '15% off orders over $100', 'percentage', 15.00, 100.00, 50.00, 50, 
+             datetime.utcnow(), datetime.utcnow() + timedelta(days=60)),
+            ('FREESHIP', '$10 off shipping', 'fixed', 10.00, 50.00, None, None, 
+             datetime.utcnow(), datetime.utcnow() + timedelta(days=90))
+        ]
+        
+        for code, desc, disc_type, disc_val, min_purchase, max_disc, usage_limit, start_date, end_date in promotion_codes_data:
+            if not PromotionCode.query.filter_by(code=code).first():
+                promo = PromotionCode()
+                promo.code = code
+                promo.description = desc
+                promo.discount_type = disc_type
+                promo.discount_value = disc_val
+                promo.min_purchase_amount = min_purchase
+                promo.max_discount_amount = max_disc
+                promo.usage_limit = usage_limit
+                promo.usage_count = 0
+                promo.start_date = start_date
+                promo.end_date = end_date
+                promo.is_active = True
+                promo.store_id = None  # Available in all stores
+                db.session.add(promo)
         
         db.session.commit()
         print("Default data created successfully")
