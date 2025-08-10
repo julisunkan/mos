@@ -1,7 +1,7 @@
 from flask import Blueprint, render_template, redirect, url_for, flash, request, jsonify
 from flask_login import login_required, current_user
 from forms import SaleForm, CashRegisterForm, ReturnForm
-from models import Product, Customer, Sale, SaleItem, CashRegister, UserStore, SaleReturn, SaleReturnItem
+from models import Product, Customer, Sale, SaleItem, CashRegister, UserStore, StoreStock, SaleReturn, SaleReturnItem
 from app import db
 from utils import generate_receipt_number, calculate_tax, generate_hold_number, generate_return_number
 from datetime import datetime
@@ -22,13 +22,18 @@ def index():
         return redirect(url_for('pos.open_register'))
     
     # Get products available in the current user's store
-    from models import StoreStock
     store_id = register.store_id
+    
+    # Debug: Add logging
+    print(f"DEBUG: Current user: {current_user.id}, Register store: {store_id}")
+    
     products = db.session.query(Product).join(StoreStock).filter(
         Product.is_active == True,
         StoreStock.store_id == store_id,
         StoreStock.quantity > 0  # Only show products with stock
     ).all()
+    
+    print(f"DEBUG: Found {len(products)} products in store {store_id}")
     
     customers = Customer.query.filter_by(is_active=True).all()
     
@@ -162,7 +167,6 @@ def process_sale():
             quantity = int(item_data['quantity'])
             
             # Check store-specific stock instead of global product stock
-            from models import StoreStock
             store_stock = StoreStock.query.filter_by(
                 product_id=product.id,
                 store_id=register.store_id
@@ -357,7 +361,6 @@ def search_products():
         return jsonify([])
     
     # Search products available in the user's store with stock
-    from models import StoreStock
     products = db.session.query(Product, StoreStock.quantity).join(StoreStock).filter(
         db.or_(
             Product.name.ilike(f'%{query}%'),
