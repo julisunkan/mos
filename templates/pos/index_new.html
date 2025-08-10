@@ -28,23 +28,56 @@
     }
     
     .product-grid {
-        max-height: 600px;
+        max-height: 70vh;
         overflow-y: auto;
+        padding: 10px;
     }
     
     .product-item {
-        background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
         color: white;
-        border-radius: 12px;
+        border-radius: 15px;
         cursor: pointer;
         transition: all 0.3s ease;
         margin-bottom: 15px;
-        padding: 15px;
+        padding: 20px;
+        border: none;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        height: 140px;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        text-align: center;
     }
     
     .product-item:hover {
-        transform: translateY(-3px);
-        box-shadow: 0 8px 25px rgba(0,0,0,0.2);
+        transform: translateY(-5px);
+        box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        background: linear-gradient(135deg, #764ba2 0%, #667eea 100%);
+    }
+    
+    .product-name {
+        font-weight: 600;
+        font-size: 14px;
+        margin-bottom: 8px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        width: 100%;
+    }
+    
+    .product-price {
+        font-size: 18px;
+        font-weight: 700;
+        margin: 5px 0;
+    }
+    
+    .product-stock {
+        background: rgba(255,255,255,0.2);
+        border-radius: 20px;
+        padding: 4px 12px;
+        font-size: 12px;
+        font-weight: 500;
     }
     
     .cart-container {
@@ -135,20 +168,54 @@
         border: 1px solid #ddd;
     }
     
+    /* Responsive improvements */
     @media (max-width: 768px) {
         .pos-container {
             padding: 10px;
         }
         
         .product-item {
-            padding: 10px;
-            font-size: 14px;
+            padding: 15px;
+            height: 120px;
+            font-size: 13px;
+        }
+        
+        .product-price {
+            font-size: 16px;
         }
         
         .cart-container {
             position: static;
             max-height: none;
         }
+        
+        .pos-header {
+            padding: 15px;
+        }
+    }
+    
+    @media (max-width: 576px) {
+        .product-item {
+            height: 110px;
+            padding: 12px;
+        }
+        
+        .product-price {
+            font-size: 15px;
+        }
+        
+        .product-name {
+            font-size: 12px;
+        }
+    }
+    
+    /* Grid spacing improvements */
+    .row {
+        margin: 0 -5px;
+    }
+    
+    .row > [class*="col-"] {
+        padding: 0 5px;
     }
 </style>
 {% endblock %}
@@ -212,21 +279,17 @@
                             <div class="row" id="productsList">
                                 {% if products %}
                                     {% for product in products %}
-                                    <div class="col-xl-3 col-lg-4 col-md-6 col-sm-6">
+                                    <div class="col-xl-3 col-lg-4 col-md-4 col-sm-6 col-6 mb-3">
                                         <div class="product-item" 
                                              data-id="{{ product.id }}" 
                                              data-name="{{ product.name }}" 
                                              data-price="{{ product.selling_price }}"
                                              data-tax="{{ product.tax_rate or 0 }}"
                                              onclick="addProductToCart({{ product.id }}, '{{ product.name }}', {{ product.selling_price }}, {{ product.get_store_stock(register.store_id) }}, {{ product.tax_rate or 0 }})">
-                                            <div class="d-flex justify-content-between align-items-start mb-2">
-                                                <h6 class="mb-0">{{ product.name }}</h6>
-                                                <span class="badge bg-light text-dark">
-                                                    {{ product.get_store_stock(register.store_id) }} left
-                                                </span>
-                                            </div>
-                                            <div class="text-center">
-                                                <h5 class="mb-0">{{ product.selling_price|format_currency }}</h5>
+                                            <div class="product-name" title="{{ product.name }}">{{ product.name }}</div>
+                                            <div class="product-price">{{ product.selling_price|format_currency }}</div>
+                                            <div class="d-flex justify-content-between align-items-center">
+                                                <span class="product-stock">{{ product.get_store_stock(register.store_id) }} left</span>
                                                 {% if product.tax_rate %}
                                                 <small class="opacity-75">+{{ product.tax_rate }}% tax</small>
                                                 {% endif %}
@@ -429,21 +492,17 @@ function searchProducts() {
 function showDefaultProducts() {
     document.getElementById('productsList').innerHTML = `
         {% for product in products %}
-        <div class="col-xl-3 col-lg-4 col-md-6 col-sm-6">
+        <div class="col-xl-3 col-lg-4 col-md-4 col-sm-6 col-6 mb-3">
             <div class="product-item" 
                  data-id="{{ product.id }}" 
                  data-name="{{ product.name }}" 
                  data-price="{{ product.selling_price }}"
                  data-tax="{{ product.tax_rate or 0 }}"
                  onclick="addProductToCart({{ product.id }}, '{{ product.name }}', {{ product.selling_price }}, {{ product.get_store_stock(register.store_id) }}, {{ product.tax_rate or 0 }})">
-                <div class="d-flex justify-content-between align-items-start mb-2">
-                    <h6 class="mb-0">{{ product.name }}</h6>
-                    <span class="badge bg-light text-dark">
-                        {{ product.get_store_stock(register.store_id) }} left
-                    </span>
-                </div>
-                <div class="text-center">
-                    <h5 class="mb-0">{{ product.selling_price|format_currency }}</h5>
+                <div class="product-name" title="{{ product.name }}">{{ product.name }}</div>
+                <div class="product-price">{{ product.selling_price|format_currency }}</div>
+                <div class="d-flex justify-content-between align-items-center">
+                    <span class="product-stock">{{ product.get_store_stock(register.store_id) }} left</span>
                     {% if product.tax_rate %}
                     <small class="opacity-75">+{{ product.tax_rate }}% tax</small>
                     {% endif %}
@@ -469,15 +528,13 @@ function displaySearchResults(products) {
     }
     
     container.innerHTML = products.map(product => `
-        <div class="col-xl-3 col-lg-4 col-md-6 col-sm-6">
+        <div class="col-xl-3 col-lg-4 col-md-4 col-sm-6 col-6 mb-3">
             <div class="product-item" 
                  onclick="addProductToCart(${product.id}, '${product.name}', ${product.price}, ${product.stock}, ${product.tax_rate})">
-                <div class="d-flex justify-content-between align-items-start mb-2">
-                    <h6 class="mb-0">${product.name}</h6>
-                    <span class="badge bg-light text-dark">${product.stock} left</span>
-                </div>
-                <div class="text-center">
-                    <h5 class="mb-0">${formatCurrency(product.price)}</h5>
+                <div class="product-name" title="${product.name}">${product.name}</div>
+                <div class="product-price">${formatCurrency(product.price)}</div>
+                <div class="d-flex justify-content-between align-items-center">
+                    <span class="product-stock">${product.stock} left</span>
                     ${product.tax_rate > 0 ? `<small class="opacity-75">+${product.tax_rate}% tax</small>` : ''}
                 </div>
             </div>
