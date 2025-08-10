@@ -234,43 +234,70 @@ document.addEventListener('DOMContentLoaded', function() {
     const searchInput = document.getElementById('product-search');
     const productsGrid = document.getElementById('products-grid');
     
+    if (!searchInput || !productsGrid) {
+        console.error('Search elements not found:', { searchInput, productsGrid });
+        return;
+    }
+    
     searchInput.addEventListener('input', function() {
         const searchTerm = this.value.toLowerCase();
         const productCards = productsGrid.querySelectorAll('.product-card');
         
         productCards.forEach(card => {
-            const productName = card.querySelector('.product-name').textContent.toLowerCase();
-            const productSku = card.querySelector('.product-sku').textContent.toLowerCase();
+            const productNameEl = card.querySelector('.product-name');
+            const productSkuEl = card.querySelector('.product-sku');
+            const parentCol = card.closest('.col-xl-3');
+            
+            if (!productNameEl || !productSkuEl || !parentCol) {
+                console.warn('Missing elements in product card');
+                return;
+            }
+            
+            const productName = productNameEl.textContent.toLowerCase();
+            const productSku = productSkuEl.textContent.toLowerCase();
             
             if (productName.includes(searchTerm) || productSku.includes(searchTerm)) {
-                card.closest('.col-xl-3').style.display = 'block';
+                parentCol.style.display = 'block';
             } else {
-                card.closest('.col-xl-3').style.display = 'none';
+                parentCol.style.display = 'none';
             }
         });
     });
     
-    // Add to cart functionality
-    document.addEventListener('click', function(e) {
-        if (e.target.closest('.add-to-cart-btn')) {
-            console.log('Add button clicked!');
-            const btn = e.target.closest('.add-to-cart-btn');
-            const productId = btn.dataset.productId;
-            const productName = btn.dataset.productName;
-            const productPrice = parseFloat(btn.dataset.productPrice);
-            const productStock = parseInt(btn.dataset.productStock);
+    // Simplified Add to cart functionality
+    function setupAddToCartButtons() {
+        const addButtons = document.querySelectorAll('.add-to-cart-btn');
+        console.log('Setting up', addButtons.length, 'add buttons');
+        
+        addButtons.forEach((btn, index) => {
+            console.log(`Button ${index}:`, btn.dataset);
             
-            console.log('Product data:', { productId, productName, productPrice, productStock });
-            
-            if (!productId || !productName || isNaN(productPrice)) {
-                console.error('Invalid product data:', { productId, productName, productPrice, productStock });
-                alert('Error: Invalid product data');
-                return;
-            }
-            
-            addToCart(productId, productName, productPrice, productStock);
-        }
-    });
+            btn.addEventListener('click', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                
+                console.log('Button clicked:', this);
+                
+                const productId = this.getAttribute('data-product-id');
+                const productName = this.getAttribute('data-product-name');
+                const productPrice = parseFloat(this.getAttribute('data-product-price'));
+                const productStock = parseInt(this.getAttribute('data-product-stock'));
+                
+                console.log('Extracted data:', { productId, productName, productPrice, productStock });
+                
+                if (!productId || !productName || isNaN(productPrice)) {
+                    console.error('Invalid product data');
+                    alert('Error: Invalid product data');
+                    return;
+                }
+                
+                addToCart(productId, productName, productPrice, productStock);
+            });
+        });
+    }
+    
+    // Set up buttons after DOM is ready
+    setupAddToCartButtons();
     
     function addToCart(productId, productName, productPrice, productStock) {
         console.log('Adding to cart:', { productId, productName, productPrice, productStock });
@@ -349,36 +376,7 @@ document.addEventListener('DOMContentLoaded', function() {
         updateCartTotals();
     }
     
-    // Alternative direct event listener approach
-    function attachAddToCartListeners() {
-        const addButtons = document.querySelectorAll('.add-to-cart-btn');
-        console.log('Found', addButtons.length, 'add buttons');
-        
-        addButtons.forEach(btn => {
-            btn.addEventListener('click', function(e) {
-                e.preventDefault();
-                console.log('Direct button click');
-                
-                const productId = this.dataset.productId;
-                const productName = this.dataset.productName;
-                const productPrice = parseFloat(this.dataset.productPrice);
-                const productStock = parseInt(this.dataset.productStock);
-                
-                console.log('Direct product data:', { productId, productName, productPrice, productStock });
-                
-                if (!productId || !productName || isNaN(productPrice)) {
-                    console.error('Invalid direct product data:', { productId, productName, productPrice, productStock });
-                    alert('Error: Invalid product data');
-                    return;
-                }
-                
-                addToCart(productId, productName, productPrice, productStock);
-            });
-        });
-    }
-    
-    // Attach direct listeners as fallback
-    setTimeout(attachAddToCartListeners, 100);
+
     
     function updateCartTotals() {
         let subtotal = 0;
