@@ -142,6 +142,20 @@ def api_products():
     
     return jsonify(results)
 
+@cashier_bp.route('/receipt/<int:sale_id>')
+@login_required
+def receipt(sale_id):
+    """Display receipt for a sale"""
+    sale = Sale.query.get_or_404(sale_id)
+    
+    # Ensure user can only view receipts from their store
+    user_store = get_user_store()
+    if not user_store or sale.store_id != user_store.id:
+        flash('Access denied', 'error')
+        return redirect(url_for('cashier.index'))
+    
+    return render_template('cashier/receipt.html', sale=sale, store=user_store)
+
 @cashier_bp.route('/api/process_sale', methods=['POST'])
 @login_required
 def process_sale():

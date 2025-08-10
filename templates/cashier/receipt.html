@@ -1,130 +1,91 @@
 {% extends "base.html" %}
 
-{% block title %}Receipt - Cloud POS{% endblock %}
+{% block title %}Receipt - {{ sale.receipt_number }}{% endblock %}
 
 {% block content %}
 <div class="container">
     <div class="row justify-content-center">
         <div class="col-md-8">
-            <div class="card">
-                <div class="card-body">
-                    <div class="receipt-content">
-                        <div class="text-center mb-4">
-                            <h3>{{ sale.store.name }}</h3>
-                            <p class="mb-1">{{ sale.store.address if sale.store.address else 'Store Address' }}</p>
-                            <p class="mb-1">Phone: {{ sale.store.phone if sale.store.phone else 'Store Phone' }}</p>
-                            <hr class="my-3">
-                        </div>
-                        
-                        <div class="row mb-3">
-                            <div class="col-6">
-                                <strong>Receipt #:</strong> {{ sale.receipt_number }}
-                            </div>
-                            <div class="col-6 text-end">
-                                <strong>Date:</strong> {{ sale.created_at.strftime('%Y-%m-%d %H:%M') }}
-                            </div>
-                        </div>
-                        
-                        <div class="row mb-3">
-                            <div class="col-6">
-                                <strong>Cashier:</strong> {{ sale.user.full_name }}
-                            </div>
-                            <div class="col-6 text-end">
-                                {% if sale.customer %}
-                                <strong>Customer:</strong> {{ sale.customer.name }}
-                                {% else %}
-                                <strong>Customer:</strong> Walk-in
-                                {% endif %}
-                            </div>
-                        </div>
-                        
-                        <hr>
-                        
-                        <table class="table table-sm">
-                            <thead>
-                                <tr>
-                                    <th>Item</th>
-                                    <th class="text-center">Qty</th>
-                                    <th class="text-end">Price</th>
-                                    <th class="text-end">Total</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {% for item in sale.sale_items %}
-                                <tr>
-                                    <td>{{ item.product.name }}</td>
-                                    <td class="text-center">{{ item.quantity }}</td>
-                                    <td class="text-end">{{ item.unit_price|format_currency }}</td>
-                                    <td class="text-end">{{ item.total_price|format_currency }}</td>
-                                </tr>
-                                {% endfor %}
-                            </tbody>
-                        </table>
-                        
-                        <hr>
-                        
-                        <div class="row">
-                            <div class="col-6"></div>
-                            <div class="col-6">
-                                <div class="d-flex justify-content-between">
-                                    <span>Subtotal:</span>
-                                    <span>{{ sale.subtotal|format_currency }}</span>
-                                </div>
-                                <div class="d-flex justify-content-between">
-                                    <span>Tax:</span>
-                                    <span>{{ sale.tax_amount|format_currency }}</span>
-                                </div>
-                                <hr>
-                                <div class="d-flex justify-content-between fw-bold fs-5">
-                                    <span>Total:</span>
-                                    <span>{{ sale.total_amount|format_currency }}</span>
-                                </div>
-                                <div class="d-flex justify-content-between mt-2">
-                                    <span>Payment Method:</span>
-                                    <span>{{ sale.payment_method.title() }}</span>
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <hr>
-                        
-                        <div class="text-center mt-4">
-                            <p class="mb-1">Thank you for your business!</p>
-                            <p class="mb-0 text-muted">Please keep this receipt for your records</p>
-                        </div>
+            <div class="receipt-content">
+                <div class="text-center mb-4">
+                    <h2>{{ store.name }}</h2>
+                    {% if store.address %}
+                    <p class="mb-0">{{ store.address }}</p>
+                    {% endif %}
+                    {% if store.phone %}
+                    <p class="mb-0">Phone: {{ store.phone }}</p>
+                    {% endif %}
+                    {% if store.email %}
+                    <p class="mb-0">Email: {{ store.email }}</p>
+                    {% endif %}
+                </div>
+                
+                <hr>
+                
+                <div class="row mb-3">
+                    <div class="col-6">
+                        <strong>Receipt #:</strong> {{ sale.receipt_number }}<br>
+                        <strong>Date:</strong> {{ sale.created_at.strftime('%Y-%m-%d %H:%M:%S') }}<br>
+                        <strong>Cashier:</strong> {{ sale.user.username }}
                     </div>
-                    
-                    <div class="text-center mt-4">
-                        <button onclick="window.print()" class="btn btn-primary me-2">
-                            <i class="fas fa-print me-2"></i>Print Receipt
-                        </button>
-                        <a href="{{ url_for('cashier.index') }}" class="btn btn-secondary">
-                            <i class="fas fa-arrow-left me-2"></i>Back to POS
-                        </a>
+                    <div class="col-6 text-end">
+                        {% if sale.customer %}
+                        <strong>Customer:</strong> {{ sale.customer.name }}<br>
+                        {% if sale.customer.phone %}
+                        <strong>Phone:</strong> {{ sale.customer.phone }}<br>
+                        {% endif %}
+                        {% else %}
+                        <strong>Customer:</strong> Walk-in Customer<br>
+                        {% endif %}
+                        <strong>Payment:</strong> {{ sale.payment_method.title() }}
                     </div>
+                </div>
+                
+                <hr>
+                
+                <table class="table table-sm">
+                    <thead>
+                        <tr>
+                            <th>Item</th>
+                            <th class="text-center">Qty</th>
+                            <th class="text-end">Price</th>
+                            <th class="text-end">Total</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in sale.sale_items %}
+                        <tr>
+                            <td>{{ item.product.name }}</td>
+                            <td class="text-center">{{ item.quantity }}</td>
+                            <td class="text-end">{{ item.unit_price|format_currency }}</td>
+                            <td class="text-end">{{ item.total_price|format_currency }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                    <tfoot>
+                        <tr>
+                            <td colspan="3" class="text-end"><strong>Subtotal:</strong></td>
+                            <td class="text-end"><strong>{{ sale.subtotal|format_currency }}</strong></td>
+                        </tr>
+                        <tr>
+                            <td colspan="3" class="text-end"><strong>Tax:</strong></td>
+                            <td class="text-end"><strong>{{ sale.tax_amount|format_currency }}</strong></td>
+                        </tr>
+                        <tr class="table-dark">
+                            <td colspan="3" class="text-end"><strong>TOTAL:</strong></td>
+                            <td class="text-end"><strong>{{ sale.total_amount|format_currency }}</strong></td>
+                        </tr>
+                    </tfoot>
+                </table>
+                
+                <hr>
+                
+                <div class="text-center">
+                    <p class="mb-0">Thank you for your business!</p>
+                    <p class="mb-0">Have a great day!</p>
                 </div>
             </div>
         </div>
     </div>
 </div>
-
-<style>
-@media print {
-    .btn, .card, .card-body {
-        display: none !important;
-    }
-    
-    .receipt-content {
-        display: block !important;
-        font-family: 'Courier New', monospace;
-        font-size: 12px;
-        line-height: 1.2;
-    }
-    
-    body {
-        margin: 0;
-        padding: 20px;
-    }
-}
-</style>
 {% endblock %}
