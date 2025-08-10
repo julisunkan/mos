@@ -228,81 +228,53 @@
 window.currencySymbol = '$';
 
 document.addEventListener('DOMContentLoaded', function() {
+    console.log('DOM loaded, initializing POS system');
     let cart = [];
     
-    // Product search functionality
-    const searchInput = document.getElementById('product-search');
-    const productsGrid = document.getElementById('products-grid');
+    // Immediate setup of Add to cart buttons
+    console.log('Setting up Add to Cart buttons...');
+    const addButtons = document.querySelectorAll('.add-to-cart-btn');
+    console.log('Found', addButtons.length, 'add buttons');
     
-    if (!searchInput || !productsGrid) {
-        console.error('Search elements not found:', { searchInput, productsGrid });
-        // Don't return, continue with cart functionality
-    } else {
-        // Only set up search if elements exist
-    
-        searchInput.addEventListener('input', function() {
-            const searchTerm = this.value.toLowerCase();
-            const productCards = productsGrid.querySelectorAll('.product-card');
-            
-            productCards.forEach(card => {
-                const productNameEl = card.querySelector('.product-name');
-                const productSkuEl = card.querySelector('.product-sku');
-                const parentCol = card.closest('.col-xl-3');
-                
-                if (!productNameEl || !productSkuEl || !parentCol) {
-                    console.warn('Missing elements in product card');
-                    return;
-                }
-                
-                const productName = productNameEl.textContent.toLowerCase();
-                const productSku = productSkuEl.textContent.toLowerCase();
-                
-                if (productName.includes(searchTerm) || productSku.includes(searchTerm)) {
-                    parentCol.style.display = 'block';
-                } else {
-                    parentCol.style.display = 'none';
-                }
-            });
+    addButtons.forEach((btn, index) => {
+        console.log(`Button ${index} data:`, {
+            id: btn.getAttribute('data-product-id'),
+            name: btn.getAttribute('data-product-name'),
+            price: btn.getAttribute('data-product-price'),
+            stock: btn.getAttribute('data-product-stock')
         });
-    } // End of search setup
-    
-    // Simplified Add to cart functionality
-    function setupAddToCartButtons() {
-        const addButtons = document.querySelectorAll('.add-to-cart-btn');
-        console.log('Setting up', addButtons.length, 'add buttons');
         
-        addButtons.forEach((btn, index) => {
-            console.log(`Button ${index}:`, btn.dataset);
+        // Remove any existing listeners
+        btn.replaceWith(btn.cloneNode(true));
+        const newBtn = document.querySelectorAll('.add-to-cart-btn')[index];
+        
+        newBtn.onclick = function(e) {
+            e.preventDefault();
+            console.log('Add button clicked!');
             
-            btn.addEventListener('click', function(e) {
-                e.preventDefault();
-                e.stopPropagation();
-                
-                console.log('Button clicked:', this);
-                
-                const productId = this.getAttribute('data-product-id');
-                const productName = this.getAttribute('data-product-name');
-                const productPrice = parseFloat(this.getAttribute('data-product-price'));
-                const productStock = parseInt(this.getAttribute('data-product-stock'));
-                
-                console.log('Extracted data:', { productId, productName, productPrice, productStock });
-                
-                if (!productId || !productName || isNaN(productPrice)) {
-                    console.error('Invalid product data');
-                    alert('Error: Invalid product data');
-                    return;
-                }
-                
-                addToCart(productId, productName, productPrice, productStock);
-            });
-        });
-    }
-    
-    // Set up buttons after DOM is ready
-    setupAddToCartButtons();
+            const productId = this.getAttribute('data-product-id');
+            const productName = this.getAttribute('data-product-name');
+            const productPrice = parseFloat(this.getAttribute('data-product-price'));
+            const productStock = parseInt(this.getAttribute('data-product-stock')) || 0;
+            
+            console.log('Product data:', { productId, productName, productPrice, productStock });
+            
+            if (!productId || !productName || isNaN(productPrice)) {
+                alert('Invalid product data');
+                return;
+            }
+            
+            addToCart(productId, productName, productPrice, productStock);
+        };
+    });
     
     function addToCart(productId, productName, productPrice, productStock) {
         console.log('Adding to cart:', { productId, productName, productPrice, productStock });
+        
+        if (!Array.isArray(cart)) {
+            cart = [];
+        }
+        
         const existingItem = cart.find(item => item.product_id === productId);
         
         if (existingItem) {
