@@ -10,22 +10,27 @@
 {% block extra_css %}
 <style>
     :root {
-        --primary: #6366f1;
-        --primary-dark: #4f46e5;
-        --secondary: #06b6d4;
-        --accent: #f59e0b;
+        --primary: #8b5cf6;
+        --primary-dark: #7c3aed;
+        --secondary: #a855f7;
+        --accent: #c084fc;
         --success: #10b981;
         --danger: #ef4444;
         --warning: #f59e0b;
-        --dark: #1f2937;
+        --dark: #0f0f0f;
+        --darker: #0a0a0a;
         --light: #f8fafc;
-        --glass: rgba(255, 255, 255, 0.1);
-        --glass-border: rgba(255, 255, 255, 0.2);
-        --shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
-        --shadow-xl: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+        --gray-900: #111827;
+        --gray-800: #1f2937;
+        --gray-700: #374151;
+        --glass: rgba(0, 0, 0, 0.6);
+        --glass-border: rgba(139, 92, 246, 0.3);
+        --glass-light: rgba(139, 92, 246, 0.1);
+        --shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.3), 0 10px 10px -5px rgba(139, 92, 246, 0.1);
+        --shadow-xl: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
         --gradient-primary: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
         --gradient-success: linear-gradient(135deg, var(--success) 0%, #059669 100%);
-        --gradient-bg: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
+        --gradient-bg: linear-gradient(135deg, #0a0a0a 0%, #1a0f2e 50%, #0f0f0f 100%);
     }
     
     * {
@@ -66,7 +71,7 @@
     
     .shape {
         position: absolute;
-        background: rgba(255, 255, 255, 0.1);
+        background: rgba(139, 92, 246, 0.1);
         border-radius: 50%;
         animation: float 20s infinite linear;
     }
@@ -116,7 +121,7 @@
         right: -50%;
         width: 200px;
         height: 200px;
-        background: rgba(255, 255, 255, 0.1);
+        background: rgba(139, 92, 246, 0.1);
         border-radius: 50%;
         animation: pulse 4s ease-in-out infinite;
     }
@@ -141,14 +146,14 @@
     .store-avatar {
         width: 72px;
         height: 72px;
-        background: rgba(255, 255, 255, 0.2);
+        background: rgba(139, 92, 246, 0.2);
         border-radius: 20px;
         display: flex;
         align-items: center;
         justify-content: center;
         font-size: 28px;
         backdrop-filter: blur(10px);
-        border: 1px solid rgba(255, 255, 255, 0.3);
+        border: 1px solid rgba(139, 92, 246, 0.4);
     }
     
     .store-info h1 {
@@ -217,7 +222,7 @@
         left: 0;
         right: 0;
         bottom: 0;
-        background: linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.05) 100%);
+        background: linear-gradient(135deg, rgba(139, 92, 246, 0.1) 0%, rgba(139, 92, 246, 0.05) 100%);
         z-index: -1;
     }
     
@@ -229,9 +234,9 @@
     .search-input {
         width: 100%;
         padding: 20px 24px 20px 60px;
-        border: 2px solid rgba(255, 255, 255, 0.2);
+        border: 2px solid rgba(139, 92, 246, 0.3);
         border-radius: 50px;
-        background: rgba(255, 255, 255, 0.1);
+        background: rgba(0, 0, 0, 0.6);
         backdrop-filter: blur(10px);
         color: white;
         font-size: 18px;
@@ -240,15 +245,15 @@
     }
     
     .search-input::placeholder {
-        color: rgba(255, 255, 255, 0.7);
+        color: rgba(255, 255, 255, 0.6);
     }
     
     .search-input:focus {
         outline: none;
-        border-color: rgba(255, 255, 255, 0.4);
-        background: rgba(255, 255, 255, 0.15);
+        border-color: rgba(139, 92, 246, 0.6);
+        background: rgba(0, 0, 0, 0.8);
         transform: translateY(-2px);
-        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+        box-shadow: 0 10px 30px rgba(139, 92, 246, 0.3);
     }
     
     .search-icon {
@@ -256,7 +261,7 @@
         left: 20px;
         top: 50%;
         transform: translateY(-50%);
-        color: rgba(255, 255, 255, 0.7);
+        color: rgba(139, 92, 246, 0.8);
         font-size: 20px;
     }
     
@@ -280,7 +285,7 @@
         left: 0;
         right: 0;
         bottom: 0;
-        background: rgba(255, 255, 255, 0.05);
+        background: rgba(139, 92, 246, 0.05);
         z-index: -1;
     }
     
@@ -299,23 +304,23 @@
     }
     
     .products-grid::-webkit-scrollbar-track {
-        background: rgba(255, 255, 255, 0.1);
+        background: rgba(139, 92, 246, 0.1);
         border-radius: 4px;
     }
     
     .products-grid::-webkit-scrollbar-thumb {
-        background: rgba(255, 255, 255, 0.3);
+        background: rgba(139, 92, 246, 0.4);
         border-radius: 4px;
     }
     
     .products-grid::-webkit-scrollbar-thumb:hover {
-        background: rgba(255, 255, 255, 0.5);
+        background: rgba(139, 92, 246, 0.6);
     }
     
     .product-card {
-        background: rgba(255, 255, 255, 0.1);
+        background: rgba(0, 0, 0, 0.6);
         backdrop-filter: blur(15px);
-        border: 1px solid rgba(255, 255, 255, 0.2);
+        border: 1px solid rgba(139, 92, 246, 0.2);
         border-radius: 16px;
         padding: 20px;
         cursor: pointer;
@@ -340,8 +345,8 @@
     .product-card:hover {
         transform: translateY(-8px);
         box-shadow: var(--shadow-xl);
-        border-color: rgba(255, 255, 255, 0.4);
-        background: rgba(255, 255, 255, 0.15);
+        border-color: rgba(139, 92, 246, 0.5);
+        background: rgba(0, 0, 0, 0.8);
     }
     
     .product-card:hover::before {
@@ -366,8 +371,8 @@
     }
     
     .product-sku {
-        background: rgba(255, 255, 255, 0.2);
-        color: rgba(255, 255, 255, 0.9);
+        background: rgba(139, 92, 246, 0.2);
+        color: rgba(139, 92, 246, 0.9);
         padding: 4px 8px;
         border-radius: 8px;
         font-size: 11px;
@@ -482,8 +487,8 @@
         left: 0;
         right: 0;
         bottom: 0;
-        background: linear-gradient(135deg, var(--dark) 0%, #374151 100%);
-        opacity: 0.8;
+        background: linear-gradient(135deg, var(--darker) 0%, var(--dark) 100%);
+        opacity: 0.9;
         z-index: -1;
     }
     
@@ -535,7 +540,7 @@
         left: 0;
         right: 0;
         bottom: 0;
-        background: rgba(0, 0, 0, 0.1);
+        background: rgba(0, 0, 0, 0.4);
         z-index: -1;
     }
     
@@ -554,9 +559,9 @@
     .form-select {
         width: 100%;
         padding: 12px 16px;
-        border: 1px solid rgba(255, 255, 255, 0.2);
+        border: 1px solid rgba(139, 92, 246, 0.3);
         border-radius: 12px;
-        background: rgba(255, 255, 255, 0.1);
+        background: rgba(0, 0, 0, 0.6);
         backdrop-filter: blur(10px);
         color: white;
         font-size: 14px;
@@ -565,8 +570,8 @@
     
     .form-select:focus {
         outline: none;
-        border-color: rgba(255, 255, 255, 0.4);
-        background: rgba(255, 255, 255, 0.15);
+        border-color: rgba(139, 92, 246, 0.6);
+        background: rgba(0, 0, 0, 0.8);
     }
     
     .cart-items {
@@ -581,14 +586,14 @@
     
     .empty-cart i {
         font-size: 48px;
-        color: rgba(255, 255, 255, 0.5);
+        color: rgba(139, 92, 246, 0.5);
         margin-bottom: 16px;
     }
     
     .cart-item {
-        background: rgba(255, 255, 255, 0.1);
+        background: rgba(0, 0, 0, 0.4);
         backdrop-filter: blur(15px);
-        border: 1px solid rgba(255, 255, 255, 0.1);
+        border: 1px solid rgba(139, 92, 246, 0.2);
         border-radius: 12px;
         padding: 16px;
         margin-bottom: 12px;
@@ -610,8 +615,8 @@
     }
     
     .cart-item:hover {
-        border-color: rgba(255, 255, 255, 0.3);
-        background: rgba(255, 255, 255, 0.15);
+        border-color: rgba(139, 92, 246, 0.4);
+        background: rgba(0, 0, 0, 0.6);
         transform: translateX(4px);
     }
     
@@ -659,7 +664,7 @@
         display: flex;
         align-items: center;
         gap: 8px;
-        background: rgba(255, 255, 255, 0.1);
+        background: rgba(139, 92, 246, 0.1);
         border-radius: 8px;
         padding: 4px;
     }
@@ -669,7 +674,7 @@
         height: 32px;
         border: none;
         border-radius: 6px;
-        background: rgba(255, 255, 255, 0.1);
+        background: rgba(139, 92, 246, 0.2);
         color: white;
         font-weight: 700;
         cursor: pointer;
@@ -726,8 +731,7 @@
         left: 0;
         right: 0;
         bottom: 0;
-        background: linear-gradient(135deg, var(--success) 0%, #059669 100%);
-        opacity: 0.1;
+        background: linear-gradient(135deg, rgba(139, 92, 246, 0.1) 0%, rgba(0, 0, 0, 0.4) 100%);
         z-index: -1;
     }
     
@@ -748,7 +752,7 @@
         color: white;
         margin: 20px 0;
         padding-top: 16px;
-        border-top: 2px solid rgba(255, 255, 255, 0.2);
+        border-top: 2px solid rgba(139, 92, 246, 0.3);
         text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
     }
     
@@ -759,9 +763,9 @@
     .form-control {
         width: 100%;
         padding: 12px 16px;
-        border: 1px solid rgba(255, 255, 255, 0.2);
+        border: 1px solid rgba(139, 92, 246, 0.3);
         border-radius: 12px;
-        background: rgba(255, 255, 255, 0.1);
+        background: rgba(0, 0, 0, 0.6);
         backdrop-filter: blur(10px);
         color: white;
         font-size: 14px;
@@ -770,12 +774,13 @@
     
     .form-control:focus {
         outline: none;
-        border-color: rgba(255, 255, 255, 0.4);
-        background: rgba(255, 255, 255, 0.15);
+        border-color: rgba(139, 92, 246, 0.6);
+        background: rgba(0, 0, 0, 0.8);
     }
     
     .cash-details {
-        background: rgba(255, 255, 255, 0.1);
+        background: rgba(139, 92, 246, 0.1);
+        border: 1px solid rgba(139, 92, 246, 0.2);
         border-radius: 12px;
         padding: 16px;
         margin-top: 12px;
@@ -831,8 +836,8 @@
     }
     
     .btn-close-register {
-        background: rgba(239, 68, 68, 0.2);
-        border: 1px solid rgba(239, 68, 68, 0.3);
+        background: rgba(0, 0, 0, 0.6);
+        border: 1px solid rgba(239, 68, 68, 0.4);
         color: white;
         padding: 10px 20px;
         border-radius: 12px;
@@ -844,7 +849,8 @@
     }
     
     .btn-close-register:hover {
-        background: rgba(239, 68, 68, 0.3);
+        background: rgba(239, 68, 68, 0.2);
+        border-color: rgba(239, 68, 68, 0.6);
         transform: translateY(-2px);
     }
     
