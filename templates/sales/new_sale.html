@@ -1,0 +1,348 @@
+{% extends "base.html" %}
+
+{% block title %}New Sale - Cloud POS{% endblock %}
+{% block mobile_title %}New Sale{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-8">
+        <!-- Product Search and Cart -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="card-title mb-0">Products</h5>
+            </div>
+            <div class="card-body">
+                <!-- Product Search -->
+                <div class="mb-3">
+                    <input type="text" class="form-control" id="productSearch" 
+                           placeholder="Search products by name, SKU, or barcode...">
+                </div>
+                
+                <!-- Product Grid -->
+                <div class="row" id="productGrid">
+                    {% for product in products %}
+                    <div class="col-md-4 col-sm-6 mb-3">
+                        <div class="card product-card h-100" style="cursor: pointer;" 
+                             onclick="addToCart({{ product.id }}, '{{ product.name|replace("'", "\\'") }}', {{ product.selling_price }}, {{ product.stock_quantity }}, {{ product.tax_rate or 0 }})">
+                            <div class="card-body text-center">
+                                <h6 class="card-title">{{ product.name }}</h6>
+                                <p class="card-text">
+                                    <strong>${{ "%.2f"|format(product.selling_price) }}</strong><br>
+                                    <small class="text-muted">Stock: {{ product.stock_quantity }}</small>
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4">
+        <!-- Shopping Cart -->
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">Shopping Cart</h5>
+            </div>
+            <div class="card-body">
+                <div id="cartItems">
+                    <p class="text-muted text-center">Cart is empty</p>
+                </div>
+                
+                <hr>
+                
+                <!-- Cart Totals -->
+                <div class="d-flex justify-content-between">
+                    <span>Subtotal:</span>
+                    <span id="cartSubtotal">$0.00</span>
+                </div>
+                <div class="d-flex justify-content-between">
+                    <span>Tax:</span>
+                    <span id="cartTax">$0.00</span>
+                </div>
+                <div class="d-flex justify-content-between fw-bold">
+                    <span>Total:</span>
+                    <span id="cartTotal">$0.00</span>
+                </div>
+                
+                <hr>
+                
+                <!-- Customer Selection -->
+                <div class="mb-3">
+                    <label for="customerSelect" class="form-label">Customer (Optional)</label>
+                    <select class="form-select" id="customerSelect">
+                        <option value="">Walk-in Customer</option>
+                        {% for customer in customers %}
+                        <option value="{{ customer.id }}">{{ customer.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                
+                <!-- Payment Method -->
+                <div class="mb-3">
+                    <label for="paymentMethod" class="form-label">Payment Method</label>
+                    <select class="form-select" id="paymentMethod">
+                        <option value="cash">Cash</option>
+                        <option value="card">Card</option>
+                        <option value="digital_wallet">Digital Wallet</option>
+                        <option value="bank_transfer">Bank Transfer</option>
+                    </select>
+                </div>
+                
+                <!-- Process Sale Button -->
+                <button class="btn btn-primary w-100" id="processSaleBtn" onclick="processSale()" disabled>
+                    Process Sale
+                </button>
+                
+                <button class="btn btn-secondary w-100 mt-2" onclick="clearCart()">
+                    Clear Cart
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Success Modal -->
+<div class="modal fade" id="saleSuccessModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Sale Completed!</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>Sale has been processed successfully.</p>
+                <p><strong>Receipt Number:</strong> <span id="receiptNumber"></span></p>
+                <p><strong>Total Amount:</strong> <span id="saleTotal"></span></p>
+            </div>
+            <div class="modal-footer">
+                <a href="#" id="downloadReceiptBtn" class="btn btn-primary" target="_blank">
+                    Download PDF Receipt
+                </a>
+                <a href="#" id="viewReceiptBtn" class="btn btn-secondary" target="_blank">
+                    View Receipt
+                </a>
+                <button type="button" class="btn btn-success" data-bs-dismiss="modal" onclick="clearCart()">
+                    New Sale
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+let cart = [];
+
+function addToCart(productId, productName, price, stock, taxRate) {
+    // Check if product already in cart
+    const existingItem = cart.find(item => item.product_id === productId);
+    
+    if (existingItem) {
+        if (existingItem.quantity >= stock) {
+            alert('Not enough stock available');
+            return;
+        }
+        existingItem.quantity += 1;
+    } else {
+        cart.push({
+            product_id: productId,
+            name: productName,
+            unit_price: price,
+            quantity: 1,
+            stock: stock,
+            tax_rate: taxRate
+        });
+    }
+    
+    updateCartDisplay();
+}
+
+function removeFromCart(productId) {
+    cart = cart.filter(item => item.product_id !== productId);
+    updateCartDisplay();
+}
+
+function updateQuantity(productId, quantity) {
+    const item = cart.find(item => item.product_id === productId);
+    if (item) {
+        if (quantity <= 0) {
+            removeFromCart(productId);
+        } else if (quantity <= item.stock) {
+            item.quantity = quantity;
+            updateCartDisplay();
+        } else {
+            alert('Not enough stock available');
+        }
+    }
+}
+
+function updateCartDisplay() {
+    const cartContainer = document.getElementById('cartItems');
+    const processSaleBtn = document.getElementById('processSaleBtn');
+    
+    if (cart.length === 0) {
+        cartContainer.innerHTML = '<p class="text-muted text-center">Cart is empty</p>';
+        processSaleBtn.disabled = true;
+    } else {
+        let html = '';
+        cart.forEach(item => {
+            const itemTotal = item.quantity * item.unit_price;
+            html += `
+                <div class="cart-item mb-2 p-2 border rounded">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <strong>${item.name}</strong><br>
+                            <small>$${item.unit_price.toFixed(2)} each</small>
+                        </div>
+                        <div class="text-end">
+                            <div class="input-group input-group-sm" style="width: 100px;">
+                                <button class="btn btn-outline-secondary" type="button" 
+                                        onclick="updateQuantity(${item.product_id}, ${item.quantity - 1})">-</button>
+                                <input type="number" class="form-control text-center" 
+                                       value="${item.quantity}" min="1" max="${item.stock}"
+                                       onchange="updateQuantity(${item.product_id}, parseInt(this.value))">
+                                <button class="btn btn-outline-secondary" type="button" 
+                                        onclick="updateQuantity(${item.product_id}, ${item.quantity + 1})">+</button>
+                            </div>
+                            <small>$${itemTotal.toFixed(2)}</small>
+                            <button class="btn btn-sm btn-outline-danger ms-1" 
+                                    onclick="removeFromCart(${item.product_id})">×</button>
+                        </div>
+                    </div>
+                </div>
+            `;
+        });
+        cartContainer.innerHTML = html;
+        processSaleBtn.disabled = false;
+    }
+    
+    updateCartTotals();
+}
+
+function updateCartTotals() {
+    let subtotal = 0;
+    let tax = 0;
+    
+    cart.forEach(item => {
+        const itemSubtotal = item.quantity * item.unit_price;
+        const itemTax = itemSubtotal * (item.tax_rate / 100);
+        subtotal += itemSubtotal;
+        tax += itemTax;
+    });
+    
+    const total = subtotal + tax;
+    
+    document.getElementById('cartSubtotal').textContent = `$${subtotal.toFixed(2)}`;
+    document.getElementById('cartTax').textContent = `$${tax.toFixed(2)}`;
+    document.getElementById('cartTotal').textContent = `$${total.toFixed(2)}`;
+}
+
+function clearCart() {
+    cart = [];
+    updateCartDisplay();
+}
+
+function processSale() {
+    if (cart.length === 0) {
+        alert('Cart is empty');
+        return;
+    }
+    
+    const customerSelect = document.getElementById('customerSelect');
+    const paymentMethod = document.getElementById('paymentMethod');
+    
+    const saleData = {
+        items: cart,
+        customer_id: customerSelect.value || null,
+        payment_method: paymentMethod.value
+    };
+    
+    // Disable button to prevent double submission
+    document.getElementById('processSaleBtn').disabled = true;
+    document.getElementById('processSaleBtn').textContent = 'Processing...';
+    
+    fetch('/sales/api/process_sale', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(saleData)
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // Show success modal
+            document.getElementById('receiptNumber').textContent = data.receipt_number;
+            document.getElementById('saleTotal').textContent = `$${data.total_amount.toFixed(2)}`;
+            document.getElementById('downloadReceiptBtn').href = `/sales/receipt/${data.sale_id}/pdf`;
+            document.getElementById('viewReceiptBtn').href = `/sales/receipt/${data.sale_id}`;
+            
+            const modal = new bootstrap.Modal(document.getElementById('saleSuccessModal'));
+            modal.show();
+        } else {
+            alert('Error: ' + data.error);
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('An error occurred while processing the sale');
+    })
+    .finally(() => {
+        // Re-enable button
+        document.getElementById('processSaleBtn').disabled = false;
+        document.getElementById('processSaleBtn').textContent = 'Process Sale';
+    });
+}
+
+// Product search functionality
+document.getElementById('productSearch').addEventListener('input', function() {
+    const query = this.value.trim();
+    
+    if (query.length < 2) {
+        // Show all products if search is too short
+        return;
+    }
+    
+    fetch(`/sales/api/products/search?q=${encodeURIComponent(query)}`)
+        .then(response => response.json())
+        .then(products => {
+            updateProductGrid(products);
+        })
+        .catch(error => {
+            console.error('Search error:', error);
+        });
+});
+
+function updateProductGrid(products) {
+    const grid = document.getElementById('productGrid');
+    
+    if (products.length === 0) {
+        grid.innerHTML = '<div class="col-12"><p class="text-muted text-center">No products found</p></div>';
+        return;
+    }
+    
+    let html = '';
+    products.forEach(product => {
+        html += `
+            <div class="col-md-4 col-sm-6 mb-3">
+                <div class="card product-card h-100" style="cursor: pointer;" 
+                     onclick="addToCart(${product.id}, '${product.name.replace(/'/g, "\\'")}', ${product.price}, ${product.stock}, ${product.tax_rate})">
+                    <div class="card-body text-center">
+                        <h6 class="card-title">${product.name}</h6>
+                        <p class="card-text">
+                            <strong>$${product.price.toFixed(2)}</strong><br>
+                            <small class="text-muted">Stock: ${product.stock}</small>
+                        </p>
+                    </div>
+                </div>
+            </div>
+        `;
+    });
+    
+    grid.innerHTML = html;
+}
+</script>
+{% endblock %}
