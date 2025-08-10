@@ -14,6 +14,13 @@ Cloud POS & Inventory Manager is a comprehensive Point of Sale and Inventory Man
 - Improved product form template with checkbox interface for store selection
 - Maintains existing StoreStock model relationships for inventory tracking per location
 
+✅ **Store-Filtered POS System: COMPLETED** - Modified POS system to filter products based on cashier's assigned store. Cashiers now only see and can sell products available in their specific store. Features include:
+- POS product listing filtered by user's store assignment through UserStore and CashRegister models
+- Product search API updated to only return products available in user's current store
+- Store-specific stock checking - validates against StoreStock quantities instead of global product stock
+- Sales processing updated to deduct from store-specific stock rather than global inventory
+- Prevents cashiers from accessing products not assigned to their store location
+
 ✅ **Route Error Fixes: COMPLETED** - Fixed critical route error in admin blueprint UserStoreAssignmentForm where store_ids.choices was not being populated, causing "TypeError: 'NoneType' object is not iterable" errors. Added proper form choice population for both assign_user_stores and edit_user_stores routes. All routes now working correctly.
 
 ✅ **Thousand Separator Formatting: COMPLETED** - Implemented comma separators for all monetary values throughout the application (e.g., $1,234.56 instead of $1234.56). Updated format_currency() function, added format_number() filter, and enhanced JavaScript formatting functions. Fixed sales report modal template literals that were displaying raw code instead of formatted currency values.

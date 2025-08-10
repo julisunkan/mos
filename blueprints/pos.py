@@ -21,8 +21,15 @@ def index():
     if not register:
         return redirect(url_for('pos.open_register'))
     
-    # Get products for POS
-    products = Product.query.filter_by(is_active=True).all()
+    # Get products available in the current user's store
+    from models import StoreStock
+    store_id = register.store_id
+    products = db.session.query(Product).join(StoreStock).filter(
+        Product.is_active == True,
+        StoreStock.store_id == store_id,
+        StoreStock.quantity > 0  # Only show products with stock
+    ).all()
+    
     customers = Customer.query.filter_by(is_active=True).all()
     
     return render_template('pos/index.html', 
@@ -153,8 +160,16 @@ def process_sale():
                 return jsonify({'error': f'Product not found: {item_data["product_id"]}'}), 400
             
             quantity = int(item_data['quantity'])
-            if product.stock_quantity < quantity:
-                return jsonify({'error': f'Insufficient stock for {product.name}'}), 400
+            
+            # Check store-specific stock instead of global product stock
+            from models import StoreStock
+            store_stock = StoreStock.query.filter_by(
+                product_id=product.id,
+                store_id=register.store_id
+            ).first()
+            
+            if not store_stock or store_stock.quantity < quantity:
+                return jsonify({'error': f'Insufficient stock for {product.name} in this store'}), 400
             
             unit_price = float(item_data.get('unit_price', float(product.selling_price)))
             total_price = unit_price * quantity
@@ -170,8 +185,8 @@ def process_sale():
             
             db.session.add(sale_item)
             
-            # Update product stock
-            product.stock_quantity -= quantity
+            # Update store-specific stock instead of global product stock
+            store_stock.quantity -= quantity
             
             subtotal += total_price
             if product.tax_rate:
@@ -326,29 +341,42 @@ def returns():
 @pos_bp.route('/product/search')
 @login_required
 def search_products():
-    """Search products for POS"""
+    """Search products for POS (filtered by user's store)"""
     query = request.args.get('q', '').strip()
     
     if len(query) < 2:
         return jsonify([])
     
-    # Search by name, SKU, or barcode
-    products = Product.query.filter(
+    # Get user's current register to find their store
+    register = CashRegister.query.filter_by(
+        user_id=current_user.id,
+        is_open=True
+    ).first()
+    
+    if not register:
+        return jsonify([])
+    
+    # Search products available in the user's store with stock
+    from models import StoreStock
+    products = db.session.query(Product, StoreStock.quantity).join(StoreStock).filter(
         db.or_(
             Product.name.ilike(f'%{query}%'),
             Product.sku.ilike(f'%{query}%'),
             Product.barcode.ilike(f'%{query}%')
-        )
-    ).filter(Product.is_active == True).limit(20).all()
+        ),
+        Product.is_active == True,
+        StoreStock.store_id == register.store_id,
+        StoreStock.quantity > 0
+    ).limit(20).all()
     
     results = []
-    for product in products:
+    for product, stock_quantity in products:
         results.append({
             'id': product.id,
             'name': product.name,
             'price': float(product.selling_price),
-            'stock': product.stock_quantity,
-            'tax_rate': float(product.tax_rate)
+            'stock': stock_quantity,  # Use store-specific stock
+            'tax_rate': float(product.tax_rate or 0)
         })
     
     return jsonify(results)
