@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+
+{% block title %}Open Cash Register - Cloud POS{% endblock %}
+{% block mobile_title %}Open Register{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header">
+                    <h4 class="mb-0">
+                        <i class="fas fa-cash-register me-2"></i>Open Cash Register
+                    </h4>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle me-2"></i>
+                        You need to open your cash register before you can start making sales.
+                    </div>
+                    
+                    <form method="POST">
+                        <div class="mb-3">
+                            <label for="store" class="form-label">Store</label>
+                            <input type="text" class="form-control" value="{{ store.name }}" readonly>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="opening_balance" class="form-label">Opening Balance</label>
+                            <div class="input-group">
+                                <span class="input-group-text">{{ get_currency_symbol() }}</span>
+                                <input type="number" id="opening_balance" name="opening_balance" 
+                                       class="form-control" step="0.01" min="0" value="0.00" required>
+                            </div>
+                            <div class="form-text">Enter the amount of cash in the register at the start of your shift.</div>
+                        </div>
+                        
+                        <div class="d-grid">
+                            <button type="submit" class="btn btn-primary btn-lg">
+                                <i class="fas fa-unlock me-2"></i>Open Register
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

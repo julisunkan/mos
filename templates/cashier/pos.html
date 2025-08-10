@@ -1,0 +1,445 @@
+{% extends "base.html" %}
+
+{% block title %}Cashier POS - Cloud POS{% endblock %}
+{% block mobile_title %}Cashier POS{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <!-- Product Catalog (Left Side) -->
+        <div class="col-lg-8">
+            <div class="card h-100">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-boxes me-2"></i>Products - {{ store.name }}
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <!-- Search Bar -->
+                    <div class="mb-3">
+                        <div class="input-group">
+                            <span class="input-group-text">
+                                <i class="fas fa-search"></i>
+                            </span>
+                            <input type="text" id="product-search" class="form-control" 
+                                   placeholder="Search products by name, SKU, or barcode...">
+                        </div>
+                    </div>
+                    
+                    <!-- Products Grid -->
+                    <div id="products-grid" class="row g-3">
+                        {% for product in products %}
+                        <div class="col-xl-3 col-lg-4 col-md-4 col-sm-6 col-6">
+                            <div class="product-card" data-product-id="{{ product.id }}">
+                                <div class="product-info">
+                                    <h6 class="product-name">{{ product.name }}</h6>
+                                    <p class="product-sku">SKU: {{ product.sku }}</p>
+                                    <p class="product-price">{{ product.selling_price|format_currency }}</p>
+                                    <p class="product-stock">Stock: 
+                                        {% set stock = product.store_stocks.filter_by(store_id=store.id).first() %}
+                                        {{ stock.quantity if stock else 0 }}
+                                    </p>
+                                </div>
+                                <button class="btn btn-primary btn-sm add-to-cart-btn" 
+                                        data-product-id="{{ product.id }}"
+                                        data-product-name="{{ product.name }}"
+                                        data-product-price="{{ product.selling_price }}"
+                                        data-product-stock="{% set stock = product.store_stocks.filter_by(store_id=store.id).first() %}{{ stock.quantity if stock else 0 }}">
+                                    <i class="fas fa-plus"></i> Add
+                                </button>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Shopping Cart (Right Side) -->
+        <div class="col-lg-4">
+            <div class="card h-100">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-shopping-cart me-2"></i>Shopping Cart
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <!-- Customer Selection -->
+                    <div class="mb-3">
+                        <label for="customer-select" class="form-label">Customer (Optional)</label>
+                        <select id="customer-select" class="form-select">
+                            <option value="">Walk-in Customer</option>
+                            {% for customer in customers %}
+                            <option value="{{ customer.id }}">{{ customer.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    
+                    <!-- Cart Items -->
+                    <div id="cart-items" class="mb-3">
+                        <p class="text-muted text-center">Cart is empty</p>
+                    </div>
+                    
+                    <!-- Cart Totals -->
+                    <div class="cart-totals mb-3">
+                        <div class="d-flex justify-content-between">
+                            <span>Subtotal:</span>
+                            <span id="cart-subtotal">{{ 0|format_currency }}</span>
+                        </div>
+                        <div class="d-flex justify-content-between">
+                            <span>Tax:</span>
+                            <span id="cart-tax">{{ 0|format_currency }}</span>
+                        </div>
+                        <hr>
+                        <div class="d-flex justify-content-between fw-bold">
+                            <span>Total:</span>
+                            <span id="cart-total">{{ 0|format_currency }}</span>
+                        </div>
+                    </div>
+                    
+                    <!-- Payment Method -->
+                    <div class="mb-3">
+                        <label for="payment-method" class="form-label">Payment Method</label>
+                        <select id="payment-method" class="form-select">
+                            <option value="cash">Cash</option>
+                            <option value="card">Card</option>
+                            <option value="digital_wallet">Digital Wallet</option>
+                        </select>
+                    </div>
+                    
+                    <!-- Action Buttons -->
+                    <div class="d-grid gap-2">
+                        <button id="process-sale-btn" class="btn btn-success btn-lg" disabled>
+                            <i class="fas fa-money-bill-wave me-2"></i>Process Sale
+                        </button>
+                        <button id="clear-cart-btn" class="btn btn-outline-secondary">
+                            <i class="fas fa-trash me-2"></i>Clear Cart
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Receipt Modal -->
+<div class="modal fade" id="receiptModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="fas fa-receipt me-2"></i>Sale Complete
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="text-center mb-3">
+                    <div class="alert alert-success">
+                        <i class="fas fa-check-circle fa-2x mb-2"></i>
+                        <h5>Sale Processed Successfully!</h5>
+                        <p class="mb-0">Receipt Number: <span id="receipt-number"></span></p>
+                    </div>
+                </div>
+                
+                <div id="receipt-content" class="receipt-preview">
+                    <!-- Receipt content will be loaded here -->
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" id="print-receipt-btn" class="btn btn-primary">
+                    <i class="fas fa-print me-2"></i>Print Receipt
+                </button>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.product-card {
+    background: linear-gradient(135deg, #1e293b, #334155);
+    border: 1px solid #475569;
+    border-radius: 8px;
+    padding: 1rem;
+    height: 140px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    transition: transform 0.2s, box-shadow 0.2s;
+    cursor: pointer;
+}
+
+.product-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+.product-info h6 {
+    color: #f1f5f9;
+    font-size: 0.9rem;
+    margin-bottom: 0.3rem;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.product-info p {
+    color: #94a3b8;
+    font-size: 0.8rem;
+    margin-bottom: 0.2rem;
+}
+
+.product-price {
+    color: #10b981 !important;
+    font-weight: bold;
+}
+
+.cart-item {
+    background: linear-gradient(135deg, #1e293b, #334155);
+    border: 1px solid #475569;
+    border-radius: 6px;
+    padding: 0.75rem;
+    margin-bottom: 0.5rem;
+}
+
+.cart-totals {
+    background: rgba(255, 255, 255, 0.05);
+    padding: 1rem;
+    border-radius: 6px;
+}
+
+.receipt-preview {
+    background: white;
+    color: black;
+    padding: 2rem;
+    font-family: 'Courier New', monospace;
+    border-radius: 6px;
+}
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    let cart = [];
+    
+    // Product search functionality
+    const searchInput = document.getElementById('product-search');
+    const productsGrid = document.getElementById('products-grid');
+    
+    searchInput.addEventListener('input', function() {
+        const searchTerm = this.value.toLowerCase();
+        const productCards = productsGrid.querySelectorAll('.product-card');
+        
+        productCards.forEach(card => {
+            const productName = card.querySelector('.product-name').textContent.toLowerCase();
+            const productSku = card.querySelector('.product-sku').textContent.toLowerCase();
+            
+            if (productName.includes(searchTerm) || productSku.includes(searchTerm)) {
+                card.closest('.col-xl-3').style.display = 'block';
+            } else {
+                card.closest('.col-xl-3').style.display = 'none';
+            }
+        });
+    });
+    
+    // Add to cart functionality
+    document.addEventListener('click', function(e) {
+        if (e.target.closest('.add-to-cart-btn')) {
+            const btn = e.target.closest('.add-to-cart-btn');
+            const productId = btn.dataset.productId;
+            const productName = btn.dataset.productName;
+            const productPrice = parseFloat(btn.dataset.productPrice);
+            const productStock = parseInt(btn.dataset.productStock);
+            
+            addToCart(productId, productName, productPrice, productStock);
+        }
+    });
+    
+    function addToCart(productId, productName, productPrice, productStock) {
+        const existingItem = cart.find(item => item.product_id === productId);
+        
+        if (existingItem) {
+            if (existingItem.quantity < productStock) {
+                existingItem.quantity++;
+            } else {
+                alert('Insufficient stock available');
+                return;
+            }
+        } else {
+            if (productStock > 0) {
+                cart.push({
+                    product_id: productId,
+                    name: productName,
+                    price: productPrice,
+                    quantity: 1,
+                    stock: productStock
+                });
+            } else {
+                alert('Product out of stock');
+                return;
+            }
+        }
+        
+        updateCartDisplay();
+    }
+    
+    function updateCartDisplay() {
+        const cartItemsContainer = document.getElementById('cart-items');
+        const processSaleBtn = document.getElementById('process-sale-btn');
+        
+        if (cart.length === 0) {
+            cartItemsContainer.innerHTML = '<p class="text-muted text-center">Cart is empty</p>';
+            processSaleBtn.disabled = true;
+        } else {
+            let html = '';
+            cart.forEach((item, index) => {
+                html += `
+                    <div class="cart-item">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <h6 class="mb-1">${item.name}</h6>
+                                <small class="text-muted">${window.currencySymbol}${item.price.toFixed(2)} each</small>
+                            </div>
+                            <div class="d-flex align-items-center">
+                                <button class="btn btn-sm btn-outline-secondary me-2" onclick="changeQuantity(${index}, -1)">-</button>
+                                <span class="mx-2">${item.quantity}</span>
+                                <button class="btn btn-sm btn-outline-secondary me-2" onclick="changeQuantity(${index}, 1)">+</button>
+                                <button class="btn btn-sm btn-outline-danger" onclick="removeFromCart(${index})">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="text-end mt-2">
+                            <strong>${window.currencySymbol}${(item.price * item.quantity).toFixed(2)}</strong>
+                        </div>
+                    </div>
+                `;
+            });
+            cartItemsContainer.innerHTML = html;
+            processSaleBtn.disabled = false;
+        }
+        
+        updateCartTotals();
+    }
+    
+    function updateCartTotals() {
+        let subtotal = 0;
+        let tax = 0;
+        
+        cart.forEach(item => {
+            const lineTotal = item.price * item.quantity;
+            subtotal += lineTotal;
+            // Assuming 10% tax rate for simplicity
+            tax += lineTotal * 0.10;
+        });
+        
+        const total = subtotal + tax;
+        
+        document.getElementById('cart-subtotal').textContent = `${window.currencySymbol}${subtotal.toFixed(2)}`;
+        document.getElementById('cart-tax').textContent = `${window.currencySymbol}${tax.toFixed(2)}`;
+        document.getElementById('cart-total').textContent = `${window.currencySymbol}${total.toFixed(2)}`;
+    }
+    
+    window.changeQuantity = function(index, change) {
+        const item = cart[index];
+        const newQuantity = item.quantity + change;
+        
+        if (newQuantity <= 0) {
+            cart.splice(index, 1);
+        } else if (newQuantity <= item.stock) {
+            item.quantity = newQuantity;
+        } else {
+            alert('Insufficient stock available');
+            return;
+        }
+        
+        updateCartDisplay();
+    };
+    
+    window.removeFromCart = function(index) {
+        cart.splice(index, 1);
+        updateCartDisplay();
+    };
+    
+    // Clear cart
+    document.getElementById('clear-cart-btn').addEventListener('click', function() {
+        cart = [];
+        updateCartDisplay();
+    });
+    
+    // Process sale
+    document.getElementById('process-sale-btn').addEventListener('click', function() {
+        const customerId = document.getElementById('customer-select').value;
+        const paymentMethod = document.getElementById('payment-method').value;
+        
+        if (cart.length === 0) {
+            alert('Cart is empty');
+            return;
+        }
+        
+        const saleData = {
+            items: cart,
+            customer_id: customerId || null,
+            payment_method: paymentMethod
+        };
+        
+        fetch('/cashier/api/process_sale', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(saleData)
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                // Show receipt modal
+                document.getElementById('receipt-number').textContent = data.receipt_number;
+                
+                // Load receipt content
+                fetch(`/cashier/receipt/${data.sale_id}`)
+                .then(response => response.text())
+                .then(html => {
+                    const parser = new DOMParser();
+                    const doc = parser.parseFromString(html, 'text/html');
+                    const receiptContent = doc.querySelector('.receipt-content');
+                    document.getElementById('receipt-content').innerHTML = receiptContent.innerHTML;
+                });
+                
+                // Clear cart and show modal
+                cart = [];
+                updateCartDisplay();
+                new bootstrap.Modal(document.getElementById('receiptModal')).show();
+            } else {
+                alert('Error: ' + data.error);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('An error occurred while processing the sale');
+        });
+    });
+    
+    // Print receipt
+    document.getElementById('print-receipt-btn').addEventListener('click', function() {
+        const receiptContent = document.getElementById('receipt-content').innerHTML;
+        const printWindow = window.open('', '', 'width=800,height=600');
+        printWindow.document.write(`
+            <html>
+                <head>
+                    <title>Receipt</title>
+                    <style>
+                        body { font-family: 'Courier New', monospace; }
+                        .receipt-content { padding: 20px; }
+                    </style>
+                </head>
+                <body>
+                    <div class="receipt-content">${receiptContent}</div>
+                    <script>window.print(); window.close();</script>
+                </body>
+            </html>
+        `);
+        printWindow.document.close();
+    });
+});
+</script>
+{% endblock %}
