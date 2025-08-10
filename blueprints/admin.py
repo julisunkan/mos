@@ -83,6 +83,19 @@ def delete_user(id):
         return redirect(url_for('admin.users'))
     
     try:
+        # Handle related records before deleting user
+        from models import CashRegister, UserStore
+        
+        # Close any open cash registers for this user
+        open_registers = CashRegister.query.filter_by(user_id=user.id, is_open=True).all()
+        for register in open_registers:
+            register.is_open = False
+            register.closed_at = datetime.utcnow()
+        
+        # Remove user store assignments
+        UserStore.query.filter_by(user_id=user.id).delete()
+        
+        # Now safe to delete the user
         db.session.delete(user)
         db.session.commit()
         flash(f'User {user.username} deleted successfully!', 'success')
