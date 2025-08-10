@@ -36,15 +36,21 @@
                                     <p class="product-sku">SKU: {{ product.sku }}</p>
                                     <p class="product-price">{{ product.selling_price|format_currency }}</p>
                                     <p class="product-stock">Stock: 
-                                        {% set stock = product.store_stocks.filter_by(store_id=store.id).first() %}
-                                        {{ stock.quantity if stock else 0 }}
+                                        {% for stock in product.store_stocks %}
+                                            {% if stock.store_id == store.id %}
+                                                {{ stock.quantity }}
+                                                {% break %}
+                                            {% endif %}
+                                        {% else %}
+                                            0
+                                        {% endfor %}
                                     </p>
                                 </div>
                                 <button class="btn btn-primary btn-sm add-to-cart-btn" 
                                         data-product-id="{{ product.id }}"
                                         data-product-name="{{ product.name }}"
                                         data-product-price="{{ product.selling_price }}"
-                                        data-product-stock="{% set stock = product.store_stocks.filter_by(store_id=store.id).first() %}{{ stock.quantity if stock else 0 }}">
+                                        data-product-stock="{% for stock in product.store_stocks %}{% if stock.store_id == store.id %}{{ stock.quantity }}{% break %}{% endif %}{% else %}0{% endfor %}">
                                     <i class="fas fa-plus"></i> Add
                                 </button>
                             </div>

@@ -231,8 +231,11 @@ def process_sale():
         
         # Update cash register balance for cash payments
         if payment_method == 'cash':
-            # Note: CashRegister model doesn't have current_balance field, using total_sales instead
-            cash_register.total_sales += total_amount
+            # Update cash register balance (if the field exists)
+            if hasattr(cash_register, 'current_balance'):
+                cash_register.current_balance += total_amount
+            elif hasattr(cash_register, 'total_sales'):
+                cash_register.total_sales += total_amount
         
         db.session.commit()
         

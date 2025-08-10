@@ -106,11 +106,10 @@ class Product(db.Model):
         if store_stock:
             store_stock.quantity = quantity
         else:
-            store_stock = StoreStock(
-                store_id=store_id,
-                product_id=self.id,
-                quantity=quantity
-            )
+            store_stock = StoreStock()
+            store_stock.store_id = store_id
+            store_stock.product_id = self.id
+            store_stock.quantity = quantity
             db.session.add(store_stock)
     
     def is_low_stock_in_store(self, store_id):
