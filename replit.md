@@ -7,7 +7,7 @@ Successfully migrated from Replit Agent to standard Replit environment. The appl
 - PostgreSQL database provisioned and connected
 - All dependencies installed via package manager
 - Store assignment issues resolved (fixed User-Store relationship mapping)
-- JavaScript frontend integration improved for POS functionality
+- Cashier/POS module completely removed due to unresolvable JavaScript template conflicts
 - Security practices maintained with client/server separation
 
 # User Preferences
@@ -17,7 +17,7 @@ Preferred communication style: Simple, everyday language.
 # System Architecture
 
 ## Backend Framework
-- **Flask Application Factory Pattern**: Modular, blueprint-based architecture for admin, auth, customers, inventory, POS, and reports.
+- **Flask Application Factory Pattern**: Modular, blueprint-based architecture for admin, auth, customers, inventory, stores, and reports.
 - **SQLAlchemy ORM**: Database abstraction with Alembic for migrations.
 - **Role-Based Access Control (RBAC)**: Granular permissions for roles like Admin, Manager, Cashier, Accountant.
 - **Flask-Login**: Session-based authentication with bcrypt hashing.
