@@ -533,8 +533,12 @@ class SaleReturn(db.Model):
     processed_at = db.Column(db.DateTime)
     
     # Relationships
-    original_sale = db.relationship('Sale', backref='returns')
-    processed_by = db.relationship('User', backref='processed_returns')
+    original_sale = db.relationship('Sale', backref='sale_returns')
+    processed_by = db.relationship('User', backref='sale_returns')
+    return_items = db.relationship('SaleReturnItem', backref='return_record', lazy=True, cascade='all, delete-orphan')
+    
+    def __repr__(self):
+        return f'<SaleReturn {self.return_number} for Sale {self.original_sale_id}>'
 
 class SaleReturnItem(db.Model):
     __tablename__ = 'sale_return_items'
@@ -543,14 +547,16 @@ class SaleReturnItem(db.Model):
     return_id = db.Column(db.Integer, db.ForeignKey('sale_returns.id'), nullable=False)
     product_id = db.Column(db.Integer, db.ForeignKey('products.id'), nullable=False)
     original_sale_item_id = db.Column(db.Integer, db.ForeignKey('sale_items.id'), nullable=False)
-    quantity_returned = db.Column(db.Integer, nullable=False)
+    quantity = db.Column(db.Integer, nullable=False)
     unit_price = db.Column(db.Numeric(10, 2), nullable=False)
-    total_amount = db.Column(db.Numeric(10, 2), nullable=False)
+    total_refund = db.Column(db.Numeric(10, 2), nullable=False)
     
     # Relationships
-    return_record = db.relationship('SaleReturn', backref='items')
     product = db.relationship('Product', backref='return_items')
-    original_item = db.relationship('SaleItem', backref='returns')
+    original_sale_item = db.relationship('SaleItem', backref='return_items')
+    
+    def __repr__(self):
+        return f'<SaleReturnItem {self.id}: {self.quantity}x Product {self.product_id}>'
 
 class SalePayment(db.Model):
     __tablename__ = 'sale_payments'

@@ -1,0 +1,347 @@
+{% extends "base.html" %}
+
+{% block title %}Returns & Refunds{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2><i class="fas fa-undo"></i> Returns & Refunds</h2>
+        <a href="{{ url_for('returns.history') }}" class="btn btn-outline-primary">
+            <i class="fas fa-history"></i> View History
+        </a>
+    </div>
+
+    <!-- Receipt Search Card -->
+    <div class="card mb-4">
+        <div class="card-header">
+            <h5><i class="fas fa-search"></i> Find Receipt for Return</h5>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="input-group">
+                        <input type="text" id="receiptNumber" class="form-control" 
+                               placeholder="Enter receipt number (e.g., POS-20250810-001)">
+                        <button class="btn btn-primary" onclick="searchReceipt()">
+                            <i class="fas fa-search"></i> Search
+                        </button>
+                    </div>
+                    <small class="text-muted">Returns are only allowed within 30 days of purchase</small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Search Results -->
+    <div id="searchResults" style="display: none;">
+        <!-- Sale Information Card -->
+        <div class="card mb-4">
+            <div class="card-header bg-info text-white">
+                <h5><i class="fas fa-receipt"></i> Sale Information</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <p><strong>Receipt:</strong> <span id="saleReceiptNumber"></span></p>
+                        <p><strong>Date:</strong> <span id="saleDate"></span></p>
+                        <p><strong>Customer:</strong> <span id="customerName"></span></p>
+                        <p><strong>Total Amount:</strong> $<span id="totalAmount"></span></p>
+                    </div>
+                    <div class="col-md-6">
+                        <p><strong>Payment Method:</strong> <span id="paymentMethod"></span></p>
+                        <p><strong>Cashier:</strong> <span id="cashierName"></span></p>
+                        <p><strong>Store:</strong> <span id="storeName"></span></p>
+                        <p><strong>Days Since Sale:</strong> <span id="daysSince"></span> days</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Return Items Form -->
+        <div class="card">
+            <div class="card-header">
+                <h5><i class="fas fa-list"></i> Select Items to Return</h5>
+            </div>
+            <div class="card-body">
+                <form id="returnForm">
+                    <div id="returnItems">
+                        <!-- Items will be populated here -->
+                    </div>
+                    
+                    <div class="row mt-4">
+                        <div class="col-md-6">
+                            <label for="returnReason" class="form-label">Return Reason</label>
+                            <select class="form-select" id="returnReason" required>
+                                <option value="">Select a reason</option>
+                                <option value="defective">Defective/Damaged</option>
+                                <option value="wrong_item">Wrong Item</option>
+                                <option value="not_satisfied">Customer Not Satisfied</option>
+                                <option value="size_issue">Size/Fit Issue</option>
+                                <option value="changed_mind">Customer Changed Mind</option>
+                                <option value="duplicate">Duplicate Purchase</option>
+                                <option value="other">Other</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label for="refundMethod" class="form-label">Refund Method</label>
+                            <select class="form-select" id="refundMethod" required>
+                                <option value="original_payment">Original Payment Method</option>
+                                <option value="cash">Cash</option>
+                                <option value="store_credit">Store Credit</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="row mt-3">
+                        <div class="col-12">
+                            <div class="alert alert-info">
+                                <strong>Total Refund Amount:</strong> $<span id="totalRefund">0.00</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row mt-3">
+                        <div class="col-12">
+                            <button type="button" class="btn btn-success" onclick="processReturn()">
+                                <i class="fas fa-check"></i> Process Return
+                            </button>
+                            <button type="button" class="btn btn-secondary ms-2" onclick="clearForm()">
+                                <i class="fas fa-times"></i> Cancel
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Loading Indicator -->
+    <div id="loadingIndicator" class="text-center" style="display: none;">
+        <div class="spinner-border text-primary" role="status">
+            <span class="visually-hidden">Loading...</span>
+        </div>
+        <p class="mt-2">Searching for receipt...</p>
+    </div>
+</div>
+
+<script>
+let currentSale = null;
+
+function searchReceipt() {
+    const receiptNumber = document.getElementById('receiptNumber').value.trim();
+    
+    if (!receiptNumber) {
+        showAlert('Please enter a receipt number', 'warning');
+        return;
+    }
+
+    showLoading(true);
+    
+    fetch(`/returns/api/search_receipt?receipt_number=${encodeURIComponent(receiptNumber)}`)
+        .then(response => response.json())
+        .then(data => {
+            showLoading(false);
+            
+            if (data.error) {
+                showAlert(data.error, 'danger');
+                hideSearchResults();
+            } else {
+                currentSale = data;
+                displaySaleInfo(data);
+                displayReturnItems(data.items);
+                showSearchResults();
+            }
+        })
+        .catch(error => {
+            showLoading(false);
+            console.error('Error:', error);
+            showAlert('Error searching for receipt', 'danger');
+        });
+}
+
+function displaySaleInfo(data) {
+    document.getElementById('saleReceiptNumber').textContent = data.sale.receipt_number;
+    document.getElementById('saleDate').textContent = data.sale.created_at;
+    document.getElementById('customerName').textContent = data.sale.customer_name;
+    document.getElementById('totalAmount').textContent = data.sale.total_amount.toFixed(2);
+    document.getElementById('paymentMethod').textContent = data.sale.payment_method;
+    document.getElementById('cashierName').textContent = data.sale.cashier;
+    document.getElementById('storeName').textContent = data.sale.store_name;
+    document.getElementById('daysSince').textContent = data.days_since_sale;
+}
+
+function displayReturnItems(items) {
+    const container = document.getElementById('returnItems');
+    container.innerHTML = '';
+
+    items.forEach(item => {
+        if (item.available_quantity <= 0) return; // Skip items that can't be returned
+
+        const itemDiv = document.createElement('div');
+        itemDiv.className = 'row mb-3 p-3 border rounded';
+        itemDiv.innerHTML = `
+            <div class="col-md-4">
+                <strong>${item.product_name}</strong><br>
+                <small class="text-muted">
+                    Purchased: ${item.quantity} | 
+                    Returned: ${item.returned_quantity} | 
+                    Available: ${item.available_quantity}
+                </small>
+            </div>
+            <div class="col-md-2">
+                <p class="mb-1">Unit Price: $${item.unit_price.toFixed(2)}</p>
+                <p class="mb-0">Total: $${item.total_price.toFixed(2)}</p>
+            </div>
+            <div class="col-md-3">
+                <label class="form-label">Return Quantity</label>
+                <input type="number" 
+                       class="form-control return-quantity" 
+                       data-item-id="${item.id}"
+                       data-unit-price="${item.unit_price}"
+                       min="0" 
+                       max="${item.available_quantity}" 
+                       value="0"
+                       onchange="updateRefundTotal()">
+            </div>
+            <div class="col-md-3">
+                <label class="form-label">Refund Amount</label>
+                <div class="input-group">
+                    <span class="input-group-text">$</span>
+                    <input type="text" class="form-control refund-amount" readonly value="0.00">
+                </div>
+            </div>
+        `;
+        container.appendChild(itemDiv);
+    });
+}
+
+function updateRefundTotal() {
+    let total = 0;
+    document.querySelectorAll('.return-quantity').forEach(input => {
+        const quantity = parseInt(input.value) || 0;
+        const unitPrice = parseFloat(input.dataset.unitPrice);
+        const refundAmount = quantity * unitPrice;
+        
+        // Update individual refund amount
+        const refundInput = input.closest('.row').querySelector('.refund-amount');
+        refundInput.value = refundAmount.toFixed(2);
+        
+        total += refundAmount;
+    });
+    
+    document.getElementById('totalRefund').textContent = total.toFixed(2);
+}
+
+function processReturn() {
+    if (!currentSale) {
+        showAlert('No sale selected', 'danger');
+        return;
+    }
+
+    const reason = document.getElementById('returnReason').value;
+    const refundMethod = document.getElementById('refundMethod').value;
+    
+    if (!reason || !refundMethod) {
+        showAlert('Please fill in all required fields', 'warning');
+        return;
+    }
+
+    // Collect return items
+    const items = [];
+    document.querySelectorAll('.return-quantity').forEach(input => {
+        const quantity = parseInt(input.value) || 0;
+        if (quantity > 0) {
+            items.push({
+                sale_item_id: input.dataset.itemId,
+                return_quantity: quantity
+            });
+        }
+    });
+
+    if (items.length === 0) {
+        showAlert('Please select at least one item to return', 'warning');
+        return;
+    }
+
+    // Process the return
+    const returnData = {
+        original_sale_id: currentSale.sale.id,
+        items: items,
+        reason: reason,
+        refund_method: refundMethod
+    };
+
+    showLoading(true);
+
+    fetch('/returns/api/process_return', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(returnData)
+    })
+    .then(response => response.json())
+    .then(data => {
+        showLoading(false);
+        
+        if (data.success) {
+            showAlert(`Return processed successfully! Return #${data.return_number}. Refund amount: $${data.refund_amount.toFixed(2)}`, 'success');
+            clearForm();
+        } else {
+            showAlert(data.error || 'Error processing return', 'danger');
+        }
+    })
+    .catch(error => {
+        showLoading(false);
+        console.error('Error:', error);
+        showAlert('Error processing return', 'danger');
+    });
+}
+
+function showAlert(message, type) {
+    const alertDiv = document.createElement('div');
+    alertDiv.className = `alert alert-${type} alert-dismissible fade show`;
+    alertDiv.innerHTML = `
+        ${message}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    `;
+    
+    const container = document.querySelector('.container');
+    container.insertBefore(alertDiv, container.firstChild);
+    
+    // Auto-dismiss after 5 seconds
+    setTimeout(() => {
+        if (alertDiv.parentNode) {
+            alertDiv.remove();
+        }
+    }, 5000);
+}
+
+function showLoading(show) {
+    document.getElementById('loadingIndicator').style.display = show ? 'block' : 'none';
+}
+
+function showSearchResults() {
+    document.getElementById('searchResults').style.display = 'block';
+}
+
+function hideSearchResults() {
+    document.getElementById('searchResults').style.display = 'none';
+}
+
+function clearForm() {
+    document.getElementById('receiptNumber').value = '';
+    document.getElementById('returnReason').value = '';
+    document.getElementById('refundMethod').value = 'original_payment';
+    hideSearchResults();
+    currentSale = null;
+}
+
+// Allow Enter key to search
+document.getElementById('receiptNumber').addEventListener('keypress', function(e) {
+    if (e.key === 'Enter') {
+        searchReceipt();
+    }
+});
+</script>
+{% endblock %}

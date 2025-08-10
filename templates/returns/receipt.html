@@ -1,0 +1,116 @@
+{% extends "base.html" %}
+
+{% block title %}Return Receipt - {{ return_record.return_number }}{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2><i class="fas fa-receipt"></i> Return Receipt</h2>
+        <div>
+            <a href="{{ url_for('returns.history') }}" class="btn btn-secondary">
+                <i class="fas fa-arrow-left"></i> Back to History
+            </a>
+            <button onclick="window.print()" class="btn btn-primary">
+                <i class="fas fa-print"></i> Print
+            </button>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-body">
+            <!-- Return Header -->
+            <div class="row mb-4">
+                <div class="col-md-6">
+                    <h4>Return Information</h4>
+                    <p><strong>Return Number:</strong> {{ return_record.return_number }}</p>
+                    <p><strong>Date Processed:</strong> {{ return_record.created_at.strftime('%Y-%m-%d %H:%M:%S') }}</p>
+                    <p><strong>Processed By:</strong> {{ return_record.processed_by.full_name }}</p>
+                    <p><strong>Status:</strong> 
+                        <span class="badge {% if return_record.status == 'Completed' %}bg-success{% else %}bg-warning{% endif %}">
+                            {{ return_record.status }}
+                        </span>
+                    </p>
+                </div>
+                <div class="col-md-6">
+                    <h4>Original Sale</h4>
+                    <p><strong>Receipt Number:</strong> {{ return_record.original_sale.receipt_number }}</p>
+                    <p><strong>Sale Date:</strong> {{ return_record.original_sale.created_at.strftime('%Y-%m-%d %H:%M:%S') }}</p>
+                    <p><strong>Original Amount:</strong> ${{ "%.2f"|format(return_record.original_sale.total_amount) }}</p>
+                    <p><strong>Payment Method:</strong> {{ return_record.original_sale.payment_method }}</p>
+                </div>
+            </div>
+
+            <!-- Return Reason -->
+            <div class="row mb-4">
+                <div class="col-12">
+                    <h5>Return Reason</h5>
+                    <p class="alert alert-info">{{ return_record.return_reason }}</p>
+                    {% if return_record.notes %}
+                    <p><strong>Notes:</strong> {{ return_record.notes }}</p>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Returned Items -->
+            <div class="row mb-4">
+                <div class="col-12">
+                    <h5>Returned Items</h5>
+                    <div class="table-responsive">
+                        <table class="table table-bordered">
+                            <thead class="table-dark">
+                                <tr>
+                                    <th>Item</th>
+                                    <th>Unit Price</th>
+                                    <th>Quantity Returned</th>
+                                    <th>Refund Amount</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for item in return_record.return_items %}
+                                <tr>
+                                    <td>{{ item.product.name }}</td>
+                                    <td>${{ "%.2f"|format(item.unit_price) }}</td>
+                                    <td>{{ item.quantity }}</td>
+                                    <td>${{ "%.2f"|format(item.total_refund) }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                            <tfoot class="table-light">
+                                <tr>
+                                    <th colspan="3" class="text-end">Total Refund Amount:</th>
+                                    <th>${{ "%.2f"|format(return_record.return_amount) }}</th>
+                                </tr>
+                            </tfoot>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Footer -->
+            <div class="row">
+                <div class="col-12 text-center">
+                    <hr>
+                    <p class="text-muted">
+                        <small>
+                            This return receipt was generated on {{ return_record.created_at.strftime('%Y-%m-%d at %H:%M:%S') }}<br>
+                            Thank you for your business!
+                        </small>
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+@media print {
+    .btn, .navbar, .breadcrumb {
+        display: none !important;
+    }
+    .card {
+        border: none !important;
+        box-shadow: none !important;
+    }
+}
+</style>
+{% endblock %}
