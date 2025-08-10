@@ -587,9 +587,9 @@
     </div>
 </div>
 
-<!-- Success Modal -->
+<!-- Success Modal with Standard POS Receipt -->
 <div class="modal fade" id="successModal" tabindex="-1">
-    <div class="modal-dialog">
+    <div class="modal-dialog modal-lg">
         <div class="modal-content">
             <div class="modal-header bg-success text-white">
                 <h5 class="modal-title">
@@ -597,16 +597,17 @@
                 </h5>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
             </div>
-            <div class="modal-body text-center">
-                <i class="fas fa-receipt fa-3x text-success mb-3"></i>
-                <h4>Payment Successful!</h4>
-                <p class="mb-2">Receipt #<span id="receiptNumber"></span></p>
-                <p class="mb-2">Total: <span id="receiptTotal"></span></p>
-                <p class="mb-0">Change: <span id="receiptChange"></span></p>
+            <div class="modal-body p-4">
+                <div id="receiptContent" style="font-family: 'Courier New', monospace; font-size: 14px; line-height: 1.4; max-width: 400px; margin: 0 auto; background: white; color: black; padding: 20px; border: 1px solid #ddd;">
+                    <!-- Receipt content will be dynamically inserted here -->
+                </div>
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-primary" onclick="printReceipt()">
                     <i class="fas fa-print me-2"></i>Print Receipt
+                </button>
+                <button type="button" class="btn btn-outline-primary" onclick="emailReceipt()">
+                    <i class="fas fa-envelope me-2"></i>Email Receipt
                 </button>
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
             </div>
@@ -979,9 +980,111 @@ function processPayment() {
 }
 
 function showSuccessModal(saleData) {
-    document.getElementById('receiptNumber').textContent = saleData.receipt_number;
-    document.getElementById('receiptTotal').textContent = formatCurrency(saleData.total_amount);
-    document.getElementById('receiptChange').textContent = formatCurrency(saleData.change_amount);
+    // Generate detailed receipt content
+    const receiptContent = document.getElementById('receiptContent');
+    const now = new Date();
+    const dateStr = now.toLocaleDateString('en-US');
+    const timeStr = now.toLocaleTimeString('en-US');
+    
+    // Get current user info and store info
+    const storeName = '{{ store.name }}';
+    const cashierName = '{{ current_user.full_name }}';
+    const customerName = currentCustomer ? 
+        (document.getElementById('customerSelect').selectedOptions[0]?.text || 'Walk-in Customer') : 
+        'Walk-in Customer';
+    
+    let receiptHTML = `
+        <div style="text-align: center; margin-bottom: 15px;">
+            <div style="font-weight: bold; font-size: 16px;">CLOUD POS SYSTEM</div>
+            <div style="font-size: 14px;">${storeName}</div>
+            <div style="font-size: 12px; margin-top: 5px;">Receipt #: ${saleData.receipt_number}</div>
+            <div style="font-size: 12px;">${dateStr} ${timeStr}</div>
+        </div>
+        
+        <div style="border-top: 1px dashed #000; border-bottom: 1px dashed #000; padding: 10px 0; margin: 10px 0;">
+            <div>Cashier: ${cashierName}</div>
+            <div>Customer: ${customerName}</div>
+        </div>
+        
+        <div style="margin: 15px 0;">
+            <div style="display: flex; justify-content: space-between; font-weight: bold; border-bottom: 1px dashed #000; padding-bottom: 5px;">
+                <span>ITEM</span>
+                <span>QTY</span>
+                <span>PRICE</span>
+                <span>TOTAL</span>
+            </div>
+    `;
+    
+    // Add cart items to receipt
+    let subtotal = 0;
+    cart.forEach(item => {
+        const itemTotal = item.price * item.quantity;
+        subtotal += itemTotal;
+        receiptHTML += `
+            <div style="display: flex; justify-content: space-between; margin: 8px 0; font-size: 13px;">
+                <span style="flex: 2; padding-right: 10px;">${item.name}</span>
+                <span style="width: 40px; text-align: center;">${item.quantity}</span>
+                <span style="width: 60px; text-align: right;">${formatCurrency(item.price)}</span>
+                <span style="width: 70px; text-align: right;">${formatCurrency(itemTotal)}</span>
+            </div>
+        `;
+    });
+    
+    // Add totals section
+    const paymentMethod = document.getElementById('paymentMethod').value;
+    const amountTendered = paymentMethod === 'Cash' ? parseFloat(document.getElementById('amountTendered').value || saleData.total_amount) : saleData.total_amount;
+    const changeAmount = Math.max(0, amountTendered - saleData.total_amount);
+    
+    receiptHTML += `
+        </div>
+        
+        <div style="border-top: 1px dashed #000; padding-top: 10px; margin-top: 15px;">
+            <div style="display: flex; justify-content: space-between; margin: 5px 0;">
+                <span>Subtotal:</span>
+                <span>${formatCurrency(subtotal)}</span>
+            </div>
+            <div style="display: flex; justify-content: space-between; margin: 5px 0;">
+                <span>Tax:</span>
+                <span>${formatCurrency(0)}</span>
+            </div>
+            <div style="display: flex; justify-content: space-between; margin: 5px 0; font-weight: bold; font-size: 16px; border-top: 1px solid #000; padding-top: 5px;">
+                <span>TOTAL:</span>
+                <span>${formatCurrency(saleData.total_amount)}</span>
+            </div>
+            
+            <div style="margin-top: 15px; border-top: 1px dashed #000; padding-top: 10px;">
+                <div style="display: flex; justify-content: space-between;">
+                    <span>Payment Method:</span>
+                    <span>${paymentMethod}</span>
+                </div>
+                ${paymentMethod === 'Cash' ? `
+                <div style="display: flex; justify-content: space-between;">
+                    <span>Amount Tendered:</span>
+                    <span>${formatCurrency(amountTendered)}</span>
+                </div>
+                <div style="display: flex; justify-content: space-between; font-weight: bold;">
+                    <span>Change:</span>
+                    <span>${formatCurrency(changeAmount)}</span>
+                </div>
+                ` : ''}
+            </div>
+        </div>
+        
+        <div style="text-align: center; margin-top: 20px; font-size: 12px; border-top: 1px dashed #000; padding-top: 10px;">
+            <div>Thank you for your business!</div>
+            <div style="margin-top: 5px;">Visit us again soon</div>
+            <div style="margin-top: 10px; font-size: 10px;">Powered by Cloud POS System</div>
+        </div>
+    `;
+    
+    receiptContent.innerHTML = receiptHTML;
+    
+    // Store receipt data for printing
+    window.lastReceiptData = {
+        receiptNumber: saleData.receipt_number,
+        receiptHTML: receiptHTML,
+        saleData: saleData
+    };
     
     const modal = new bootstrap.Modal(document.getElementById('successModal'));
     modal.show();
@@ -1018,7 +1121,113 @@ function closeRegister() {
 }
 
 function printReceipt() {
-    window.print();
+    if (!window.lastReceiptData) {
+        showMessage('No receipt data available for printing', 'error');
+        return;
+    }
+    
+    // Create a new window for printing with just the receipt
+    const printWindow = window.open('', '_blank', 'width=400,height=600');
+    printWindow.document.write(`
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <title>Receipt ${window.lastReceiptData.receiptNumber}</title>
+            <style>
+                @media print {
+                    body { margin: 0; padding: 0; }
+                    .no-print { display: none; }
+                }
+                body {
+                    font-family: 'Courier New', monospace;
+                    font-size: 14px;
+                    line-height: 1.4;
+                    max-width: 400px;
+                    margin: 20px auto;
+                    background: white;
+                    color: black;
+                }
+                .print-controls {
+                    margin-bottom: 20px;
+                    text-align: center;
+                }
+                .btn {
+                    background: #007bff;
+                    color: white;
+                    border: none;
+                    padding: 8px 15px;
+                    border-radius: 4px;
+                    cursor: pointer;
+                    margin: 0 5px;
+                }
+                .btn:hover {
+                    background: #0056b3;
+                }
+            </style>
+        </head>
+        <body>
+            <div class="print-controls no-print">
+                <button class="btn" onclick="window.print()">Print Receipt</button>
+                <button class="btn" onclick="window.close()">Close</button>
+            </div>
+            ${window.lastReceiptData.receiptHTML}
+        </body>
+        </html>
+    `);
+    printWindow.document.close();
+    
+    // Auto-focus and print
+    printWindow.focus();
+    setTimeout(() => {
+        printWindow.print();
+    }, 250);
+    
+    showMessage('Receipt ready for printing', 'success');
+}
+
+function emailReceipt() {
+    if (!window.lastReceiptData) {
+        showMessage('No receipt data available', 'error');
+        return;
+    }
+    
+    const email = prompt('Enter customer email address:');
+    if (!email) return;
+    
+    // Validate email format
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+        showMessage('Please enter a valid email address', 'error');
+        return;
+    }
+    
+    showLoading(true);
+    
+    fetch('/pos/api/receipt/email', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': getCSRFToken()
+        },
+        body: JSON.stringify({
+            receipt_number: window.lastReceiptData.receiptNumber,
+            email: email
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        showLoading(false);
+        if (data.success) {
+            showMessage(`Receipt sent to ${email}`, 'success');
+        } else {
+            showMessage(data.error || 'Failed to send receipt', 'error');
+        }
+    })
+    .catch(error => {
+        showLoading(false);
+        console.error('Email error:', error);
+        showMessage('Failed to send receipt email', 'error');
+    });
 }
 
 // Utility functions
