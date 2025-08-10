@@ -37,7 +37,7 @@ def index():
     
     customers = Customer.query.filter_by(is_active=True).all()
     
-    return render_template('pos/index_new.html', 
+    return render_template('pos/index_modern.html', 
                          products=products, 
                          customers=customers,
                          register=register)
