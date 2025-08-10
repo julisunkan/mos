@@ -263,7 +263,7 @@ class LoyaltyProgram(db.Model):
     __tablename__ = 'loyalty_programs'
     
     id = db.Column(db.Integer, primary_key=True)
-    customer_id = db.Column(db.Integer, db.ForeignKey('customers.id'), nullable=False)
+    customer_id = db.Column(db.Integer, db.ForeignKey('customers.id', ondelete='CASCADE'), nullable=False)
     points_balance = db.Column(db.Integer, default=0)
     total_points_earned = db.Column(db.Integer, default=0)
     total_points_redeemed = db.Column(db.Integer, default=0)
@@ -271,7 +271,7 @@ class LoyaltyProgram(db.Model):
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     
     # Relationships
-    customer = db.relationship('Customer', backref='loyalty_program', uselist=False)
+    customer = db.relationship('Customer', backref=db.backref('loyalty_program', uselist=False, cascade='all, delete-orphan'))
     transactions = db.relationship('LoyaltyTransaction', backref='loyalty_program', lazy=True)
 
 class LoyaltyTransaction(db.Model):
