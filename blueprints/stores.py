@@ -20,12 +20,21 @@ def index():
 @admin_required
 def new_store():
     form = StoreForm()
+    
+    # Populate manager choices
+    managers = User.query.filter_by(is_active=True).all()
+    form.manager_id.choices = [(0, '--- No Manager ---')] + [(u.id, f"{u.username} ({u.first_name} {u.last_name})") for u in managers]
+    
     if form.validate_on_submit():
+        # Handle manager_id (0 means no manager)
+        manager_id = form.manager_id.data if form.manager_id.data != 0 else None
+        
         store = Store()
         store.name = form.name.data
         store.address = form.address.data
         store.phone = form.phone.data
         store.email = form.email.data
+        store.manager_id = manager_id
         
         try:
             db.session.add(store)
@@ -45,11 +54,19 @@ def edit_store(id):
     store = Store.query.get_or_404(id)
     form = StoreForm(obj=store)
     
+    # Populate manager choices
+    managers = User.query.filter_by(is_active=True).all()
+    form.manager_id.choices = [(0, '--- No Manager ---')] + [(u.id, f"{u.username} ({u.first_name} {u.last_name})") for u in managers]
+    
     if form.validate_on_submit():
+        # Handle manager_id (0 means no manager)
+        manager_id = form.manager_id.data if form.manager_id.data != 0 else None
+        
         store.name = form.name.data
         store.address = form.address.data
         store.phone = form.phone.data
         store.email = form.email.data
+        store.manager_id = manager_id
         
         try:
             db.session.commit()
@@ -119,8 +136,13 @@ def stock_transfers():
 @login_required
 def new_stock_transfer():
     form = StockTransferForm()
-    form.from_store_id.choices = [(s.id, s.name) for s in Store.query.filter_by(is_active=True).all()]
-    form.to_store_id.choices = [(s.id, s.name) for s in Store.query.filter_by(is_active=True).all()]
+    
+    # Populate form choices
+    stores = Store.query.filter_by(is_active=True).all()
+    products = Product.query.filter_by(is_active=True).all()
+    form.from_store_id.choices = [(s.id, s.name) for s in stores]
+    form.to_store_id.choices = [(s.id, s.name) for s in stores]
+    form.product_id.choices = [(p.id, f"{p.name} ({p.sku})") for p in products]
     
     if form.validate_on_submit():
         transfer = StockTransfer()
@@ -146,6 +168,13 @@ def new_stock_transfer():
 @admin_required
 def new_purchase_order():
     form = PurchaseOrderForm()
+    
+    # Populate form choices
+    suppliers = Supplier.query.filter_by(is_active=True).all()
+    stores = Store.query.filter_by(is_active=True).all()
+    form.supplier_id.choices = [(s.id, s.name) for s in suppliers]
+    form.store_id.choices = [(s.id, s.name) for s in stores]
+    
     if form.validate_on_submit():
         po = PurchaseOrder()
         po.po_number = generate_po_number()
