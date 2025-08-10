@@ -109,6 +109,10 @@ def delete_customer(id):
         return redirect(url_for('customers.index'))
     
     try:
+        # Delete associated loyalty program first (if exists)
+        if hasattr(customer, 'loyalty_program') and customer.loyalty_program:
+            db.session.delete(customer.loyalty_program)
+        
         db.session.delete(customer)
         db.session.commit()
         flash(f'Customer {customer.name} deleted successfully!', 'success')
