@@ -1,0 +1,126 @@
+{% extends "base.html" %}
+
+{% block title %}Receipt #{{ sale.receipt_number }} - Cloud POS{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="receipt-content" style="background: white; color: black; padding: 2rem; font-family: 'Courier New', monospace; border-radius: 6px;">
+                <!-- Store Header -->
+                <div class="text-center mb-4">
+                    <h3>{{ sale.store.name }}</h3>
+                    {% if sale.store.address %}
+                    <p class="mb-1">{{ sale.store.address }}</p>
+                    {% endif %}
+                    {% if sale.store.phone %}
+                    <p class="mb-1">Tel: {{ sale.store.phone }}</p>
+                    {% endif %}
+                    <hr style="border-top: 2px solid #000;">
+                </div>
+                
+                <!-- Receipt Info -->
+                <div class="mb-3">
+                    <div class="row">
+                        <div class="col-6">
+                            <strong>Receipt #:</strong> {{ sale.receipt_number }}<br>
+                            <strong>Date:</strong> {{ sale.created_at.strftime('%Y-%m-%d %H:%M') }}<br>
+                            <strong>Cashier:</strong> {{ sale.user.username }}
+                        </div>
+                        <div class="col-6 text-end">
+                            {% if sale.customer %}
+                            <strong>Customer:</strong> {{ sale.customer.name }}<br>
+                            {% if sale.customer.phone %}
+                            <strong>Phone:</strong> {{ sale.customer.phone }}<br>
+                            {% endif %}
+                            {% else %}
+                            <strong>Customer:</strong> Walk-in<br>
+                            {% endif %}
+                            <strong>Payment:</strong> {{ sale.payment_method.title() }}
+                        </div>
+                    </div>
+                </div>
+                
+                <hr style="border-top: 1px solid #000;">
+                
+                <!-- Items -->
+                <div class="mb-3">
+                    <table style="width: 100%; border-collapse: collapse;">
+                        <thead>
+                            <tr style="border-bottom: 1px solid #000;">
+                                <th style="text-align: left; padding: 5px 0;">Item</th>
+                                <th style="text-align: center; padding: 5px 0;">Qty</th>
+                                <th style="text-align: right; padding: 5px 0;">Price</th>
+                                <th style="text-align: right; padding: 5px 0;">Total</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for item in sale.sale_items %}
+                            <tr>
+                                <td style="padding: 5px 0;">{{ item.product.name }}</td>
+                                <td style="text-align: center; padding: 5px 0;">{{ item.quantity }}</td>
+                                <td style="text-align: right; padding: 5px 0;">{{ item.unit_price|format_currency }}</td>
+                                <td style="text-align: right; padding: 5px 0;">{{ item.total_price|format_currency }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                
+                <hr style="border-top: 1px solid #000;">
+                
+                <!-- Totals -->
+                <div class="mb-3">
+                    <table style="width: 100%;">
+                        <tr>
+                            <td style="text-align: right; padding: 2px 0;"><strong>Subtotal:</strong></td>
+                            <td style="text-align: right; padding: 2px 0; width: 100px;"><strong>{{ sale.subtotal|format_currency }}</strong></td>
+                        </tr>
+                        {% if sale.tax_amount > 0 %}
+                        <tr>
+                            <td style="text-align: right; padding: 2px 0;"><strong>Tax:</strong></td>
+                            <td style="text-align: right; padding: 2px 0;"><strong>{{ sale.tax_amount|format_currency }}</strong></td>
+                        </tr>
+                        {% endif %}
+                        <tr style="border-top: 1px solid #000;">
+                            <td style="text-align: right; padding: 5px 0; font-size: 1.2em;"><strong>TOTAL:</strong></td>
+                            <td style="text-align: right; padding: 5px 0; font-size: 1.2em;"><strong>{{ sale.total_amount|format_currency }}</strong></td>
+                        </tr>
+                    </table>
+                </div>
+                
+                <hr style="border-top: 2px solid #000;">
+                
+                <!-- Footer -->
+                <div class="text-center mt-4">
+                    <p class="mb-1">Thank you for your business!</p>
+                    <p class="mb-1">Please come again</p>
+                    <p class="mb-0">{{ sale.created_at.strftime('%Y-%m-%d %H:%M:%S') }}</p>
+                </div>
+            </div>
+            
+            <!-- Print Button -->
+            <div class="text-center mt-3">
+                <button onclick="window.print()" class="btn btn-primary me-2">
+                    <i class="fas fa-print me-2"></i>Print Receipt
+                </button>
+                <a href="{{ url_for('cashier.index') }}" class="btn btn-success">
+                    <i class="fas fa-plus me-2"></i>New Sale
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+@media print {
+    .btn, .navbar, .footer { display: none !important; }
+    .receipt-content { 
+        box-shadow: none !important; 
+        border: none !important;
+        margin: 0 !important;
+        padding: 1rem !important;
+    }
+}
+</style>
+{% endblock %}
