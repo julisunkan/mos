@@ -148,6 +148,29 @@
                         </div>
                         
                         <div class="mb-3">
+                            {{ form.store_ids.label(class="form-label") }}
+                            <div class="border rounded p-3" style="max-height: 200px; overflow-y: auto;">
+                                {% for value, label in form.store_ids.choices %}
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" name="store_ids" value="{{ value }}" id="store_{{ value }}" 
+                                           {% if value in form.store_ids.data %}checked{% endif %}>
+                                    <label class="form-check-label" for="store_{{ value }}">
+                                        {{ label }}
+                                    </label>
+                                </div>
+                                {% endfor %}
+                            </div>
+                            {% if form.store_ids.errors %}
+                                <div class="text-danger mt-1">
+                                    {% for error in form.store_ids.errors %}
+                                        <small>{{ error }}</small>
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                            <small class="form-text text-muted">Select the stores where this product will be available</small>
+                        </div>
+                        
+                        <div class="mb-3">
                             <div class="form-check">
                                 {{ form.is_active(class="form-check-input") }}
                                 {{ form.is_active.label(class="form-check-label") }}

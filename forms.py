@@ -115,6 +115,7 @@ class ProductForm(FlaskForm):
     stock_quantity = IntegerField('Stock Quantity', validators=[DataRequired(), NumberRange(min=0)])
     low_stock_threshold = IntegerField('Low Stock Threshold', validators=[Optional(), NumberRange(min=0)], default=10)
     tax_rate = FloatField('Tax Rate (%)', validators=[Optional(), NumberRange(min=0, max=100)], default=0)
+    store_ids = SelectMultipleField('Available in Stores', coerce=int, validators=[DataRequired()])
     is_active = BooleanField('Active', default=True)
 
 class CustomerForm(FlaskForm):

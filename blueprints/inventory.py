@@ -53,6 +53,10 @@ def new_product():
     categories = Category.query.filter_by(is_active=True).all()
     form.category_id.choices = [(c.id, c.name) for c in categories]
     
+    # Populate store choices
+    stores = Store.query.filter_by(is_active=True).all()
+    form.store_ids.choices = [(s.id, s.name) for s in stores]
+    
     if form.validate_on_submit():
         product = Product(
             name=form.name.data,
@@ -72,11 +76,11 @@ def new_product():
             db.session.add(product)
             db.session.flush()  # Get the product ID
             
-            # Initialize stock for all active stores
-            stores = Store.query.filter_by(is_active=True).all()
-            for store in stores:
+            # Initialize stock for selected stores only
+            selected_store_ids = form.store_ids.data
+            for store_id in selected_store_ids:
                 store_stock = StoreStock(
-                    store_id=store.id,
+                    store_id=store_id,
                     product_id=product.id,
                     quantity=form.stock_quantity.data
                 )
@@ -105,6 +109,14 @@ def edit_product(id):
     categories = Category.query.filter_by(is_active=True).all()
     form.category_id.choices = [(c.id, c.name) for c in categories]
     
+    # Populate store choices and set current store assignments
+    stores = Store.query.filter_by(is_active=True).all()
+    form.store_ids.choices = [(s.id, s.name) for s in stores]
+    
+    # Set current stores where this product is available
+    current_stores = db.session.query(StoreStock.store_id).filter_by(product_id=product.id).all()
+    form.store_ids.data = [store_id[0] for store_id in current_stores]
+    
     if form.validate_on_submit():
         product.name = form.name.data
         product.description = form.description.data
@@ -117,6 +129,25 @@ def edit_product(id):
         product.low_stock_threshold = form.low_stock_threshold.data
         product.tax_rate = form.tax_rate.data
         product.is_active = form.is_active.data
+        
+        # Update store assignments
+        selected_store_ids = set(form.store_ids.data)
+        current_store_ids = set(store_id[0] for store_id in db.session.query(StoreStock.store_id).filter_by(product_id=product.id).all())
+        
+        # Remove from stores that are no longer selected
+        stores_to_remove = current_store_ids - selected_store_ids
+        for store_id in stores_to_remove:
+            StoreStock.query.filter_by(product_id=product.id, store_id=store_id).delete()
+        
+        # Add to newly selected stores
+        stores_to_add = selected_store_ids - current_store_ids
+        for store_id in stores_to_add:
+            store_stock = StoreStock(
+                store_id=store_id,
+                product_id=product.id,
+                quantity=form.stock_quantity.data
+            )
+            db.session.add(store_stock)
         
         try:
             db.session.commit()

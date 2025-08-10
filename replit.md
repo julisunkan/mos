@@ -4,7 +4,15 @@ Cloud POS & Inventory Manager is a comprehensive Point of Sale and Inventory Man
 
 ## Recent Changes (August 2025)
 
-[x] **Migration Status: COMPLETED** - Successfully migrated from Replit Agent to Replit environment on August 9, 2025. All packages installed, PostgreSQL database configured, admin user created, and application running successfully on port 5000. **Login functionality verified** - User can successfully log in with admin/admin123 credentials and access the full POS dashboard. **Data persistence confirmed** - all user credentials and database data are preserved across application restarts.
+✅ **Migration Status: COMPLETED** - Successfully migrated from Replit Agent to Replit environment on August 10, 2025. All packages installed, PostgreSQL database configured, admin user created, and application running successfully on port 5000. **Login functionality verified** - User can successfully log in with admin/admin123 credentials and access the full POS dashboard. **Data persistence confirmed** - all user credentials and database data are preserved across application restarts.
+
+✅ **Multi-Store Product Selection: COMPLETED** - Implemented selective store availability for products. Admins can now choose which specific stores a product should appear in during product creation/editing. Features include:
+- SelectMultipleField in ProductForm for store selection with validation
+- Updated inventory blueprint to populate store choices and handle selected stores
+- Modified product creation to initialize stock only for selected stores (instead of all stores)
+- Enhanced product editing with store assignment management (add/remove store associations)
+- Improved product form template with checkbox interface for store selection
+- Maintains existing StoreStock model relationships for inventory tracking per location
 
 ✅ **Route Error Fixes: COMPLETED** - Fixed critical route error in admin blueprint UserStoreAssignmentForm where store_ids.choices was not being populated, causing "TypeError: 'NoneType' object is not iterable" errors. Added proper form choice population for both assign_user_stores and edit_user_stores routes. All routes now working correctly.
 
