@@ -197,7 +197,7 @@
         <div class="modal-content">
             <div class="modal-header">
                 <h5 class="modal-title">Sale Completed</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" onclick="closeSaleModal()"></button>
             </div>
             <div class="modal-body text-center">
                 <i class="fas fa-check-circle fa-3x text-success mb-3"></i>
@@ -211,7 +211,7 @@
                 <button type="button" class="btn btn-primary" onclick="downloadReceipt()">
                     <i class="fas fa-download me-2"></i>Download PDF
                 </button>
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" onclick="closeSaleModal()">Close</button>
             </div>
         </div>
     </div>
@@ -730,5 +730,33 @@ document.addEventListener('DOMContentLoaded', function() {
     // Initialize payment fields
     togglePaymentFields();
 });
+
+// Close sale modal and refresh page
+function closeSaleModal() {
+    // Clear the cart
+    cart = [];
+    updateCartDisplay();
+    
+    // Reset payment fields
+    document.getElementById('discount').value = '0';
+    document.getElementById('saleNotes').value = '';
+    
+    // Reset payment method to Cash and show appropriate fields
+    document.getElementById('paymentMethod').value = 'Cash';
+    togglePaymentFields();
+    
+    // Hide any messages
+    hideMessage();
+    
+    // Update totals
+    updateCartTotals();
+    
+    // Focus on search input for next sale
+    const searchInput = document.getElementById('productSearch');
+    if (searchInput) {
+        searchInput.focus();
+        searchInput.value = '';
+    }
+}
 </script>
 {% endblock %}
