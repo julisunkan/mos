@@ -46,13 +46,14 @@
                                         {% if not stock_found %}0{% endif %}
                                     </p>
                                 </div>
-                                <button class="btn btn-primary btn-sm add-to-cart-btn" 
-                                        data-product-id="{{ product.id }}"
-                                        data-product-name="{{ product.name }}"
-                                        data-product-price="{{ product.selling_price }}"
-                                        data-product-stock="{% set stock_qty = 0 %}{% for stock in product.store_stocks %}{% if stock.store_id == store.id %}{% set stock_qty = stock.quantity %}{% endif %}{% endfor %}{{ stock_qty }}">
-                                    <i class="fas fa-plus"></i> Add
-                                </button>
+                                <div class="add-to-cart-area" 
+                                     data-product-id="{{ product.id }}"
+                                     data-product-name="{{ product.name }}"
+                                     data-product-price="{{ product.selling_price }}"
+                                     data-product-stock="{% set stock_qty = 0 %}{% for stock in product.store_stocks %}{% if stock.store_id == store.id %}{% set stock_qty = stock.quantity %}{% endif %}{% endfor %}{{ stock_qty }}"
+                                     style="background: rgba(0,123,255,0.1); padding: 12px; border-radius: 4px; cursor: pointer; text-align: center; border: 2px dashed #007bff; margin-top: 8px; transition: all 0.2s;">
+                                    <small class="text-primary"><i class="fas fa-shopping-cart"></i> Click to Add to Cart</small>
+                                </div>
                             </div>
                         </div>
                         {% endfor %}
@@ -231,26 +232,22 @@ document.addEventListener('DOMContentLoaded', function() {
     console.log('DOM loaded, initializing POS system');
     let cart = [];
     
-    // Immediate setup of Add to cart buttons
-    console.log('Setting up Add to Cart buttons...');
-    const addButtons = document.querySelectorAll('.add-to-cart-btn');
-    console.log('Found', addButtons.length, 'add buttons');
+    // Setup double-click to add to cart
+    console.log('Setting up double-click add to cart...');
+    const addAreas = document.querySelectorAll('.add-to-cart-area');
+    console.log('Found', addAreas.length, 'add areas');
     
-    addButtons.forEach((btn, index) => {
-        console.log(`Button ${index} data:`, {
-            id: btn.getAttribute('data-product-id'),
-            name: btn.getAttribute('data-product-name'),
-            price: btn.getAttribute('data-product-price'),
-            stock: btn.getAttribute('data-product-stock')
+    addAreas.forEach((area, index) => {
+        console.log(`Area ${index} data:`, {
+            id: area.getAttribute('data-product-id'),
+            name: area.getAttribute('data-product-name'),
+            price: area.getAttribute('data-product-price'),
+            stock: area.getAttribute('data-product-stock')
         });
         
-        // Remove any existing listeners
-        btn.replaceWith(btn.cloneNode(true));
-        const newBtn = document.querySelectorAll('.add-to-cart-btn')[index];
-        
-        newBtn.onclick = function(e) {
+        area.onclick = function(e) {
             e.preventDefault();
-            console.log('Add button clicked!');
+            console.log('Product clicked!');
             
             const productId = this.getAttribute('data-product-id');
             const productName = this.getAttribute('data-product-name');
@@ -264,7 +261,25 @@ document.addEventListener('DOMContentLoaded', function() {
                 return;
             }
             
+            // Visual feedback
+            this.style.background = 'rgba(40,167,69,0.2)';
+            this.style.borderColor = '#28a745';
+            this.innerHTML = '<small class="text-success"><i class="fas fa-check"></i> Added to cart!</small>';
+            setTimeout(() => {
+                this.style.background = 'rgba(0,123,255,0.1)';
+                this.style.borderColor = '#007bff';
+                this.innerHTML = '<small class="text-primary"><i class="fas fa-shopping-cart"></i> Click to Add to Cart</small>';
+            }, 1500);
+            
             addToCart(productId, productName, productPrice, productStock);
+        };
+        
+        // Hover effect
+        area.onmouseenter = function() {
+            this.style.background = 'rgba(0,123,255,0.2)';
+        };
+        area.onmouseleave = function() {
+            this.style.background = 'rgba(0,123,255,0.1)';
         };
     });
     
