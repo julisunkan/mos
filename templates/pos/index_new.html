@@ -133,12 +133,41 @@
                     <!-- Payment Method -->
                     <div class="mb-3">
                         <label class="form-label">Payment Method</label>
-                        <select id="paymentMethod" class="form-select">
+                        <select id="paymentMethod" class="form-select" onchange="togglePaymentFields()">
                             <option value="Cash">Cash</option>
                             <option value="Card">Card</option>
                             <option value="Bank Transfer">Bank Transfer</option>
                             <option value="Mobile Money">Mobile Money</option>
                         </select>
+                    </div>
+
+                    <!-- Cash Payment Fields -->
+                    <div id="cashPaymentFields" class="mb-3">
+                        <div class="row">
+                            <div class="col-6">
+                                <label class="form-label">Amount Tendered</label>
+                                <div class="input-group">
+                                    <span class="input-group-text">{{ get_currency_symbol() }}</span>
+                                    <input type="number" id="amountTendered" class="form-control" 
+                                           step="0.01" min="0" onchange="calculateChange()">
+                                </div>
+                            </div>
+                            <div class="col-6">
+                                <label class="form-label">Change</label>
+                                <div class="input-group">
+                                    <span class="input-group-text">{{ get_currency_symbol() }}</span>
+                                    <input type="number" id="changeAmount" class="form-control" 
+                                           readonly style="background-color: #f8f9fa;">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Non-Cash Payment Fields -->
+                    <div id="nonCashPaymentFields" class="mb-3" style="display: none;">
+                        <label class="form-label">Payment Reference</label>
+                        <input type="text" id="paymentReference" class="form-control" 
+                               placeholder="Enter payment reference/transaction ID">
                     </div>
 
                     <!-- Notes -->
@@ -496,6 +525,7 @@ async function processSale() {
         return;
     }
     
+    const paymentMethod = document.getElementById('paymentMethod').value;
     const saleData = {
         items: cart.map(item => ({
             product_id: item.id,
@@ -503,10 +533,37 @@ async function processSale() {
             unit_price: item.price
         })),
         customer_id: document.getElementById('customerSelect') ? document.getElementById('customerSelect').value || null : null,
-        payment_method: document.getElementById('paymentMethod') ? document.getElementById('paymentMethod').value : 'Cash',
+        payment_method: paymentMethod,
         discount: document.getElementById('discount') ? parseFloat(document.getElementById('discount').value) || 0 : 0,
         notes: document.getElementById('saleNotes') ? document.getElementById('saleNotes').value : ''
     };
+
+    // Add payment-specific fields
+    if (paymentMethod === 'Cash') {
+        const amountTendered = parseFloat(document.getElementById('amountTendered').value) || 0;
+        const change = parseFloat(document.getElementById('changeAmount').value) || 0;
+        
+        // Validate cash payment
+        const totalText = document.getElementById('total').textContent.replace(/[^0-9.-]/g, '');
+        const total = parseFloat(totalText) || 0;
+        
+        if (amountTendered < total) {
+            showAlert('Amount tendered must be greater than or equal to the total amount!', 'danger');
+            return;
+        }
+        
+        saleData.amount_tendered = amountTendered;
+        saleData.change_amount = change;
+    } else {
+        const paymentReference = document.getElementById('paymentReference').value.trim();
+        
+        if (!paymentReference) {
+            showAlert('Payment reference is required for non-cash payments!', 'danger');
+            return;
+        }
+        
+        saleData.payment_reference = paymentReference;
+    }
     
     console.log('Sale data being sent:', JSON.stringify(saleData, null, 2)); // Debug
     
@@ -615,6 +672,49 @@ function confirmAction() {
     hideMessage();
 }
 
+// Toggle payment fields based on selected payment method
+function togglePaymentFields() {
+    const paymentMethod = document.getElementById('paymentMethod').value;
+    const cashFields = document.getElementById('cashPaymentFields');
+    const nonCashFields = document.getElementById('nonCashPaymentFields');
+    
+    if (paymentMethod === 'Cash') {
+        cashFields.style.display = 'block';
+        nonCashFields.style.display = 'none';
+        // Clear non-cash fields
+        document.getElementById('paymentReference').value = '';
+    } else {
+        cashFields.style.display = 'none';
+        nonCashFields.style.display = 'block';
+        // Clear cash fields
+        document.getElementById('amountTendered').value = '';
+        document.getElementById('changeAmount').value = '';
+    }
+}
+
+// Calculate change when amount tendered changes
+function calculateChange() {
+    const totalElement = document.getElementById('total');
+    const amountTenderedElement = document.getElementById('amountTendered');
+    const changeElement = document.getElementById('changeAmount');
+    
+    if (!totalElement || !amountTenderedElement || !changeElement) return;
+    
+    // Parse total amount (remove currency symbol and commas)
+    const totalText = totalElement.textContent.replace(/[^0-9.-]/g, '');
+    const total = parseFloat(totalText) || 0;
+    
+    const amountTendered = parseFloat(amountTenderedElement.value) || 0;
+    const change = amountTendered - total;
+    
+    changeElement.value = change >= 0 ? change.toFixed(2) : '0.00';
+    
+    // Show warning if amount tendered is less than total
+    if (amountTendered > 0 && amountTendered < total) {
+        showAlert('Amount tendered is less than the total amount!', 'warning');
+    }
+}
+
 // Process sale button event handler
 document.addEventListener('DOMContentLoaded', function() {
     const processSaleBtn = document.getElementById('processSale');
@@ -626,6 +726,9 @@ document.addEventListener('DOMContentLoaded', function() {
     if (clearCartBtn) {
         clearCartBtn.addEventListener('click', clearCart);
     }
+    
+    // Initialize payment fields
+    togglePaymentFields();
 });
 </script>
 {% endblock %}

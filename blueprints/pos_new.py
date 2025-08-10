@@ -178,6 +178,15 @@ def process_sale():
         sale.currency = get_default_currency()
         sale.exchange_rate = 1.0
         
+        # Add payment-specific fields
+        if sale.payment_method == 'Cash':
+            # Set amount tendered and change for cash payments
+            sale.amount_tendered = float(data.get('amount_tendered', 0))
+            sale.change_amount = float(data.get('change_amount', 0))
+        else:
+            # Set payment reference for non-cash payments
+            sale.payment_reference = data.get('payment_reference', '')
+        
         db.session.add(sale)
         db.session.flush()  # Get the sale ID
         

@@ -129,6 +129,9 @@ class Sale(db.Model):
     total_amount = db.Column(db.Numeric(10, 2), nullable=False, default=0.00)
     payment_method = db.Column(db.String(20), nullable=False, default='Cash')
     payment_status = db.Column(db.String(20), nullable=False, default='Paid')
+    amount_tendered = db.Column(db.Numeric(10, 2), nullable=True)  # For cash payments
+    change_amount = db.Column(db.Numeric(10, 2), nullable=True)    # For cash payments
+    payment_reference = db.Column(db.String(100), nullable=True)   # For non-cash payments
     store_id = db.Column(db.Integer, db.ForeignKey('stores.id'), nullable=False)
     currency = db.Column(db.String(3), default='USD')
     exchange_rate = db.Column(db.Numeric(10, 6), default=1.0)
