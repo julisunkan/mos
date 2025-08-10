@@ -1,7 +1,7 @@
 from flask import Blueprint, render_template, redirect, url_for, flash, request, jsonify
 from flask_login import login_required, current_user
 from forms import ProductForm, CategoryForm
-from models import Product, Category
+from models import Product, Category, Store, StoreStock
 from app import db
 from utils import generate_sku
 from datetime import datetime
@@ -70,6 +70,18 @@ def new_product():
         
         try:
             db.session.add(product)
+            db.session.flush()  # Get the product ID
+            
+            # Initialize stock for all active stores
+            stores = Store.query.filter_by(is_active=True).all()
+            for store in stores:
+                store_stock = StoreStock(
+                    store_id=store.id,
+                    product_id=product.id,
+                    quantity=form.stock_quantity.data
+                )
+                db.session.add(store_stock)
+            
             db.session.commit()
             flash(f'Product {product.name} created successfully!', 'success')
             return redirect(url_for('inventory.products'))

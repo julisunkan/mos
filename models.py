@@ -85,7 +85,37 @@ class Product(db.Model):
     
     @property
     def is_low_stock(self):
+        # Use store-specific stock for current store or global stock as fallback
         return self.stock_quantity <= self.low_stock_threshold
+    
+    def get_store_stock(self, store_id):
+        """Get stock quantity for a specific store"""
+        store_stock = StoreStock.query.filter_by(
+            store_id=store_id, 
+            product_id=self.id
+        ).first()
+        return store_stock.quantity if store_stock else 0
+    
+    def set_store_stock(self, store_id, quantity):
+        """Set stock quantity for a specific store"""
+        store_stock = StoreStock.query.filter_by(
+            store_id=store_id, 
+            product_id=self.id
+        ).first()
+        
+        if store_stock:
+            store_stock.quantity = quantity
+        else:
+            store_stock = StoreStock(
+                store_id=store_id,
+                product_id=self.id,
+                quantity=quantity
+            )
+            db.session.add(store_stock)
+    
+    def is_low_stock_in_store(self, store_id):
+        """Check if product is low stock in a specific store"""
+        return self.get_store_stock(store_id) <= self.low_stock_threshold
     
     @property
     def profit_margin(self):
@@ -201,6 +231,9 @@ class StoreStock(db.Model):
     
     # Relationships
     product = db.relationship('Product', backref='store_stocks')
+    
+    # Unique constraint to prevent duplicate store-product combinations
+    __table_args__ = (db.UniqueConstraint('store_id', 'product_id', name='_store_product_uc'),)
 
 class Supplier(db.Model):
     __tablename__ = 'suppliers'

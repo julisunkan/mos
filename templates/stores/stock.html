@@ -77,47 +77,37 @@
                             <tr>
                                 <td>
                                     <strong>{{ product.name }}</strong>
-                                    {% if product.description %}
-                                        <br><small class="text-muted">{{ product.description[:50] }}{% if product.description|length > 50 %}...{% endif %}</small>
+                                    {% if stock_item.quantity <= product.low_stock_threshold %}
+                                        <br><small class="text-warning">
+                                            <i class="fas fa-exclamation-triangle"></i> Low Stock
+                                        </small>
                                     {% endif %}
                                 </td>
+                                <td><code>{{ product.sku }}</code></td>
+                                <td>{{ product.category.name }}</td>
                                 <td>
-                                    <code>{{ product.sku }}</code>
-                                </td>
-                                <td>{{ product.category.name if product.category else 'N/A' }}</td>
-                                <td>
-                                    <span class="fw-bold {{ 'text-danger' if stock_item.quantity <= (stock_item.min_stock or 0) else 'text-success' if stock_item.quantity >= (stock_item.max_stock or 100) else '' }}">
-                                        {{ stock_item.quantity }}
+                                    <span class="badge bg-{{ 'warning' if stock_item.quantity <= product.low_stock_threshold else 'success' }}">
+                                        {{ stock_item.quantity | format_number }}
                                     </span>
                                 </td>
-                                <td>{{ stock_item.min_stock or 0 }}</td>
-                                <td>{{ stock_item.max_stock or 100 }}</td>
+                                <td>{{ product.low_stock_threshold | format_number }}</td>
+                                <td>{{ product.stock_quantity | format_number }}</td>
                                 <td>
-                                    {% if stock_item.quantity <= (stock_item.min_stock or 0) %}
-                                        <span class="badge bg-danger">Low Stock</span>
-                                    {% elif stock_item.quantity >= (stock_item.max_stock or 100) %}
-                                        <span class="badge bg-warning">Overstock</span>
-                                    {% else %}
-                                        <span class="badge bg-success">Normal</span>
-                                    {% endif %}
+                                    <span class="badge bg-{{ 'success' if product.is_active else 'secondary' }}">
+                                        {{ 'Active' if product.is_active else 'Inactive' }}
+                                    </span>
                                 </td>
+                                <td>{{ stock_item.last_updated.strftime('%m/%d/%Y %I:%M %p') if stock_item.last_updated else 'N/A' }}</td>
                                 <td>
-                                    {% if stock_item.last_updated %}
-                                        {{ stock_item.last_updated.strftime('%Y-%m-%d %H:%M') }}
-                                    {% else %}
-                                        <span class="text-muted">Never</span>
-                                    {% endif %}
-                                </td>
-                                <td>
-                                    <div class="btn-group btn-group-sm" role="group">
-                                        <a href="{{ url_for('inventory.view_product', id=product.id) }}" 
-                                           class="btn btn-outline-primary" title="View Product">
-                                            <i class="fas fa-eye"></i>
-                                        </a>
+                                    <div class="btn-group btn-group-sm">
                                         <a href="{{ url_for('inventory.edit_product', id=product.id) }}" 
-                                           class="btn btn-outline-secondary" title="Edit Product">
+                                           class="btn btn-outline-primary">
                                             <i class="fas fa-edit"></i>
                                         </a>
+                                        <button type="button" class="btn btn-outline-info" 
+                                                onclick="updateStock({{ stock_item.id }}, {{ stock_item.quantity }})">
+                                            <i class="fas fa-sync"></i>
+                                        </button>
                                     </div>
                                 </td>
                             </tr>

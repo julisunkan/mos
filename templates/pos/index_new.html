@@ -307,7 +307,7 @@ async function searchProducts() {
                         <p class="card-text mb-1">
                             <strong>${formatCurrency(product.price)}</strong>
                         </p>
-                        <small class="text-muted">Stock: ${product.stock}</small>
+                        <small class="text-muted">Stock: ${product.stock_quantity || 0}</small>
                     </div>
                 </div>
             </div>

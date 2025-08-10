@@ -1,6 +1,6 @@
 from flask import Blueprint, render_template, redirect, url_for, flash, request, jsonify, make_response
 from flask_login import login_required, current_user
-from models import Product, Customer, Sale, SaleItem, CashRegister, UserStore, SaleReturn, SaleReturnItem
+from models import Product, Customer, Sale, SaleItem, CashRegister, UserStore, SaleReturn, SaleReturnItem, StoreStock
 from app import db
 from utils import generate_receipt_number, generate_return_number, get_default_currency, format_currency, get_currency_symbol
 from datetime import datetime
@@ -134,13 +134,25 @@ def search_products():
         Product.is_active == True
     ).limit(10).all()
     
+    # Get current store from open register
+    register = CashRegister.query.filter_by(
+        user_id=current_user.id,
+        is_open=True
+    ).first()
+    
+    if not register:
+        return jsonify([])
+    
     results = []
     for product in products:
+        # Get store-specific stock
+        store_stock = product.get_store_stock(register.store_id)
         results.append({
             'id': product.id,
             'name': product.name,
             'price': float(product.selling_price),
-            'stock': product.stock_quantity,
+            'stock': store_stock,
+            'stock_quantity': store_stock,  # For template compatibility
             'tax_rate': float(product.tax_rate or 0)
         })
     
@@ -220,8 +232,19 @@ def process_sale():
             except (ValueError, TypeError):
                 return jsonify({'error': f'Invalid quantity for {product.name}'}), 400
             
-            if product.stock_quantity < quantity:
-                return jsonify({'error': f'Insufficient stock for {product.name}. Available: {product.stock_quantity}'}), 400
+            # Get current store from open register
+            register = CashRegister.query.filter_by(
+                user_id=current_user.id,
+                is_open=True
+            ).first()
+            
+            if not register:
+                return jsonify({'error': 'No open cash register found'}), 400
+            
+            # Check store-specific stock
+            store_stock = product.get_store_stock(register.store_id)
+            if store_stock < quantity:
+                return jsonify({'error': f'Insufficient stock for {product.name}. Available: {store_stock}'}), 400
             
             unit_price = float(item_data.get('unit_price', float(product.selling_price)))
             total_price = unit_price * quantity
@@ -236,8 +259,9 @@ def process_sale():
             
             db.session.add(sale_item)
             
-            # Update product stock
-            product.stock_quantity -= quantity
+            # Update store-specific stock
+            current_stock = product.get_store_stock(register.store_id)
+            product.set_store_stock(register.store_id, current_stock - quantity)
             
             subtotal += total_price
             if product.tax_rate:
@@ -313,10 +337,11 @@ def process_refund():
             refund_item.total_price = -original_item.total_price
             db.session.add(refund_item)
             
-            # Restore stock
+            # Restore store-specific stock
             product = Product.query.get(original_item.product_id)
             if product:
-                product.stock_quantity += original_item.quantity
+                current_stock = product.get_store_stock(original_sale.store_id)
+                product.set_store_stock(original_sale.store_id, current_stock + original_item.quantity)
         
         db.session.commit()
         
