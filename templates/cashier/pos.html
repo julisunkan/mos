@@ -423,21 +423,12 @@ document.addEventListener('DOMContentLoaded', function() {
     document.getElementById('print-receipt-btn').addEventListener('click', function() {
         const receiptContent = document.getElementById('receipt-content').innerHTML;
         const printWindow = window.open('', '', 'width=800,height=600');
-        printWindow.document.write(`
-            <html>
-                <head>
-                    <title>Receipt</title>
-                    <style>
-                        body { font-family: 'Courier New', monospace; }
-                        .receipt-content { padding: 20px; }
-                    </style>
-                </head>
-                <body>
-                    <div class="receipt-content">${receiptContent}</div>
-                    <script>window.print(); window.close();</script>
-                </body>
-            </html>
-        `);
+        printWindow.document.write('<html><head><title>Receipt</title>');
+        printWindow.document.write('<style>body { font-family: "Courier New", monospace; } .receipt-content { padding: 20px; }</style>');
+        printWindow.document.write('</head><body>');
+        printWindow.document.write('<div class="receipt-content">' + receiptContent + '</div>');
+        printWindow.document.write('<script>window.print(); window.close();</script>');
+        printWindow.document.write('</body></html>');
         printWindow.document.close();
     });
 });
