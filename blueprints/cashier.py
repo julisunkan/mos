@@ -13,8 +13,8 @@ def index():
     """Main cashier interface"""
     # Get user's assigned store
     user_store = None
-    if hasattr(current_user, 'user_stores') and current_user.user_stores:
-        user_store = current_user.user_stores[0].store
+    if hasattr(current_user, 'store_assignments') and current_user.store_assignments:
+        user_store = current_user.store_assignments[0].store
     
     if not user_store:
         flash('You are not assigned to any store. Please contact administrator.', 'error')
@@ -44,8 +44,8 @@ def process_sale():
         
         # Get user's store
         user_store = None
-        if hasattr(current_user, 'user_stores') and current_user.user_stores:
-            user_store = current_user.user_stores[0].store
+        if hasattr(current_user, 'store_assignments') and current_user.store_assignments:
+            user_store = current_user.store_assignments[0].store
         
         if not user_store:
             return jsonify({'success': False, 'error': 'No store assigned'})

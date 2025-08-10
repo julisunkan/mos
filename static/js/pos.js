@@ -33,15 +33,16 @@ class POSSystem {
 
     bindEvents() {
         // Product search
-        const searchInput = document.getElementById('productSearch');
+        const searchInput = document.getElementById('product-search');
         if (searchInput) {
             searchInput.addEventListener('input', this.debounce(this.searchProducts.bind(this), 300));
         }
 
-        // Product cards click
+        // Add to cart button click
         document.addEventListener('click', (e) => {
-            if (e.target.closest('.product-card')) {
-                this.addProductToCart(e.target.closest('.product-card'));
+            if (e.target.classList.contains('add-to-cart')) {
+                e.preventDefault();
+                this.addProductToCartFromButton(e.target);
             }
         });
 
@@ -67,7 +68,7 @@ class POSSystem {
         });
 
         // Customer selection
-        const customerSelect = document.getElementById('customerSelect');
+        const customerSelect = document.getElementById('customer-select');
         if (customerSelect) {
             customerSelect.addEventListener('change', (e) => {
                 this.currentCustomer = e.target.value || null;
@@ -81,13 +82,13 @@ class POSSystem {
         }
 
         // Process sale button
-        const processSaleBtn = document.getElementById('processSale');
+        const processSaleBtn = document.getElementById('process-sale-btn');
         if (processSaleBtn) {
             processSaleBtn.addEventListener('click', this.processSale.bind(this));
         }
 
         // Clear cart button
-        const clearCartBtn = document.getElementById('clearCart');
+        const clearCartBtn = document.getElementById('clear-cart-btn');
         if (clearCartBtn) {
             clearCartBtn.addEventListener('click', this.clearCart.bind(this));
         }
@@ -131,22 +132,31 @@ class POSSystem {
 
     async searchProducts(event) {
         const query = event.target.value.trim();
+        const productsGrid = document.getElementById('products-grid');
+        if (!productsGrid) return;
+        
         if (query.length < 2) {
-            document.getElementById('searchResults').innerHTML = '';
+            // Show all products if search is cleared
+            location.reload();
             return;
         }
 
-        try {
-            const response = await fetch(`/pos/api/products/search?q=${encodeURIComponent(query)}`);
-            const products = await response.json();
-            this.displaySearchResults(products);
-        } catch (error) {
-            console.error('Search error:', error);
-        }
+        // Simple client-side filtering for now
+        const productCards = productsGrid.querySelectorAll('.product-card');
+        productCards.forEach(card => {
+            const productName = card.querySelector('.card-title').textContent.toLowerCase();
+            const sku = card.querySelector('.card-text').textContent.toLowerCase();
+            
+            if (productName.includes(query.toLowerCase()) || sku.includes(query.toLowerCase())) {
+                card.parentElement.style.display = 'block';
+            } else {
+                card.parentElement.style.display = 'none';
+            }
+        });
     }
 
     displaySearchResults(products) {
-        const resultsContainer = document.getElementById('searchResults');
+        // This method is no longer used with client-side filtering
         
         if (products.length === 0) {
             resultsContainer.innerHTML = '<div class="col-12"><p class="text-muted">No products found.</p></div>';
@@ -175,12 +185,22 @@ class POSSystem {
         resultsContainer.innerHTML = html;
     }
 
-    addProductToCart(productCard) {
-        const productId = parseInt(productCard.dataset.productId);
-        const productName = productCard.dataset.productName;
-        const productPrice = parseFloat(productCard.dataset.productPrice);
-        const productStock = parseInt(productCard.dataset.productStock);
-        const productTax = parseFloat(productCard.dataset.productTax) || 0;
+    addProductToCartFromButton(button) {
+        const productId = parseInt(button.dataset.id);
+        const productName = button.dataset.name;
+        const productPrice = parseFloat(button.dataset.price);
+        const productStock = parseInt(button.dataset.stock);
+        const productTax = 0; // Default tax rate
+
+        this.addProductToCart({id: productId, name: productName, price: productPrice, stock: productStock, tax_rate: productTax});
+    }
+
+    addProductToCart(product) {
+        const productId = product.id;
+        const productName = product.name;
+        const productPrice = product.price;
+        const productStock = product.stock;
+        const productTax = product.tax_rate || 0;
 
         console.log('Adding product to cart:', { productId, productName, productPrice, productStock, productTax }); // Debug log
 
@@ -215,18 +235,16 @@ class POSSystem {
     }
 
     updateCartDisplay() {
-        const cartContainer = document.getElementById('cartItems');
-        const emptyCart = document.getElementById('emptyCart');
-        const processSaleBtn = document.getElementById('processSale');
+        const cartContainer = document.getElementById('cart-items');
+        const processSaleBtn = document.getElementById('process-sale-btn');
 
         if (this.cart.length === 0) {
-            emptyCart.style.display = 'block';
-            processSaleBtn.disabled = true;
+            cartContainer.innerHTML = '<p class="text-muted text-center">Cart is empty</p>';
+            if (processSaleBtn) processSaleBtn.disabled = true;
             return;
         }
 
-        emptyCart.style.display = 'none';
-        processSaleBtn.disabled = false;
+        if (processSaleBtn) processSaleBtn.disabled = false;
 
         const cartHtml = this.cart.map((item, index) => `
             <div class="cart-item border-bottom pb-2 mb-2">
@@ -300,9 +318,9 @@ class POSSystem {
         console.log('Calculated totals:', { subtotal, taxTotal, discount, total }); // Debug log
 
         // Update DOM elements
-        const subtotalElement = document.getElementById('subtotal');
-        const taxElement = document.getElementById('taxAmount');
-        const totalElement = document.getElementById('total');
+        const subtotalElement = document.getElementById('cart-subtotal');
+        const taxElement = document.getElementById('cart-tax');
+        const totalElement = document.getElementById('cart-total');
 
         if (subtotalElement) subtotalElement.textContent = `${CURRENCY_SYMBOL}${subtotal.toFixed(2)}`;
         if (taxElement) taxElement.textContent = `${CURRENCY_SYMBOL}${taxTotal.toFixed(2)}`;
@@ -322,13 +340,13 @@ class POSSystem {
                 unit_price: parseFloat(item.price)
             })),
             customer_id: this.currentCustomer,
-            payment_method: document.getElementById('paymentMethod').value,
-            discount: parseFloat(document.getElementById('discount').value) || 0,
-            notes: document.getElementById('saleNotes') ? document.getElementById('saleNotes').value : ''
+            payment_method: document.getElementById('payment-method').value,
+            discount: 0,
+            notes: ''
         };
 
         try {
-            const response = await fetch('/pos/api/sale/process', {
+            const response = await fetch('/cashier/api/process_sale', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
@@ -371,11 +389,10 @@ class POSSystem {
     clearCart() {
         this.cart = [];
         this.currentCustomer = null;
-        document.getElementById('customerSelect').value = '';
-        document.getElementById('discount').value = '0';
-        const notesField = document.getElementById('saleNotes');
-        if (notesField) notesField.value = '';
-        document.getElementById('paymentMethod').value = 'Cash';
+        const customerSelect = document.getElementById('customer-select');
+        if (customerSelect) customerSelect.value = '';
+        const paymentMethod = document.getElementById('payment-method');
+        if (paymentMethod) paymentMethod.value = 'cash';
         this.updateCartDisplay();
         this.updateTotals();
     }
