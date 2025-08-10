@@ -124,4 +124,5 @@ class CustomerForm(FlaskForm):
         ('Wholesale', 'Wholesale'),
         ('VIP', 'VIP')
     ], default='Retail')
+    credit_limit = FloatField('Credit Limit', validators=[Optional(), NumberRange(min=0)], default=0.00)
     is_active = BooleanField('Active', default=True)
