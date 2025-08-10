@@ -56,11 +56,12 @@
                         {% for product in products %}
                         <div class="col-md-3 col-sm-4 col-6 mb-3">
                             <div class="card product-card h-100" 
-                                 data-id="{{ product.id }}" 
-                                 data-name="{{ product.name }}" 
-                                 data-price="{{ product.selling_price }}"
-                                 data-stock="{{ product.stock_quantity }}"
-                                 data-tax="{{ product.tax_rate or 0 }}"
+                                 data-product-id="{{ product.id }}" 
+                                 data-product-name="{{ product.name }}" 
+                                 data-product-price="{{ product.selling_price }}"
+                                 data-product-stock="{{ product.stock_quantity }}"
+                                 data-product-tax="{{ product.tax_rate or 0 }}"
+                                 onclick="addToCart(this)"
                                  class="product-card-clickable">
                                 <div class="card-body text-center p-2">
                                     <h6 class="card-title mb-1">{{ product.name }}</h6>
@@ -266,11 +267,11 @@ async function searchProducts() {
         const html = products.map(product => `
             <div class="col-md-3 col-sm-4 col-6 mb-3">
                 <div class="card product-card h-100" 
-                     data-id="${product.id}" 
-                     data-name="${product.name}" 
-                     data-price="${product.price}"
-                     data-stock="${product.stock}"
-                     data-tax="${product.tax_rate || 0}"
+                     data-product-id="${product.id}" 
+                     data-product-name="${product.name}" 
+                     data-product-price="${product.price}"
+                     data-product-stock="${product.stock}"
+                     data-product-tax="${product.tax_rate || 0}"
                      onclick="addToCart(this)">
                     <div class="card-body text-center p-2">
                         <h6 class="card-title mb-1">${product.name}</h6>
@@ -292,11 +293,11 @@ async function searchProducts() {
 
 // Add product to cart
 function addToCart(productCard) {
-    const productId = parseInt(productCard.dataset.id);
-    const productName = productCard.dataset.name;
-    const productPrice = parseFloat(productCard.dataset.price);
-    const productStock = parseInt(productCard.dataset.stock);
-    const productTax = parseFloat(productCard.dataset.tax || 0);
+    const productId = parseInt(productCard.dataset.productId);
+    const productName = productCard.dataset.productName;
+    const productPrice = parseFloat(productCard.dataset.productPrice);
+    const productStock = parseInt(productCard.dataset.productStock);
+    const productTax = parseFloat(productCard.dataset.productTax || 0);
     
     console.log('Adding to cart:', { productId, productName, productPrice, productStock }); // Debug
     console.log('Product card dataset:', productCard.dataset); // Debug
@@ -456,6 +457,35 @@ function clearCart() {
     showAlert('Cart cleared', 'info');
 }
 
+// Show alert function
+function showAlert(message, type) {
+    const messageArea = document.getElementById('messageArea');
+    const messageContent = document.getElementById('messageContent');
+    const messageText = document.getElementById('messageText');
+    
+    if (!messageArea || !messageContent || !messageText) {
+        console.log(`${type.toUpperCase()}: ${message}`);
+        return;
+    }
+    
+    messageText.textContent = message;
+    messageContent.className = `alert alert-${type} alert-dismissible fade show`;
+    messageArea.classList.remove('d-none');
+    
+    // Auto-hide after 5 seconds
+    setTimeout(() => {
+        messageArea.classList.add('d-none');
+    }, 5000);
+}
+
+// Hide message
+function hideMessage() {
+    const messageArea = document.getElementById('messageArea');
+    if (messageArea) {
+        messageArea.classList.add('d-none');
+    }
+}
+
 // Process sale
 async function processSale() {
     console.log('Processing sale, cart length:', cart.length); // Debug
@@ -585,29 +615,17 @@ function confirmAction() {
     hideMessage();
 }
 
-// Show inline message
-function showAlert(message, type) {
-    const messageArea = document.getElementById('messageArea');
-    const messageContent = document.getElementById('messageContent');
-    const messageText = document.getElementById('messageText');
+// Process sale button event handler
+document.addEventListener('DOMContentLoaded', function() {
+    const processSaleBtn = document.getElementById('processSale');
+    if (processSaleBtn) {
+        processSaleBtn.addEventListener('click', processSale);
+    }
     
-    // Set message content and type
-    messageText.textContent = message;
-    messageContent.className = `alert alert-${type} alert-dismissible fade show`;
-    
-    // Show message area
-    messageArea.classList.remove('d-none');
-    
-    // Auto-hide after 5 seconds
-    setTimeout(() => {
-        hideMessage();
-    }, 5000);
-}
-
-// Hide inline message
-function hideMessage() {
-    const messageArea = document.getElementById('messageArea');
-    messageArea.classList.add('d-none');
-}
+    const clearCartBtn = document.getElementById('clearCart');
+    if (clearCartBtn) {
+        clearCartBtn.addEventListener('click', clearCart);
+    }
+});
 </script>
 {% endblock %}
