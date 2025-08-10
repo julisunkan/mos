@@ -253,17 +253,27 @@ document.addEventListener('DOMContentLoaded', function() {
     // Add to cart functionality
     document.addEventListener('click', function(e) {
         if (e.target.closest('.add-to-cart-btn')) {
+            console.log('Add button clicked!');
             const btn = e.target.closest('.add-to-cart-btn');
             const productId = btn.dataset.productId;
             const productName = btn.dataset.productName;
             const productPrice = parseFloat(btn.dataset.productPrice);
             const productStock = parseInt(btn.dataset.productStock);
             
+            console.log('Product data:', { productId, productName, productPrice, productStock });
+            
+            if (!productId || !productName || isNaN(productPrice)) {
+                console.error('Invalid product data:', { productId, productName, productPrice, productStock });
+                alert('Error: Invalid product data');
+                return;
+            }
+            
             addToCart(productId, productName, productPrice, productStock);
         }
     });
     
     function addToCart(productId, productName, productPrice, productStock) {
+        console.log('Adding to cart:', { productId, productName, productPrice, productStock });
         const existingItem = cart.find(item => item.product_id === productId);
         
         if (existingItem) {
@@ -294,6 +304,15 @@ document.addEventListener('DOMContentLoaded', function() {
     function updateCartDisplay() {
         const cartItemsContainer = document.getElementById('cart-items');
         const processSaleBtn = document.getElementById('process-sale-btn');
+        
+        if (!cartItemsContainer) {
+            console.error('cart-items element not found');
+            return;
+        }
+        if (!processSaleBtn) {
+            console.error('process-sale-btn element not found');
+            return;
+        }
         
         if (cart.length === 0) {
             cartItemsContainer.innerHTML = '<p class="text-muted text-center">Cart is empty</p>';
@@ -329,6 +348,37 @@ document.addEventListener('DOMContentLoaded', function() {
         
         updateCartTotals();
     }
+    
+    // Alternative direct event listener approach
+    function attachAddToCartListeners() {
+        const addButtons = document.querySelectorAll('.add-to-cart-btn');
+        console.log('Found', addButtons.length, 'add buttons');
+        
+        addButtons.forEach(btn => {
+            btn.addEventListener('click', function(e) {
+                e.preventDefault();
+                console.log('Direct button click');
+                
+                const productId = this.dataset.productId;
+                const productName = this.dataset.productName;
+                const productPrice = parseFloat(this.dataset.productPrice);
+                const productStock = parseInt(this.dataset.productStock);
+                
+                console.log('Direct product data:', { productId, productName, productPrice, productStock });
+                
+                if (!productId || !productName || isNaN(productPrice)) {
+                    console.error('Invalid direct product data:', { productId, productName, productPrice, productStock });
+                    alert('Error: Invalid product data');
+                    return;
+                }
+                
+                addToCart(productId, productName, productPrice, productStock);
+            });
+        });
+    }
+    
+    // Attach direct listeners as fallback
+    setTimeout(attachAddToCartListeners, 100);
     
     function updateCartTotals() {
         let subtotal = 0;
