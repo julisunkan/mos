@@ -268,6 +268,9 @@ def process_sale():
             amount_tendered = Decimal(str(data.get('amount_tendered', total_amount)))
             sale.amount_tendered = amount_tendered
             sale.change_amount = amount_tendered - total_amount
+        else:
+            sale.amount_tendered = total_amount
+            sale.change_amount = Decimal('0.00')
         
         db.session.add(sale)
         db.session.flush()  # Get sale ID
@@ -328,7 +331,7 @@ def get_products():
                 'price': float(product.selling_price),
                 'stock': store_stock,
                 'tax_rate': float(product.tax_rate or 0),
-                'category': product.category.name if product.category else 'Uncategorized'
+                'category': 'Uncategorized'  # Simplified for POS display
             })
         
         return jsonify(results)
