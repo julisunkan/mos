@@ -486,7 +486,7 @@ function setupEventListeners() {
 function loadProducts() {
     showLoading(true);
     
-    fetch('/pos_clean/api/products')
+    fetch('/pos/api/products')
         .then(response => response.json())
         .then(data => {
             if (data.error) {
@@ -563,7 +563,7 @@ function searchProducts() {
         return;
     }
     
-    fetch(`/pos_clean/api/products/search?q=${encodeURIComponent(searchTerm)}`)
+    fetch(`/pos/api/products/search?q=${encodeURIComponent(searchTerm)}`)
         .then(response => response.json())
         .then(data => {
             if (data.error) {
@@ -780,7 +780,7 @@ function processPayment() {
     
     showLoading(true);
     
-    fetch('/pos_clean/api/sale/process', {
+    fetch('/pos/api/sale/process', {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
@@ -820,7 +820,7 @@ function closeRegister() {
     if (confirm('Are you sure you want to close the register?')) {
         showLoading(true);
         
-        fetch('/pos_clean/register/close', {
+        fetch('/pos/register/close', {
             method: 'POST',
             headers: {
                 'X-CSRFToken': getCSRFToken()
@@ -832,7 +832,7 @@ function closeRegister() {
             if (data.success) {
                 showMessage(data.message, 'success');
                 setTimeout(() => {
-                    window.location.href = '/pos_clean/register/open';
+                    window.location.href = '/pos/register/open';
                 }, 2000);
             } else {
                 showMessage(data.error, 'error');
