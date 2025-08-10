@@ -479,12 +479,29 @@ function downloadReceipt() {
 
 // Close register
 function closeRegister() {
-    if (confirm('Are you sure you want to close the cash register?')) {
-        document.getElementById('closeRegisterForm').submit();
-    }
+    showInlineConfirmation(
+        'Are you sure you want to close the cash register?',
+        () => document.getElementById('closeRegisterForm').submit()
+    );
 }
 
 // Show inline message
+// Show inline confirmation dialog (use from dashboard.js)
+function showInlineConfirmation(message, onConfirm, onCancel = null) {
+    // This function is defined in dashboard.js and available globally
+    if (window.showInlineConfirmation) {
+        window.showInlineConfirmation(message, onConfirm, onCancel);
+        return;
+    }
+    
+    // Fallback if dashboard.js not loaded
+    if (confirm(message)) {
+        if (onConfirm) onConfirm();
+    } else {
+        if (onCancel) onCancel();
+    }
+}
+
 function showInlineMessage(message, type) {
     const messageArea = document.getElementById('messageArea');
     const messageContent = document.getElementById('messageContent');
