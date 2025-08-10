@@ -91,8 +91,7 @@ def close_register():
     ).first()
     
     if not register:
-        flash('No open cash register found.', 'error')
-        return redirect(url_for('pos.index'))
+        return jsonify({'success': False, 'error': 'No open cash register found.'})
     
     # Calculate closing balance
     total_sales = db.session.query(db.func.sum(Sale.total_amount)).filter(
@@ -108,12 +107,13 @@ def close_register():
     
     try:
         db.session.commit()
-        flash(f'Cash register closed. Closing balance: {format_currency(register.closing_balance)}', 'success')
+        return jsonify({
+            'success': True, 
+            'message': f'Cash register closed. Closing balance: {format_currency(register.closing_balance)}'
+        })
     except Exception as e:
         db.session.rollback()
-        flash(f'Error closing register: {str(e)}', 'error')
-    
-    return redirect(url_for('pos.open_register'))
+        return jsonify({'success': False, 'error': f'Error closing register: {str(e)}'})
 
 @pos_bp.route('/api/products/search')
 @login_required

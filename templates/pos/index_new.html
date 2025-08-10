@@ -849,6 +849,8 @@ function printReceipt() {
 
 function closeRegister() {
     if (confirm('Are you sure you want to close the register?')) {
+        showLoading(true);
+        
         fetch('/pos/register/close', {
             method: 'POST',
             headers: {
@@ -857,13 +859,18 @@ function closeRegister() {
         })
         .then(response => response.json())
         .then(data => {
+            showLoading(false);
             if (data.success) {
-                window.location.reload();
+                showMessage(data.message || 'Register closed successfully', 'success');
+                setTimeout(() => {
+                    window.location.href = '/pos/register/open';
+                }, 2000);
             } else {
                 showMessage(data.error || 'Failed to close register', 'error');
             }
         })
         .catch(error => {
+            showLoading(false);
             console.error('Close register error:', error);
             showMessage('Failed to close register', 'error');
         });
