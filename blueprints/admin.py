@@ -84,13 +84,18 @@ def delete_user(id):
     
     try:
         # Handle related records before deleting user
-        from models import CashRegister, UserStore
+        from models import CashRegister, UserStore, Sale, SaleItem
         
-        # Close any open cash registers for this user
-        open_registers = CashRegister.query.filter_by(user_id=user.id, is_open=True).all()
-        for register in open_registers:
-            register.is_open = False
-            register.closed_at = datetime.utcnow()
+        # Delete all cash registers for this user (both open and closed)
+        CashRegister.query.filter_by(user_id=user.id).delete()
+        
+        # Delete all sales made by this user
+        user_sales = Sale.query.filter_by(user_id=user.id).all()
+        for sale in user_sales:
+            # Delete sale items first
+            SaleItem.query.filter_by(sale_id=sale.id).delete()
+            # Delete the sale
+            db.session.delete(sale)
         
         # Remove user store assignments
         UserStore.query.filter_by(user_id=user.id).delete()
