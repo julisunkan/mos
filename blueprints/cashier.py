@@ -60,14 +60,13 @@ def process_sale():
         tax_total = 0
         
         # Create sale record
-        sale = Sale(
-            receipt_number=f"R{datetime.now().strftime('%Y%m%d%H%M%S')}",
-            user_id=current_user.id,
-            customer_id=data.get('customer_id') if data.get('customer_id') else None,
-            store_id=user_store.id,
-            payment_method=data.get('payment_method', 'cash'),
-            created_at=datetime.now()
-        )
+        sale = Sale()
+        sale.receipt_number = f"R{datetime.now().strftime('%Y%m%d%H%M%S')}"
+        sale.user_id = current_user.id
+        sale.customer_id = data.get('customer_id') if data.get('customer_id') else None
+        sale.store_id = user_store.id
+        sale.payment_method = data.get('payment_method', 'cash')
+        sale.created_at = datetime.now()
         
         # Process each item
         sale_items = []
@@ -93,13 +92,12 @@ def process_sale():
             tax_total += line_tax
             
             # Create sale item
-            sale_item = SaleItem(
-                product_id=product.id,
-                quantity=item['quantity'],
-                unit_price=product.selling_price,
-                total_price=line_subtotal,
-                tax_amount=line_tax
-            )
+            sale_item = SaleItem()
+            sale_item.product_id = product.id
+            sale_item.quantity = item['quantity']
+            sale_item.unit_price = product.selling_price
+            sale_item.total_price = line_subtotal
+            sale_item.tax_amount = line_tax
             sale_items.append(sale_item)
             
             # Update stock
@@ -124,27 +122,26 @@ def process_sale():
             'success': True,
             'sale_id': sale.id,
             'receipt_number': sale.receipt_number,
-            'total': sale.total_amount
+            'total_amount': sale.total_amount
         })
         
     except Exception as e:
         db.session.rollback()
         return jsonify({'success': False, 'error': str(e)})
 
-@cashier_bp.route('/receipt/<int:sale_id>')
+@cashier_bp.route('/api/receipt/<int:sale_id>')
 @login_required
-def receipt(sale_id):
-    """Display receipt for a sale"""
+def api_receipt(sale_id):
+    """API endpoint to get receipt HTML"""
     sale = Sale.query.get_or_404(sale_id)
     
     # Security check - ensure user can view this receipt
     user_store = None
-    if hasattr(current_user, 'user_stores') and current_user.user_stores:
-        user_store = current_user.user_stores[0].store
+    if hasattr(current_user, 'store_assignments') and current_user.store_assignments:
+        user_store = current_user.store_assignments[0].store
     
-    if sale.store_id != user_store.id and not current_user.has_permission('all'):
-        flash('Access denied', 'error')
-        return redirect(url_for('cashier.index'))
+    if user_store and sale.store_id != user_store.id:
+        return jsonify({'error': 'Access denied'}), 403
     
     return render_template('cashier/receipt.html', sale=sale)
 

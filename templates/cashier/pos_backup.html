@@ -165,19 +165,15 @@
 </div>
 
 <script>
-// Simple POS System Implementation
-const currencySymbol = '{{ get_currency_symbol() }}';
+// Global variables
 let cart = [];
+const currencySymbol = '{{ get_currency_symbol() }}';
 
 document.addEventListener('DOMContentLoaded', function() {
-    initializePOS();
-});
-
-function initializePOS() {
     // Add to cart functionality
     document.querySelectorAll('.add-to-cart').forEach(button => {
         button.addEventListener('click', function() {
-            const productId = parseInt(this.dataset.id);
+            const productId = this.dataset.id;
             const productName = this.dataset.name;
             const productPrice = parseFloat(this.dataset.price);
             const productStock = parseInt(this.dataset.stock);
@@ -233,7 +229,7 @@ function initializePOS() {
         `);
         printWindow.document.close();
     });
-}
+});
 
 function addToCart(productId, productName, productPrice, productStock) {
     // Check if item already exists in cart
@@ -256,7 +252,7 @@ function addToCart(productId, productName, productPrice, productStock) {
                 stock: productStock
             });
         } else {
-            alert('Product is out of stock');
+            alert('Product out of stock');
             return;
         }
     }
@@ -271,38 +267,35 @@ function updateCartDisplay() {
     if (cart.length === 0) {
         cartItemsContainer.innerHTML = '<p class="text-muted text-center">Cart is empty</p>';
         processSaleBtn.disabled = true;
-        updateCartTotals();
-        return;
+    } else {
+        let html = '';
+        cart.forEach((item, index) => {
+            html += `
+                <div class="cart-item mb-2 p-2" style="border: 1px solid #ddd; border-radius: 4px;">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <strong>${item.name}</strong><br>
+                            <small>${currencySymbol}${item.price.toFixed(2)} each</small>
+                        </div>
+                        <div class="d-flex align-items-center">
+                            <button class="btn btn-sm btn-outline-secondary me-1" onclick="changeQuantity(${index}, -1)">-</button>
+                            <span class="mx-2">${item.quantity}</span>
+                            <button class="btn btn-sm btn-outline-secondary me-2" onclick="changeQuantity(${index}, 1)">+</button>
+                            <button class="btn btn-sm btn-danger" onclick="removeFromCart(${index})">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="text-end mt-1">
+                        <strong>${currencySymbol}${(item.price * item.quantity).toFixed(2)}</strong>
+                    </div>
+                </div>
+            `;
+        });
+        cartItemsContainer.innerHTML = html;
+        processSaleBtn.disabled = false;
     }
     
-    processSaleBtn.disabled = false;
-    
-    let html = '';
-    cart.forEach((item, index) => {
-        html += `
-            <div class="cart-item border-bottom pb-2 mb-2">
-                <div class="d-flex justify-content-between align-items-start">
-                    <div class="flex-grow-1">
-                        <h6 class="mb-1">${item.name}</h6>
-                        <small class="text-muted">${currencySymbol}${item.price.toFixed(2)} each</small>
-                    </div>
-                    <button type="button" class="btn btn-sm btn-outline-danger" onclick="removeFromCart(${index})">
-                        <i class="fas fa-times"></i>
-                    </button>
-                </div>
-                <div class="d-flex justify-content-between align-items-center mt-2">
-                    <div class="btn-group btn-group-sm" role="group">
-                        <button type="button" class="btn btn-outline-secondary" onclick="changeQuantity(${index}, -1)">-</button>
-                        <span class="btn btn-outline-secondary">${item.quantity}</span>
-                        <button type="button" class="btn btn-outline-secondary" onclick="changeQuantity(${index}, 1)">+</button>
-                    </div>
-                    <strong>${currencySymbol}${(item.price * item.quantity).toFixed(2)}</strong>
-                </div>
-            </div>
-        `;
-    });
-    
-    cartItemsContainer.innerHTML = html;
     updateCartTotals();
 }
 
@@ -330,7 +323,10 @@ function updateCartTotals() {
     let tax = 0;
     
     cart.forEach(item => {
-        subtotal += item.price * item.quantity;
+        const itemTotal = item.price * item.quantity;
+        subtotal += itemTotal;
+        // Assuming 10% tax rate for simplicity
+        tax += itemTotal * 0.1;
     });
     
     const total = subtotal + tax;
@@ -342,24 +338,24 @@ function updateCartTotals() {
 
 function processSale() {
     if (cart.length === 0) {
-        alert('Cart is empty!');
+        alert('Cart is empty');
         return;
     }
     
+    const customerId = document.getElementById('customer-select').value;
+    const paymentMethod = document.getElementById('payment-method').value;
+    
+    const saleData = {
+        items: cart,
+        customer_id: customerId || null,
+        payment_method: paymentMethod
+    };
+    
+    // Show loading
     const processSaleBtn = document.getElementById('process-sale-btn');
     const originalText = processSaleBtn.innerHTML;
     processSaleBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Processing...';
     processSaleBtn.disabled = true;
-    
-    const saleData = {
-        items: cart.map(item => ({
-            product_id: item.product_id,
-            quantity: item.quantity,
-            unit_price: item.price
-        })),
-        customer_id: document.getElementById('customer-select').value || null,
-        payment_method: document.getElementById('payment-method').value
-    };
     
     fetch('/cashier/api/process_sale', {
         method: 'POST',
@@ -372,7 +368,7 @@ function processSale() {
     .then(data => {
         if (data.success) {
             // Load receipt content
-            fetch(`/cashier/api/receipt/${data.sale_id}`)
+            fetch(`/cashier/receipt/${data.sale_id}`)
             .then(response => response.text())
             .then(html => {
                 const parser = new DOMParser();

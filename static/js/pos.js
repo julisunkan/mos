@@ -421,9 +421,16 @@ class POSSystem {
         // Mock barcode scanning - in real implementation, this would use a barcode scanner API
         const barcode = prompt('Enter barcode:');
         if (barcode) {
-            document.getElementById('productSearch').value = barcode;
+            document.getElementById('product-search').value = barcode;
             this.searchProducts({ target: { value: barcode } });
         }
+    }
+    
+    showAlert(message, type = 'info') {
+        // Simple alert for now - could be enhanced with toast notifications
+        const alertClass = type === 'error' ? 'danger' : type;
+        console.log(`${type.toUpperCase()}: ${message}`);
+        alert(message);
     }
 
     getCSRFToken() {
