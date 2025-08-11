@@ -48,9 +48,36 @@ def create_default_store():
         return Store.query.first()
 
 def create_admin_user():
-    """Create default admin user"""
+    """Create default admin and super admin users"""
     default_store = create_default_store()
     
+    # Create Super Admin user
+    if not User.query.filter_by(username='superadmin').first():
+        super_admin_user = User(
+            username='superadmin',
+            email='superadmin@cloudpos.com',
+            first_name='Super',
+            last_name='Administrator',
+            role='Super Admin',
+            store_id=default_store.id,
+            is_active=True
+        )
+        super_admin_user.set_password('super123')  # Change this in production!
+        db.session.add(super_admin_user)
+        db.session.commit()
+        
+        # Create user-store relationship
+        user_store = UserStore(
+            user_id=super_admin_user.id,
+            store_id=default_store.id,
+            is_default=True
+        )
+        db.session.add(user_store)
+        db.session.commit()
+        
+        print("✓ Super Admin user created (username: superadmin, password: super123)")
+    
+    # Create regular Admin user
     if not User.query.filter_by(username='admin').first():
         admin_user = User(
             username='admin',
@@ -228,9 +255,9 @@ def main():
             
             print("✅ Database seeding completed successfully!")
             print("\n📝 Login credentials:")
-            print("   Username: admin")
-            print("   Password: admin123")
-            print("\n⚠️  Remember to change the admin password after first login!")
+            print("   Super Admin - Username: superadmin, Password: super123")
+            print("   Admin - Username: admin, Password: admin123")
+            print("\n⚠️  Remember to change passwords after first login!")
             
         except Exception as e:
             print(f"❌ Error during seeding: {str(e)}")

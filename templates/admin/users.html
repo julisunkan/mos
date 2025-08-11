@@ -42,7 +42,7 @@
                                         <td>{{ user.full_name }}</td>
                                         <td>{{ user.email }}</td>
                                         <td>
-                                            <span class="badge bg-{{ 'danger' if user.role == 'Admin' else 'primary' if user.role == 'Manager' else 'success' }}">
+                                            <span class="badge bg-{{ 'warning' if user.role == 'Super Admin' else 'danger' if user.role == 'Admin' else 'primary' if user.role == 'Manager' else 'success' }}">
                                                 {{ user.role }}
                                             </span>
                                         </td>
@@ -60,11 +60,18 @@
                                         </td>
                                         <td>
                                             <div class="btn-group btn-group-sm">
+                                                {% if user.role == 'Super Admin' and current_user.role != 'Super Admin' %}
+                                                <span class="btn btn-outline-secondary disabled" title="Super Admin accounts cannot be edited">
+                                                    <i class="fas fa-lock"></i>
+                                                </span>
+                                                {% else %}
                                                 <a href="{{ url_for('admin.edit_user', id=user.id) }}" 
                                                    class="btn btn-outline-primary">
                                                     <i class="fas fa-edit"></i>
                                                 </a>
-                                                {% if user.id != current_user.id and user.role != 'Admin' %}
+                                                {% endif %}
+                                                
+                                                {% if user.id != current_user.id and user.role not in ['Admin', 'Super Admin'] %}
                                                 <form method="POST" action="{{ url_for('admin.delete_user', id=user.id) }}" 
                                                       class="d-inline">
                                                     <button type="submit" class="btn btn-outline-danger"
@@ -72,7 +79,12 @@
                                                         <i class="fas fa-trash"></i>
                                                     </button>
                                                 </form>
-                                                {% elif user.role == 'Admin' and user.id != current_user.id %}
+                                                {% elif user.role == 'Super Admin' %}
+                                                <span class="btn btn-outline-secondary disabled" 
+                                                      title="Cannot delete Super Admin accounts">
+                                                    <i class="fas fa-shield-alt"></i>
+                                                </span>
+                                                {% elif user.role == 'Admin' and user.id != current_user.id and current_user.role != 'Super Admin' %}
                                                 <span class="btn btn-outline-secondary disabled" 
                                                       title="Cannot delete admin accounts">
                                                     <i class="fas fa-lock"></i>

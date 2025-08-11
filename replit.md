@@ -47,6 +47,16 @@ Successfully migrated from Replit Agent to standard Replit environment. The appl
 - Clear workflow messaging to cashiers about approval requirement
 - Inventory only restored when admin approves the return
 
+### Super Admin Role System Implemented (August 11, 2025)
+- New hierarchical admin structure: Super Admin > Admin > Manager/Cashier/Accountant
+- Super Admin can manage all user accounts including other admins
+- Regular Admins cannot edit or delete Super Admin accounts
+- Regular Admins cannot edit passwords of other admin accounts
+- Super Admin accounts protected from regular admin access
+- Form restrictions prevent non-Super Admins from creating Super Admin accounts
+- Template security controls with visual indicators for protected accounts
+- Auto-seeding creates both Super Admin (superadmin/super123) and Admin (admin/admin123) accounts
+
 # User Preferences
 
 Preferred communication style: Simple, everyday language.
@@ -56,7 +66,7 @@ Preferred communication style: Simple, everyday language.
 ## Backend Framework
 - **Flask Application Factory Pattern**: Modular, blueprint-based architecture for admin, auth, customers, inventory, stores, and reports.
 - **SQLAlchemy ORM**: Database abstraction with Alembic for migrations.
-- **Role-Based Access Control (RBAC)**: Granular permissions for roles like Admin, Manager, Cashier, Accountant.
+- **Role-Based Access Control (RBAC)**: Hierarchical permissions for roles: Super Admin, Admin, Manager, Cashier, Accountant.
 - **Flask-Login**: Session-based authentication with bcrypt hashing.
 
 ## Database Design

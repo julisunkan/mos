@@ -50,6 +50,15 @@ def admin_required(f):
         return f(*args, **kwargs)
     return decorated_function
 
+def super_admin_required(f):
+    """Decorator to require super admin role"""
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        if not current_user.is_authenticated or current_user.role != 'Super Admin':
+            abort(403)
+        return f(*args, **kwargs)
+    return decorated_function
+
 def manager_required(f):
     """Decorator to require manager or admin role"""
     @wraps(f)

@@ -37,6 +37,7 @@ class User(UserMixin, db.Model):
     
     def has_permission(self, permission):
         role_permissions = {
+            'Super Admin': ['all'],
             'Admin': ['all'],
             'Manager': ['read_all', 'write_inventory', 'write_customers', 'read_reports'],
             'Cashier': ['read_products', 'write_sales', 'read_customers'],

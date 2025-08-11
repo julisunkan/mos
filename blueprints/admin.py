@@ -57,8 +57,14 @@ def edit_user(id):
     user = User.query.get_or_404(id)
     form = UserForm(obj=user)
     
-    # Security check: Admin cannot edit another admin's password
-    is_editing_other_admin = user.role == 'Admin' and user.id != current_user.id
+    # Security checks: Regular admin cannot edit Super Admin or another admin's password
+    is_editing_super_admin = user.role == 'Super Admin' and current_user.role != 'Super Admin'
+    is_editing_other_admin = user.role in ['Admin', 'Super Admin'] and user.id != current_user.id
+    
+    # Block regular admins from editing Super Admin accounts
+    if is_editing_super_admin:
+        flash('You cannot edit Super Admin accounts.', 'error')
+        return redirect(url_for('admin.users'))
     
     # Populate store choices
     stores = Store.query.filter_by(is_active=True).all()
@@ -105,12 +111,16 @@ def edit_user(id):
 def delete_user(id):
     user = User.query.get_or_404(id)
     
-    # Security checks: Cannot delete yourself or other admins
+    # Security checks: Cannot delete yourself, other admins, or Super Admins
     if user.id == current_user.id:
         flash('You cannot delete your own account.', 'error')
         return redirect(url_for('admin.users'))
     
-    if user.role == 'Admin':
+    if user.role == 'Super Admin':
+        flash('You cannot delete Super Admin accounts.', 'error')
+        return redirect(url_for('admin.users'))
+    
+    if user.role == 'Admin' and current_user.role != 'Super Admin':
         flash('You cannot delete other admin accounts.', 'error')
         return redirect(url_for('admin.users'))
     

@@ -2,6 +2,7 @@ from flask_wtf import FlaskForm
 from wtforms import StringField, TextAreaField, FloatField, IntegerField, BooleanField, SelectField, SelectMultipleField, PasswordField, DateField
 from wtforms.validators import DataRequired, Length, Email, Optional, NumberRange
 from wtforms.widgets import CheckboxInput, ListWidget
+from flask_login import current_user
 
 class LoginForm(FlaskForm):
     username = StringField('Username', validators=[DataRequired(), Length(min=4, max=25)])
@@ -15,6 +16,7 @@ class UserForm(FlaskForm):
     last_name = StringField('Last Name', validators=[DataRequired(), Length(max=50)])
     password = PasswordField('Password', validators=[DataRequired(), Length(min=6)])
     role = SelectField('Role', choices=[
+        ('Super Admin', 'Super Admin'),
         ('Admin', 'Admin'),
         ('Manager', 'Manager'), 
         ('Cashier', 'Cashier'),
@@ -22,6 +24,12 @@ class UserForm(FlaskForm):
     ], validators=[DataRequired()])
     store_id = SelectField('Assigned Store', coerce=int, validators=[Optional()])
     is_active = BooleanField('Active', default=True)
+    
+    def __init__(self, *args, **kwargs):
+        super(UserForm, self).__init__(*args, **kwargs)
+        # Remove Super Admin from choices if current user is not Super Admin
+        if hasattr(current_user, 'role') and current_user.is_authenticated and current_user.role != 'Super Admin':
+            self.role.choices = [(choice[0], choice[1]) for choice in self.role.choices if choice[0] != 'Super Admin']
 
 class CategoryForm(FlaskForm):
     name = StringField('Category Name', validators=[DataRequired(), Length(max=100)])
