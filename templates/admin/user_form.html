@@ -78,17 +78,25 @@
                         
                         <div class="row">
                             <div class="col-md-6 mb-3">
-                                {{ form.password.label(class="form-label") }}
-                                {% if user %}
-                                    <small class="text-muted d-block">Leave blank to keep current password</small>
-                                {% endif %}
-                                {{ form.password(class="form-control" + (" is-invalid" if form.password.errors else "")) }}
-                                {% if form.password.errors %}
-                                    <div class="invalid-feedback">
-                                        {% for error in form.password.errors %}
-                                            {{ error }}
-                                        {% endfor %}
-                                    </div>
+                                {% if is_editing_other_admin %}
+                                    {{ form.password.label(class="form-label text-muted") }}
+                                    <small class="text-warning d-block">
+                                        <i class="fas fa-lock me-1"></i>Password editing disabled for admin accounts
+                                    </small>
+                                    {{ form.password(class="form-control", disabled=true, placeholder="Password cannot be changed") }}
+                                {% else %}
+                                    {{ form.password.label(class="form-label") }}
+                                    {% if user %}
+                                        <small class="text-muted d-block">Leave blank to keep current password</small>
+                                    {% endif %}
+                                    {{ form.password(class="form-control" + (" is-invalid" if form.password.errors else "")) }}
+                                    {% if form.password.errors %}
+                                        <div class="invalid-feedback">
+                                            {% for error in form.password.errors %}
+                                                {{ error }}
+                                            {% endfor %}
+                                        </div>
+                                    {% endif %}
                                 {% endif %}
                             </div>
                             

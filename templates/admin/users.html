@@ -64,13 +64,19 @@
                                                    class="btn btn-outline-primary">
                                                     <i class="fas fa-edit"></i>
                                                 </a>
-                                                {% if user.id != current_user.id %}
+                                                {% if user.id != current_user.id and user.role != 'Admin' %}
                                                 <form method="POST" action="{{ url_for('admin.delete_user', id=user.id) }}" 
                                                       class="d-inline">
-                                                    <button type="submit" class="btn btn-outline-danger">
+                                                    <button type="submit" class="btn btn-outline-danger"
+                                                            onclick="return confirm('Are you sure you want to delete this user?')">
                                                         <i class="fas fa-trash"></i>
                                                     </button>
                                                 </form>
+                                                {% elif user.role == 'Admin' and user.id != current_user.id %}
+                                                <span class="btn btn-outline-secondary disabled" 
+                                                      title="Cannot delete admin accounts">
+                                                    <i class="fas fa-lock"></i>
+                                                </span>
                                                 {% endif %}
                                             </div>
                                         </td>

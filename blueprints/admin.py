@@ -57,6 +57,9 @@ def edit_user(id):
     user = User.query.get_or_404(id)
     form = UserForm(obj=user)
     
+    # Security check: Admin cannot edit another admin's password
+    is_editing_other_admin = user.role == 'Admin' and user.id != current_user.id
+    
     # Populate store choices
     stores = Store.query.filter_by(is_active=True).all()
     form.store_id.choices = [(0, '--- No Store ---')] + [(s.id, s.name) for s in stores]
@@ -67,7 +70,7 @@ def edit_user(id):
     else:
         form.store_id.data = 0
     
-    # Password is optional for edits
+    # Password is optional for edits, but restricted for other admins
     form.password.validators = []
     
     if form.validate_on_submit():
@@ -79,8 +82,12 @@ def edit_user(id):
         user.is_active = form.is_active.data
         user.store_id = form.store_id.data if form.store_id.data != 0 else None
         
-        if form.password.data:
+        # Only allow password changes if not editing another admin
+        if form.password.data and not is_editing_other_admin:
             user.set_password(form.password.data)
+        elif form.password.data and is_editing_other_admin:
+            flash('You cannot change another admin\'s password.', 'error')
+            return render_template('admin/user_form.html', form=form, title='Edit User', user=user, is_editing_other_admin=is_editing_other_admin)
         
         try:
             db.session.commit()
@@ -90,7 +97,7 @@ def edit_user(id):
             db.session.rollback()
             flash(f'Error updating user: {str(e)}', 'error')
     
-    return render_template('admin/user_form.html', form=form, title='Edit User', user=user)
+    return render_template('admin/user_form.html', form=form, title='Edit User', user=user, is_editing_other_admin=is_editing_other_admin)
 
 @admin_bp.route('/users/<int:id>/delete', methods=['POST'])
 @login_required
@@ -98,8 +105,13 @@ def edit_user(id):
 def delete_user(id):
     user = User.query.get_or_404(id)
     
+    # Security checks: Cannot delete yourself or other admins
     if user.id == current_user.id:
         flash('You cannot delete your own account.', 'error')
+        return redirect(url_for('admin.users'))
+    
+    if user.role == 'Admin':
+        flash('You cannot delete other admin accounts.', 'error')
         return redirect(url_for('admin.users'))
     
     try:
