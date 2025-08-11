@@ -35,7 +35,7 @@ def new_user():
         user.first_name = form.first_name.data
         user.last_name = form.last_name.data
         user.role = form.role.data
-        user.is_active = form.is_active.data
+        user.active = form.is_active.data
         user.store_id = form.store_id.data if form.store_id.data != 0 else None
         user.set_password(form.password.data)
         
@@ -90,7 +90,7 @@ def edit_user(id):
         user.first_name = form.first_name.data
         user.last_name = form.last_name.data
         user.role = form.role.data
-        user.is_active = form.is_active.data
+        user.active = form.is_active.data
         user.store_id = form.store_id.data if form.store_id.data != 0 else None
         
         # Only allow password changes if not editing another admin
@@ -232,7 +232,7 @@ def assign_user_stores():
     form = UserStoreAssignmentForm()
     
     # Populate form choices
-    form.user_id.choices = [(u.id, f"{u.username} ({u.email})") for u in User.query.filter_by(is_active=True).all()]
+    form.user_id.choices = [(u.id, f"{u.username} ({u.email})") for u in User.query.filter_by(active=True).all()]
     form.store_ids.choices = [(s.id, s.name) for s in Store.query.filter_by(is_active=True).all()]
     
     if form.validate_on_submit():
@@ -288,7 +288,7 @@ def edit_user_stores(user_id):
     form = UserStoreAssignmentForm()
     
     # Populate form choices
-    form.user_id.choices = [(u.id, f"{u.username} ({u.email})") for u in User.query.filter_by(is_active=True).all()]
+    form.user_id.choices = [(u.id, f"{u.username} ({u.email})") for u in User.query.filter_by(active=True).all()]
     form.store_ids.choices = [(s.id, s.name) for s in Store.query.filter_by(is_active=True).all()]
     
     if request.method == 'GET':
@@ -361,14 +361,14 @@ def returns():
             start_dt = datetime.strptime(start_date, '%Y-%m-%d')
             query = query.filter(SaleReturn.created_at >= start_dt)
         except ValueError:
-            pass
+            flash('Invalid start date format', 'error')
             
     if end_date:
         try:
             end_dt = datetime.strptime(end_date, '%Y-%m-%d') + timedelta(days=1)
             query = query.filter(SaleReturn.created_at < end_dt)
         except ValueError:
-            pass
+            flash('Invalid end date format', 'error')
             
     if status:
         query = query.filter(SaleReturn.status == status)

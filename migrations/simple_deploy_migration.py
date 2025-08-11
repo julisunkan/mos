@@ -148,8 +148,8 @@ def ensure_data_exists():
                 if not user_exists:
                     password_hash = generate_password_hash(user_data['password'])
                     execute_sql("""
-                        INSERT INTO users (username, email, first_name, last_name, password_hash, role, store_id, is_active)
-                        VALUES (:username, :email, :first_name, :last_name, :password_hash, :role, :store_id, :is_active)
+                        INSERT INTO users (username, email, first_name, last_name, password_hash, role, store_id, active)
+                        VALUES (:username, :email, :first_name, :last_name, :password_hash, :role, :store_id, :active)
                     """, {
                         'username': user_data['username'],
                         'email': user_data['email'],
@@ -158,7 +158,7 @@ def ensure_data_exists():
                         'password_hash': password_hash,
                         'role': user_data['role'],
                         'store_id': user_data['store_id'],
-                        'is_active': True
+                        'active': True
                     })
                     
                     # Get user ID for user-store relationship
