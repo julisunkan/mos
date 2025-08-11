@@ -11,6 +11,13 @@ Successfully migrated from Replit Agent to standard Replit environment. The appl
 - New sales system with PDF receipt generation implemented
 - Security practices maintained with client/server separation
 
+### Store-Based Product Filtering Implemented (August 11, 2025)
+- Cashiers are restricted to products available in their assigned store only
+- POS system filters products based on store_stock availability for user's store_id
+- Returns system enforces store-based access control
+- Demonstration setup: Main Store (tech products) and Fashion Store (clothing) with separate inventories
+- Store assignments: julisunkan → Main Store, fashioncashier → Fashion Store
+
 ### Complete Refund Approval System Implemented (August 11, 2025)
 - Cashiers can submit return requests that go to "Pending" status
 - Returns require admin approval before inventory restoration
