@@ -217,20 +217,31 @@ def assign_user_stores():
             UserStore.query.filter_by(user_id=user_id).delete()
             
             # Add new assignments
+            user = User.query.get(user_id)
             if store_ids:
+                primary_store_id = store_ids[0]  # Use first store as primary
+                
+                # Update user's direct store_id field for POS compatibility
+                user.store_id = primary_store_id
+                
+                # Create UserStore entries for relationship tracking
                 for store_id in store_ids:
                     user_store = UserStore()
                     user_store.user_id = user_id
                     user_store.store_id = store_id
+                    # Mark first store as default
+                    user_store.is_default = (store_id == primary_store_id)
                     db.session.add(user_store)
+            else:
+                # Clear user's direct store assignment
+                user.store_id = None
             
             db.session.commit()
             
-            user = User.query.get(user_id)
             if store_ids and user:
                 stores = Store.query.filter(Store.id.in_(store_ids)).all()
                 store_names = [store.name for store in stores]
-                flash(f'User {user.username} assigned to stores: {", ".join(store_names)}', 'success')
+                flash(f'User {user.username} assigned to stores: {", ".join(store_names)} (Primary: {stores[0].name})', 'success')
             else:
                 flash(f'User store assignments cleared', 'success')
             return redirect(url_for('admin.user_stores'))
@@ -268,18 +279,29 @@ def edit_user_stores(user_id):
             
             # Add new assignments
             if store_ids:
+                primary_store_id = store_ids[0]  # Use first store as primary
+                
+                # Update user's direct store_id field for POS compatibility
+                user.store_id = primary_store_id
+                
+                # Create UserStore entries for relationship tracking
                 for store_id in store_ids:
                     user_store = UserStore()
                     user_store.user_id = user_id
                     user_store.store_id = store_id
+                    # Mark first store as default
+                    user_store.is_default = (store_id == primary_store_id)
                     db.session.add(user_store)
+            else:
+                # Clear user's direct store assignment
+                user.store_id = None
             
             db.session.commit()
             
             if store_ids:
                 stores = Store.query.filter(Store.id.in_(store_ids)).all()
                 store_names = [store.name for store in stores]
-                flash(f'Store assignments updated for {user.username}: {", ".join(store_names)}', 'success')
+                flash(f'Store assignments updated for {user.username}: {", ".join(store_names)} (Primary: {stores[0].name})', 'success')
             else:
                 flash(f'All store assignments removed for {user.username}', 'success')
             return redirect(url_for('admin.user_stores'))

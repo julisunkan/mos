@@ -117,6 +117,54 @@ def verify_store_setup(store_id):
     except Exception as e:
         return False, [f"Error verifying store setup: {str(e)}"], []
 
+def sync_user_store_assignments():
+    """
+    Synchronize user.store_id with UserStore relationships for consistency
+    This fixes any mismatches between direct assignments and relationship table
+    Returns (success: bool, message: str, fixes_applied: int)
+    """
+    try:
+        from models import User, UserStore
+        
+        fixes_applied = 0
+        users_with_relationships = db.session.query(User).join(UserStore).all()
+        
+        for user in users_with_relationships:
+            # Get user's first store relationship as primary
+            primary_user_store = UserStore.query.filter_by(user_id=user.id).first()
+            
+            if primary_user_store and user.store_id != primary_user_store.store_id:
+                print(f"Fixing user {user.username}: store_id {user.store_id} -> {primary_user_store.store_id}")
+                user.store_id = primary_user_store.store_id
+                fixes_applied += 1
+        
+        # Also check users with store_id but no relationships
+        users_with_direct_only = User.query.filter(
+            User.store_id.isnot(None)
+        ).filter(
+            ~User.id.in_(db.session.query(UserStore.user_id))
+        ).all()
+        
+        for user in users_with_direct_only:
+            # Create missing UserStore relationship
+            user_store = UserStore()
+            user_store.user_id = user.id
+            user_store.store_id = user.store_id
+            user_store.is_default = True
+            db.session.add(user_store)
+            fixes_applied += 1
+            print(f"Created missing relationship for user {user.username} -> store {user.store_id}")
+        
+        if fixes_applied > 0:
+            db.session.commit()
+            return True, f"Fixed {fixes_applied} user-store assignment inconsistencies", fixes_applied
+        else:
+            return True, "All user-store assignments are consistent", 0
+    
+    except Exception as e:
+        db.session.rollback()
+        return False, f"Error syncing user store assignments: {str(e)}", 0
+
 def fix_store_setup(store_id):
     """
     Automatically fix common store setup issues

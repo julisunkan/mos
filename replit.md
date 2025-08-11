@@ -31,12 +31,12 @@ Successfully migrated from Replit Agent to standard Replit environment. The appl
 - Store assignment helper module for robust store-user-product relationship management
 - Scalable architecture ready for multiple stores and complex inventory setups
 
-### Complete Refund Approval System Implemented (August 11, 2025)
-- Cashiers can submit return requests that go to "Pending" status
-- Returns require admin approval before inventory restoration
-- Admin interface with approve/reject functionality
-- Clear workflow messaging to cashiers about approval requirement
-- Inventory only restored when admin approves the return
+### Store Assignment System Fixed (August 11, 2025)
+- Fixed critical issue where user-store assignments via /admin/user-stores weren't working
+- User assignments now properly update both UserStore relationship table AND user.store_id field
+- POS system properly recognizes store assignments and shows correct products
+- Store assignment helper module includes sync functionality to fix inconsistencies
+- Primary store concept: first assigned store becomes user's primary store for POS access
 
 ### Complete Refund Approval System Implemented (August 11, 2025)
 - Cashiers can submit return requests that go to "Pending" status
