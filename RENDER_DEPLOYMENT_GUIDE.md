@@ -28,9 +28,14 @@ Your project should have these deployment files (they're already included):
 
 ### 1.2 Dependencies Setup
 
-Your project uses `pyproject.toml` for dependency management. Render will automatically install dependencies from this file. The build script (`build.sh`) includes a fallback to `requirements.txt` if needed.
+Your project uses `pyproject.toml` for dependency management. The improved build script (`build.sh`) will:
 
-**Current dependencies in pyproject.toml:**
+1. **Upgrade pip** for better package resolution
+2. **Install from pyproject.toml** using `pip install -e .`
+3. **Install gunicorn explicitly** to ensure the server is available
+4. **Verify core dependencies** are properly installed
+
+**Key dependencies included:**
 - Flask web framework with SQLAlchemy ORM
 - PostgreSQL database driver (psycopg2-binary)
 - Authentication (Flask-Login, bcrypt)
@@ -38,7 +43,7 @@ Your project uses `pyproject.toml` for dependency management. Render will automa
 - PDF generation (ReportLab) and QR codes
 - Production server (Gunicorn)
 
-**No additional setup required** - Render will handle dependency installation automatically.
+**Build process handles dependency installation automatically** - no manual setup required.
 
 ## Step 2: Set Up Database on Render
 
@@ -152,10 +157,11 @@ LOG_LEVEL=INFO
 
 Your application includes an **automatic migration system** that:
 
-✅ **Runs automatically on every deployment**
+✅ **Runs automatically on app startup (not during build)**
 ✅ **Creates all required database tables**
 ✅ **Imports all default data safely**
 ✅ **Never overwrites existing data**
+✅ **Dependencies are installed before migration runs**
 
 #### What Gets Migrated Automatically:
 
@@ -329,40 +335,54 @@ Immediately after successful deployment:
 
 ### Common Issues and Solutions
 
-#### Issue 1: Database Connection Error
+#### Issue 1: Build Fails - "gunicorn: command not found"
+```
+Error: bash: line 1: gunicorn: command not found
+Solution:
+1. Verify build script ran successfully (pip install -e .)
+2. Check build logs for dependency installation errors
+3. Ensure pyproject.toml is properly formatted
+4. In render.yaml, verify buildCommand: "./build.sh"
+```
+
+#### Issue 2: Migration Fails - "ModuleNotFoundError"
+```
+Error: ModuleNotFoundError: No module named 'werkzeug'
+Solution:
+1. Dependencies now installed before migration runs
+2. Check build logs for successful dependency installation
+3. Verify all required packages in pyproject.toml
+4. Migration now runs after app startup, not during build
+```
+
+#### Issue 3: Database Connection Error
 ```
 Error: could not connect to server
 Solution:
-1. Verify DATABASE_URL is correct
+1. Verify DATABASE_URL is correct in environment variables
 2. Check database is running in Render Dashboard
 3. Ensure database and web service are in same region
+4. Confirm database URL format: postgresql://user:pass@host:port/db
 ```
 
-#### Issue 2: Migration Fails
-```
-Error: migration script errors
-Solution:
-1. Check application logs for specific error
-2. Verify database permissions
-3. Try manual migration: Connect to database and run SQL scripts
-```
-
-#### Issue 3: Login Issues
-```
-Error: cannot login with default credentials
-Solution:
-1. Check migration logs for user creation
-2. Verify password field compatibility
-3. Try other default accounts (admin/admin123)
-```
-
-#### Issue 4: Missing Products/Data
+#### Issue 4: Migration Succeeds but No Data
 ```
 Error: empty product lists or missing store data
 Solution:
-1. Check migration completion in logs
-2. Verify store assignments in Admin panel
-3. Run manual data seeding if needed
+1. Check application startup logs for migration messages
+2. Look for "✅ Deployment migration completed successfully"
+3. Verify store assignments in Admin panel
+4. Migration runs automatically on every app startup
+```
+
+#### Issue 5: Login Issues
+```
+Error: cannot login with default credentials
+Solution:
+1. Check migration logs for user creation success
+2. Try all default accounts (see credentials table above)
+3. Verify password hashing is working correctly
+4. Check for database table creation errors
 ```
 
 ### Getting Help

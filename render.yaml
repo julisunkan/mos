@@ -18,6 +18,8 @@ services:
         value: .
       - key: WEB_CONCURRENCY
         value: 2
+      - key: PYTHON_VERSION
+        value: 3.11.9
 
 databases:
   - name: cloudpos-db

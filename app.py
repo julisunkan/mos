@@ -139,17 +139,25 @@ def dashboard_stats_api():
 with app.app_context():
     db.create_all()
     
-    # Run deployment migration on startup
-    try:
-        from migrations.simple_deploy_migration import ensure_data_exists
-        ensure_data_exists()
-    except Exception as e:
-        print(f"Note: Advanced deployment migration error: {e}")
-        print("Attempting fallback data seeding...")
+    # Run deployment migration on startup - moved to after dependencies are loaded
+    def run_deployment_migration():
         try:
-            exec(open('seed_data.py').read())
-        except Exception as seed_error:
-            print(f"Warning: Fallback seed data creation also failed: {seed_error}")
+            from migrations.simple_deploy_migration import ensure_data_exists
+            print("🚀 Starting deployment migration...")
+            ensure_data_exists()
+            print("✅ Deployment migration completed successfully")
+        except Exception as e:
+            print(f"❌ Migration failed: {e}")
+            print("🔄 Attempting fallback data seeding...")
+            try:
+                exec(open('seed_data.py').read())
+                print("✅ Fallback seeding completed")
+            except Exception as fallback_error:
+                print(f"❌ Fallback also failed: {fallback_error}")
+                print("⚠️  Starting with empty database - admin setup required")
+    
+    # Run migration
+    run_deployment_migration()
     
     # Create default roles and admin user if they don't exist
     from utils import create_default_data
