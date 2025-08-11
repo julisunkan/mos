@@ -50,28 +50,62 @@
             </div>
         </div>
 
-        <!-- Desktop Navigation (hidden on mobile) -->
-        <nav class="navbar navbar-dark bg-dark fixed-top d-none d-md-block">
-            <div class="container-fluid">
-                <a class="navbar-brand" href="{{ url_for('dashboard') }}">
+        <!-- Desktop Header -->
+        <div class="desktop-header d-none d-md-flex">
+            <div class="desktop-brand">
+                <a href="{{ url_for('dashboard') }}" class="brand-link">
                     <i class="fas fa-store me-2"></i>Cloud POS
                 </a>
-                <div class="navbar-nav ms-auto">
-                    <div class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle text-white" href="#" role="button" data-bs-toggle="dropdown">
-                            <i class="fas fa-home me-1"></i>{{ current_user.full_name }}
-                        </a>
-                        <ul class="dropdown-menu dropdown-menu-end">
-                            <li><span class="dropdown-item-text">Role: {{ current_user.role }}</span></li>
-                            <li><hr class="dropdown-divider"></li>
-                            <li><a class="dropdown-item" href="{{ url_for('auth.logout') }}">
-                                <i class="fas fa-sign-out-alt me-2"></i>Logout
-                            </a></li>
-                        </ul>
-                    </div>
+            </div>
+            <div class="desktop-user-info">
+                <div class="dropdown">
+                    <button class="btn btn-dark dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                        <i class="fas fa-user me-1"></i>{{ current_user.full_name }}
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-end">
+                        <li><span class="dropdown-item-text">Role: {{ current_user.role }}</span></li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li><a class="dropdown-item" href="{{ url_for('auth.logout') }}">
+                            <i class="fas fa-sign-out-alt me-2"></i>Logout
+                        </a></li>
+                    </ul>
                 </div>
             </div>
-        </nav>
+        </div>
+
+        <!-- Desktop Navigation (same as mobile) -->
+        <div class="desktop-nav d-none d-md-flex">
+            <a href="{{ url_for('dashboard') }}" class="desktop-nav-item {% if request.endpoint == 'dashboard' %}active{% endif %}">
+                <i class="fas fa-home"></i>
+                <span>Home</span>
+            </a>
+            <a href="{{ url_for('sales.new_sale') }}" class="desktop-nav-item {% if 'sales' in request.endpoint %}active{% endif %}">
+                <i class="fas fa-cash-register"></i>
+                <span>Sales</span>
+            </a>
+            <a href="{{ url_for('inventory.products') }}" class="desktop-nav-item {% if 'inventory' in request.endpoint %}active{% endif %}">
+                <i class="fas fa-boxes"></i>
+                <span>Inventory</span>
+            </a>
+            <a href="{{ url_for('returns.index') }}" class="desktop-nav-item {% if 'returns' in request.endpoint %}active{% endif %}">
+                <i class="fas fa-undo"></i>
+                <span>Returns</span>
+            </a>
+            <a href="{{ url_for('customers.index') }}" class="desktop-nav-item {% if 'customers' in request.endpoint %}active{% endif %}">
+                <i class="fas fa-users"></i>
+                <span>Customers</span>
+            </a>
+            {% if current_user.role == 'admin' %}
+            <a href="{{ url_for('reports.dashboard') }}" class="desktop-nav-item {% if 'reports' in request.endpoint %}active{% endif %}">
+                <i class="fas fa-chart-bar"></i>
+                <span>Reports</span>
+            </a>
+            <a href="{{ url_for('admin.dashboard') }}" class="desktop-nav-item {% if 'admin' in request.endpoint %}active{% endif %}">
+                <i class="fas fa-cog"></i>
+                <span>Admin</span>
+            </a>
+            {% endif %}
+        </div>
 
 
 

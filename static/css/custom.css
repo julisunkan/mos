@@ -47,6 +47,88 @@ body {
     color: white;
 }
 
+/* Desktop Header */
+.desktop-header {
+    background: var(--app-dark);
+    padding: 15px 30px;
+    justify-content: space-between;
+    align-items: center;
+    color: white;
+    box-shadow: var(--app-shadow);
+}
+
+.desktop-brand .brand-link {
+    color: white;
+    text-decoration: none;
+    font-size: 1.5rem;
+    font-weight: 700;
+}
+
+.desktop-brand .brand-link:hover {
+    color: var(--app-primary);
+}
+
+.desktop-user-info .btn {
+    background: transparent;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    color: white;
+}
+
+.desktop-user-info .btn:hover {
+    background: rgba(255, 255, 255, 0.1);
+    color: white;
+    border-color: rgba(255, 255, 255, 0.3);
+}
+
+/* Desktop Navigation */
+.desktop-nav {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    padding: 20px 30px;
+    gap: 15px;
+    justify-content: center;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    flex-wrap: wrap;
+}
+
+.desktop-nav-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 15px 20px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: var(--app-border-radius);
+    color: white;
+    text-decoration: none;
+    transition: all 0.3s ease;
+    min-width: 100px;
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.desktop-nav-item i {
+    font-size: 1.5rem;
+    margin-bottom: 8px;
+}
+
+.desktop-nav-item span {
+    font-size: 0.9rem;
+    font-weight: 600;
+}
+
+.desktop-nav-item:hover {
+    background: rgba(255, 255, 255, 0.2);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.2);
+    color: white;
+    border-color: rgba(255, 255, 255, 0.4);
+}
+
+.desktop-nav-item.active {
+    background: rgba(255, 255, 255, 0.25);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    border-color: rgba(255, 255, 255, 0.4);
+}
+
 /* Main content with safe area padding */
 .main-content {
     margin-top: 0;
@@ -296,15 +378,15 @@ body {
 }
 
 @media (min-width: 768px) {
-    .navbar,
-    .offcanvas {
-        display: block;
-    }
-    
     .bottom-nav,
     .mobile-header,
     .status-bar {
-        display: none;
+        display: none !important;
+    }
+    
+    .desktop-header,
+    .desktop-nav {
+        display: flex !important;
     }
     
     .app-container {
@@ -313,9 +395,25 @@ body {
         background: transparent;
     }
     
+    body {
+        background: #f8fafc;
+    }
+    
     .main-content {
-        margin-top: 56px;
-        padding: 20px;
+        margin-top: 0;
+        padding: 20px 30px;
+        min-height: calc(100vh - 200px);
+        background: transparent;
+    }
+    
+    /* Desktop-specific adjustments */
+    .card {
+        box-shadow: var(--app-shadow);
+    }
+    
+    .desktop-nav-item:focus {
+        outline: none;
+        box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.3);
     }
 }
 
