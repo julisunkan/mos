@@ -1,7 +1,7 @@
 from flask import Blueprint, render_template, request, redirect, url_for, flash
 from flask_login import login_required, current_user
-from datetime import datetime
-from models import User, Category, CompanyProfile, AuditLog, SaleReturn, SaleReturnItem, Store, UserStore
+from datetime import datetime, timedelta
+from models import User, Category, CompanyProfile, AuditLog, SaleReturn, SaleReturnItem, Store, UserStore, Product
 from forms import UserForm, CategoryForm, CompanyProfileForm, UserStoreAssignmentForm
 from app import db
 from utils import admin_required
