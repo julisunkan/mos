@@ -29,10 +29,9 @@ def search_receipt():
     
     # Check if user can access this sale (admin can access all, others only from their store)
     if current_user.role != 'admin':
-        # For non-admin users, they can only process returns for sales from their assigned stores
-        user_stores = [us.store_id for us in current_user.store_assignments]
-        if sale.store_id not in user_stores:
-            return jsonify({'error': 'Access denied to this receipt'}), 403
+        # For non-admin users, they can only process returns for sales from their assigned store
+        if current_user.store_id != sale.store_id:
+            return jsonify({'error': 'Access denied - you can only process returns for your assigned store'}), 403
     
     # Check if sale is recent enough for returns (within 30 days)
     days_since_sale = (datetime.utcnow() - sale.created_at).days
@@ -102,11 +101,10 @@ def process_return():
         if not original_sale:
             return jsonify({'error': 'Original sale not found'}), 404
         
-        # Check permissions - same store access logic as search
+        # Check permissions - ensure user can access this store's sales
         if current_user.role != 'admin':
-            user_stores = [us.store_id for us in current_user.store_assignments]
-            if original_sale.store_id not in user_stores:
-                return jsonify({'error': 'Access denied'}), 403
+            if current_user.store_id != original_sale.store_id:
+                return jsonify({'error': 'Access denied - you can only process returns for your assigned store'}), 403
         
         # Calculate return totals
         return_subtotal = 0

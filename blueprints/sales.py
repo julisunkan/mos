@@ -18,15 +18,18 @@ sales_bp = Blueprint('sales', __name__)
 @login_required
 def new_sale():
     """Display the new sale page"""
-    # Get products for the current user's store
+    # Get products for the current user's store - only products that have stock in their store
     if current_user.role == 'admin':
         products = Product.query.filter_by(is_active=True).all()
     else:
-        # Get products for user's assigned stores
-        store_ids = [store.id for store in current_user.store_assignments]
-        if store_ids:
-            # For now, show all products - store filtering can be added later
-            products = Product.query.filter_by(is_active=True).all()
+        if current_user.store_id:
+            # Only show products that have stock in the user's assigned store
+            from models import StoreStock
+            products = db.session.query(Product).join(StoreStock).filter(
+                Product.is_active == True,
+                StoreStock.store_id == current_user.store_id,
+                StoreStock.quantity > 0
+            ).all()
         else:
             products = []
     
@@ -48,20 +51,30 @@ def search_products():
     # Base query for active products
     base_query = Product.query.filter(Product.is_active == True)
     
-    # Filter by user's stores if not admin
+    # Filter by user's store if not admin
     if current_user.role != 'admin':
-        store_ids = [store.id for store in current_user.store_assignments]
-        if not store_ids:
+        if not current_user.store_id:
             return jsonify([])
-    
-    # Search by name, SKU, or barcode
-    products = base_query.filter(
-        or_(
-            Product.name.ilike(f'%{query}%'),
-            Product.sku.ilike(f'%{query}%'),
-            Product.barcode.ilike(f'%{query}%')
-        )
-    ).limit(20).all()
+        # Only search products available in user's store
+        from models import StoreStock
+        products = base_query.join(StoreStock).filter(
+            StoreStock.store_id == current_user.store_id,
+            StoreStock.quantity > 0,
+            or_(
+                Product.name.ilike(f'%{query}%'),
+                Product.sku.ilike(f'%{query}%'),
+                Product.barcode.ilike(f'%{query}%')
+            )
+        ).limit(20).all()
+    else:
+        # Admin can search all products
+        products = base_query.filter(
+            or_(
+                Product.name.ilike(f'%{query}%'),
+                Product.sku.ilike(f'%{query}%'),
+                Product.barcode.ilike(f'%{query}%')
+            )
+        ).limit(20).all()
     
     return jsonify([{
         'id': p.id,
