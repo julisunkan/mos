@@ -1,0 +1,124 @@
+{% extends "base.html" %}
+
+{% block title %}Cashier Store Assignments{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h1>Cashier Store Assignments</h1>
+                <a href="{{ url_for('admin.users') }}" class="btn btn-secondary">
+                    <i class="fas fa-arrow-left"></i> Back to Users
+                </a>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <h5>Current Assignments</h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>Cashier Name</th>
+                                    <th>Username</th>
+                                    <th>Role</th>
+                                    <th>Assigned Store</th>
+                                    <th>Products Available</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for assignment in assignment_data %}
+                                <tr>
+                                    <td>{{ assignment.cashier.full_name }}</td>
+                                    <td>{{ assignment.cashier.username }}</td>
+                                    <td>
+                                        <span class="badge bg-primary">{{ assignment.cashier.role }}</span>
+                                    </td>
+                                    <td>
+                                        <span class="{% if assignment.store_name == 'No Store Assigned' %}text-danger{% else %}text-success{% endif %}">
+                                            {{ assignment.store_name }}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-info">{{ assignment.product_count }} products</span>
+                                    </td>
+                                    <td>
+                                        <select class="form-select form-select-sm" style="width: 200px; display: inline;" 
+                                                onchange="assignCashier({{ assignment.cashier.id }}, this.value)">
+                                            <option value="0" {% if not assignment.cashier.store_id %}selected{% endif %}>No Store</option>
+                                            {% for store in stores %}
+                                            <option value="{{ store.id }}" {% if assignment.cashier.store_id == store.id %}selected{% endif %}>
+                                                {{ store.name }}
+                                            </option>
+                                            {% endfor %}
+                                        </select>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Summary Cards -->
+            <div class="row mt-4">
+                <div class="col-md-4">
+                    <div class="card bg-info text-white">
+                        <div class="card-body">
+                            <h5>Total Cashiers</h5>
+                            <h2>{{ assignment_data|length }}</h2>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card bg-success text-white">
+                        <div class="card-body">
+                            <h5>Assigned Cashiers</h5>
+                            <h2>{{ assignment_data|selectattr('cashier.store_id')|list|length }}</h2>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card bg-warning text-white">
+                        <div class="card-body">
+                            <h5>Unassigned Cashiers</h5>
+                            <h2>{{ assignment_data|rejectattr('cashier.store_id')|list|length }}</h2>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function assignCashier(userId, storeId) {
+    fetch('/admin/store_management/api/assign_cashier_to_store', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            user_id: userId,
+            store_id: parseInt(storeId)
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            location.reload();
+        } else {
+            alert('Error: ' + data.message);
+        }
+    })
+    .catch(error => {
+        alert('Error: ' + error);
+    });
+}
+</script>
+{% endblock %}

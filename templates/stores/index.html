@@ -5,9 +5,14 @@
 {% block content %}
 <div class="d-flex justify-content-between align-items-center mb-4">
     <h2>Store Management</h2>
-    <a href="{{ url_for('stores.new_store') }}" class="btn btn-primary">
-        <i class="fas fa-plus"></i> Add New Store
-    </a>
+    <div class="btn-group">
+        <a href="{{ url_for('store_management.cashier_assignments') }}" class="btn btn-info">
+            <i class="fas fa-users"></i> Cashier Assignments
+        </a>
+        <a href="{{ url_for('stores.new_store') }}" class="btn btn-primary">
+            <i class="fas fa-plus"></i> Add New Store
+        </a>
+    </div>
 </div>
 
 <div class="card">
@@ -40,6 +45,9 @@
                         </td>
                         <td>
                             <div class="btn-group" role="group">
+                                <a href="{{ url_for('store_management.assign_products', store_id=store.id) }}" class="btn btn-sm btn-success">
+                                    <i class="fas fa-shopping-cart"></i> Products
+                                </a>
                                 <a href="{{ url_for('stores.store_stock', id=store.id) }}" class="btn btn-sm btn-info">
                                     <i class="fas fa-boxes"></i> Stock
                                 </a>

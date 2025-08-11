@@ -75,6 +75,7 @@ from blueprints.customers import customers_bp
 from blueprints.reports import reports_bp
 from blueprints.sales import sales_bp
 from blueprints.returns import returns_bp
+from blueprints.store_management import store_management_bp
 
 
 app.register_blueprint(auth_bp, url_prefix='/auth')
@@ -85,6 +86,7 @@ app.register_blueprint(reports_bp, url_prefix='/reports')
 app.register_blueprint(stores_bp, url_prefix='/stores')
 app.register_blueprint(sales_bp, url_prefix='/sales')
 app.register_blueprint(returns_bp, url_prefix='/returns')
+app.register_blueprint(store_management_bp, url_prefix='/admin/store_management')
 
 # Register template filters
 app.jinja_env.filters['format_currency'] = format_currency

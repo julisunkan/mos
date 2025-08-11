@@ -1,0 +1,189 @@
+{% extends "base.html" %}
+
+{% block title %}{{ store.name }} - Product Assignments{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h1>{{ store.name }} - Product Assignments</h1>
+                <a href="{{ url_for('stores.index') }}" class="btn btn-secondary">
+                    <i class="fas fa-arrow-left"></i> Back to Stores
+                </a>
+            </div>
+
+            <!-- Assigned Products -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5>Assigned Products ({{ assigned_products|length }})</h5>
+                </div>
+                <div class="card-body">
+                    {% if assigned_products %}
+                        <div class="table-responsive">
+                            <table class="table table-striped">
+                                <thead>
+                                    <tr>
+                                        <th>Product Name</th>
+                                        <th>SKU</th>
+                                        <th>Price</th>
+                                        <th>Stock Quantity</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for product, quantity in assigned_products %}
+                                    <tr>
+                                        <td>{{ product.name }}</td>
+                                        <td>{{ product.sku }}</td>
+                                        <td>${{ "%.2f"|format(product.selling_price) }}</td>
+                                        <td>
+                                            <input type="number" class="form-control" style="width: 100px; display: inline;" 
+                                                   value="{{ quantity }}" 
+                                                   onchange="updateStock({{ store.id }}, {{ product.id }}, this.value)">
+                                        </td>
+                                        <td>
+                                            <button class="btn btn-danger btn-sm" 
+                                                    onclick="removeProduct({{ store.id }}, {{ product.id }})">
+                                                <i class="fas fa-trash"></i> Remove
+                                            </button>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        <p class="text-muted">No products assigned to this store yet.</p>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Available Products to Assign -->
+            <div class="card">
+                <div class="card-header">
+                    <h5>Available Products to Assign ({{ unassigned_products|length }})</h5>
+                </div>
+                <div class="card-body">
+                    {% if unassigned_products %}
+                        <div class="table-responsive">
+                            <table class="table table-striped">
+                                <thead>
+                                    <tr>
+                                        <th>Product Name</th>
+                                        <th>SKU</th>
+                                        <th>Price</th>
+                                        <th>Initial Stock</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for product in unassigned_products %}
+                                    <tr>
+                                        <td>{{ product.name }}</td>
+                                        <td>{{ product.sku }}</td>
+                                        <td>${{ "%.2f"|format(product.selling_price) }}</td>
+                                        <td>
+                                            <input type="number" class="form-control" style="width: 100px; display: inline;" 
+                                                   value="0" id="qty-{{ product.id }}" min="0">
+                                        </td>
+                                        <td>
+                                            <button class="btn btn-success btn-sm" 
+                                                    onclick="assignProduct({{ store.id }}, {{ product.id }})">
+                                                <i class="fas fa-plus"></i> Assign
+                                            </button>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        <p class="text-muted">All products are already assigned to this store.</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function assignProduct(storeId, productId) {
+    const quantity = document.getElementById('qty-' + productId).value;
+    
+    fetch('/admin/store_management/api/assign_product', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            store_id: storeId,
+            product_id: productId,
+            quantity: parseInt(quantity)
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            location.reload();
+        } else {
+            alert('Error: ' + data.message);
+        }
+    })
+    .catch(error => {
+        alert('Error: ' + error);
+    });
+}
+
+function updateStock(storeId, productId, quantity) {
+    fetch('/admin/store_management/api/update_product_stock', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            store_id: storeId,
+            product_id: productId,
+            quantity: parseInt(quantity)
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (!data.success) {
+            alert('Error: ' + data.message);
+            location.reload();
+        }
+    })
+    .catch(error => {
+        alert('Error: ' + error);
+        location.reload();
+    });
+}
+
+function removeProduct(storeId, productId) {
+    if (confirm('Are you sure you want to remove this product from the store?')) {
+        fetch('/admin/store_management/api/remove_product_from_store', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                store_id: storeId,
+                product_id: productId
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                location.reload();
+            } else {
+                alert('Error: ' + data.message);
+            }
+        })
+        .catch(error => {
+            alert('Error: ' + error);
+        });
+    }
+}
+</script>
+{% endblock %}

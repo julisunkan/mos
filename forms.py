@@ -20,6 +20,7 @@ class UserForm(FlaskForm):
         ('Cashier', 'Cashier'),
         ('Accountant', 'Accountant')
     ], validators=[DataRequired()])
+    store_id = SelectField('Assigned Store', coerce=int, validators=[Optional()])
     is_active = BooleanField('Active', default=True)
 
 class CategoryForm(FlaskForm):

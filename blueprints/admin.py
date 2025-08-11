@@ -23,6 +23,11 @@ def users():
 @admin_required
 def new_user():
     form = UserForm()
+    
+    # Populate store choices
+    stores = Store.query.filter_by(is_active=True).all()
+    form.store_id.choices = [(0, '--- No Store ---')] + [(s.id, s.name) for s in stores]
+    
     if form.validate_on_submit():
         user = User()
         user.username = form.username.data
@@ -31,6 +36,7 @@ def new_user():
         user.last_name = form.last_name.data
         user.role = form.role.data
         user.is_active = form.is_active.data
+        user.store_id = form.store_id.data if form.store_id.data != 0 else None
         user.set_password(form.password.data)
         
         try:
@@ -49,7 +55,20 @@ def new_user():
 @admin_required
 def edit_user(id):
     user = User.query.get_or_404(id)
-    form = UserForm(user=user, obj=user)
+    form = UserForm(obj=user)
+    
+    # Populate store choices
+    stores = Store.query.filter_by(is_active=True).all()
+    form.store_id.choices = [(0, '--- No Store ---')] + [(s.id, s.name) for s in stores]
+    
+    # Set current store selection
+    if user.store_id:
+        form.store_id.data = user.store_id
+    else:
+        form.store_id.data = 0
+    
+    # Password is optional for edits
+    form.password.validators = []
     
     if form.validate_on_submit():
         user.username = form.username.data
@@ -58,6 +77,7 @@ def edit_user(id):
         user.last_name = form.last_name.data
         user.role = form.role.data
         user.is_active = form.is_active.data
+        user.store_id = form.store_id.data if form.store_id.data != 0 else None
         
         if form.password.data:
             user.set_password(form.password.data)
