@@ -67,9 +67,9 @@ def process_sale():
     try:
         data = request.get_json()
         
+        # Get user store or use default store
         user_store = get_user_store()
-        if not user_store:
-            return jsonify({'error': 'No store assigned'}), 400
+        store_id = user_store.store_id if user_store else (current_user.store_id if current_user.store_id else 1)
         
         cash_register = get_user_cash_register()
         if not cash_register:
@@ -105,7 +105,7 @@ def process_sale():
         sale.receipt_number = generate_receipt_number()
         sale.user_id = current_user.id
         sale.customer_id = data.get('customer_id')
-        sale.store_id = user_store.id
+        sale.store_id = store_id
         sale.subtotal = subtotal
         sale.tax_amount = total_tax
         sale.discount_amount = discount_amount
@@ -139,7 +139,7 @@ def process_sale():
             
             # Update stock
             stock_record = StoreStock.query.filter_by(
-                store_id=user_store.id, 
+                store_id=store_id, 
                 product_id=item['product_id']
             ).first()
             if stock_record:

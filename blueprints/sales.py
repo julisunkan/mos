@@ -120,10 +120,9 @@ def process_sale():
         payment_method = data.get('payment_method', 'cash')
         customer_id = data.get('customer_id')
         
-        # Get user's primary store
+        # Get user's primary store (use default store if no assignment)
         user_store = current_user.store_assignments[0] if current_user.store_assignments else None
-        if not user_store:
-            return jsonify({'error': 'No store assigned to user'}), 400
+        store_id = user_store.store_id if user_store else (current_user.store_id if current_user.store_id else 1)
         
         # Calculate totals
         subtotal = 0
@@ -134,7 +133,7 @@ def process_sale():
         sale.receipt_number = f"REC-{datetime.now().strftime('%Y%m%d')}-{uuid.uuid4().hex[:8].upper()}"
         sale.user_id = current_user.id
         sale.customer_id = customer_id if customer_id else None
-        sale.store_id = user_store.id
+        sale.store_id = store_id
         sale.payment_method = payment_method
         sale.subtotal = 0  # Will be calculated
         sale.tax_amount = 0  # Will be calculated  
