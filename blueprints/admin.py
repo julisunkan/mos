@@ -16,7 +16,13 @@ def users():
     users = User.query.paginate(
         page=page, per_page=20, error_out=False
     )
-    return render_template('admin/users.html', users=users)
+    
+    # Handle success and error messages from query parameters
+    success_msg = request.args.get('success')
+    error_msg = request.args.get('error')
+    
+    return render_template('admin/users.html', users=users, 
+                         success_message=success_msg, error_message=error_msg)
 
 @admin_bp.route('/users/new', methods=['GET', 'POST'])
 @login_required
@@ -29,6 +35,18 @@ def new_user():
     form.store_id.choices = [(0, '--- No Store ---')] + [(s.id, s.name) for s in stores]
     
     if form.validate_on_submit():
+        # Check for existing username
+        existing_user = User.query.filter_by(username=form.username.data).first()
+        if existing_user:
+            return render_template('admin/user_form.html', form=form, title='New User', 
+                                 error_message=f'Username "{form.username.data}" already exists. Please choose a different username.')
+        
+        # Check for existing email
+        existing_email = User.query.filter_by(email=form.email.data).first()
+        if existing_email:
+            return render_template('admin/user_form.html', form=form, title='New User',
+                                 error_message=f'Email "{form.email.data}" is already registered. Please use a different email.')
+        
         user = User()
         user.username = form.username.data
         user.email = form.email.data
@@ -42,11 +60,11 @@ def new_user():
         try:
             db.session.add(user)
             db.session.commit()
-            flash(f'User {user.username} created successfully!', 'success')
-            return redirect(url_for('admin.users'))
+            return redirect(url_for('admin.users', success=f'User {user.username} created successfully!'))
         except Exception as e:
             db.session.rollback()
-            flash(f'Error creating user: {str(e)}', 'error')
+            return render_template('admin/user_form.html', form=form, title='New User',
+                                 error_message=f'Database error: {str(e)}')
     
     return render_template('admin/user_form.html', form=form, title='New User')
 
@@ -63,8 +81,7 @@ def edit_user(id):
     
     # Block regular admins from editing Super Admin accounts
     if is_editing_super_admin:
-        flash('You cannot edit Super Admin accounts.', 'error')
-        return redirect(url_for('admin.users'))
+        return redirect(url_for('admin.users', error='You cannot edit Super Admin accounts.'))
     
     # Populate store choices
     stores = Store.query.filter_by(is_active=True).all()
@@ -82,8 +99,25 @@ def edit_user(id):
     if form.validate_on_submit():
         # Admins cannot edit usernames of other admins (including Super Admins)
         if is_editing_other_admin and form.username.data != user.username:
-            flash('You cannot change the username of other admin accounts.', 'error')
-            return render_template('admin/user_form.html', form=form, title='Edit User', user=user, is_editing_other_admin=is_editing_other_admin)
+            return render_template('admin/user_form.html', form=form, title='Edit User', user=user, 
+                                 is_editing_other_admin=is_editing_other_admin,
+                                 error_message='You cannot change the username of other admin accounts.')
+        
+        # Check for duplicate username (excluding current user)
+        if form.username.data != user.username:
+            existing_user = User.query.filter_by(username=form.username.data).first()
+            if existing_user:
+                return render_template('admin/user_form.html', form=form, title='Edit User', user=user, 
+                                     is_editing_other_admin=is_editing_other_admin,
+                                     error_message=f'Username "{form.username.data}" already exists. Please choose a different username.')
+        
+        # Check for duplicate email (excluding current user)
+        if form.email.data != user.email:
+            existing_email = User.query.filter_by(email=form.email.data).first()
+            if existing_email:
+                return render_template('admin/user_form.html', form=form, title='Edit User', user=user, 
+                                     is_editing_other_admin=is_editing_other_admin,
+                                     error_message=f'Email "{form.email.data}" is already registered. Please use a different email.')
         
         user.username = form.username.data
         user.email = form.email.data
@@ -97,16 +131,18 @@ def edit_user(id):
         if form.password.data and not is_editing_other_admin:
             user.set_password(form.password.data)
         elif form.password.data and is_editing_other_admin:
-            flash('You cannot change another admin\'s password.', 'error')
-            return render_template('admin/user_form.html', form=form, title='Edit User', user=user, is_editing_other_admin=is_editing_other_admin)
+            return render_template('admin/user_form.html', form=form, title='Edit User', user=user, 
+                                 is_editing_other_admin=is_editing_other_admin,
+                                 error_message='You cannot change another admin\'s password.')
         
         try:
             db.session.commit()
-            flash(f'User {user.username} updated successfully!', 'success')
-            return redirect(url_for('admin.users'))
+            return redirect(url_for('admin.users', success=f'User {user.username} updated successfully!'))
         except Exception as e:
             db.session.rollback()
-            flash(f'Error updating user: {str(e)}', 'error')
+            return render_template('admin/user_form.html', form=form, title='Edit User', user=user, 
+                                 is_editing_other_admin=is_editing_other_admin,
+                                 error_message=f'Database error: {str(e)}')
     
     return render_template('admin/user_form.html', form=form, title='Edit User', user=user, is_editing_other_admin=is_editing_other_admin)
 
@@ -118,16 +154,13 @@ def delete_user(id):
     
     # Security checks: Cannot delete yourself, other admins, or Super Admins
     if user.id == current_user.id:
-        flash('You cannot delete your own account.', 'error')
-        return redirect(url_for('admin.users'))
+        return redirect(url_for('admin.users', error='You cannot delete your own account.'))
     
     if user.role == 'Super Admin':
-        flash('You cannot delete Super Admin accounts.', 'error')
-        return redirect(url_for('admin.users'))
+        return redirect(url_for('admin.users', error='You cannot delete Super Admin accounts.'))
     
     if user.role == 'Admin' and current_user.role != 'Super Admin':
-        flash('You cannot delete other admin accounts.', 'error')
-        return redirect(url_for('admin.users'))
+        return redirect(url_for('admin.users', error='You cannot delete other admin accounts.'))
     
     try:
         # Handle related records before deleting user
@@ -148,14 +181,13 @@ def delete_user(id):
         UserStore.query.filter_by(user_id=user.id).delete()
         
         # Now safe to delete the user
+        username = user.username
         db.session.delete(user)
         db.session.commit()
-        flash(f'User {user.username} deleted successfully!', 'success')
+        return redirect(url_for('admin.users', success=f'User {username} deleted successfully!'))
     except Exception as e:
         db.session.rollback()
-        flash(f'Error deleting user: {str(e)}', 'error')
-    
-    return redirect(url_for('admin.users'))
+        return redirect(url_for('admin.users', error=f'Error deleting user: {str(e)}'))
 
 @admin_bp.route('/company-profile', methods=['GET', 'POST'])
 @login_required

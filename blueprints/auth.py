@@ -12,6 +12,10 @@ def login():
     if current_user.is_authenticated:
         return redirect(url_for('dashboard'))
     
+    # Handle success and error messages from query parameters
+    success_msg = request.args.get('success')
+    error_msg = request.args.get('error')
+    
     form = LoginForm()
     if form.validate_on_submit():
         user = User.query.filter_by(username=form.username.data).first()
@@ -23,18 +27,19 @@ def login():
                 db.session.commit()
                 
                 next_page = request.args.get('next')
-                flash(f'Welcome back, {user.first_name}!', 'success')
                 return redirect(next_page) if next_page else redirect(url_for('dashboard'))
             else:
-                flash('Your account has been deactivated. Please contact an administrator.', 'error')
+                return render_template('auth/login.html', form=form, 
+                                     error_message='Your account has been deactivated. Please contact an administrator.')
         else:
-            flash('Invalid username or password.', 'error')
+            return render_template('auth/login.html', form=form,
+                                 error_message='Invalid username or password.')
     
-    return render_template('auth/login.html', form=form)
+    return render_template('auth/login.html', form=form, 
+                         success_message=success_msg, error_message=error_msg)
 
 @auth_bp.route('/logout')
 @login_required
 def logout():
     logout_user()
-    flash('You have been logged out successfully.', 'info')
-    return redirect(url_for('auth.login'))
+    return redirect(url_for('auth.login', success='You have been logged out successfully.'))
