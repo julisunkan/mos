@@ -54,6 +54,9 @@
                                 <a href="{{ url_for('stores.edit_store', id=store.id) }}" class="btn btn-sm btn-warning">
                                     <i class="fas fa-edit"></i> Edit
                                 </a>
+                                <a href="{{ url_for('stores.store_deletion_info', id=store.id) }}" class="btn btn-sm btn-danger">
+                                    <i class="fas fa-trash"></i> Delete
+                                </a>
                             </div>
                         </td>
                     </tr>

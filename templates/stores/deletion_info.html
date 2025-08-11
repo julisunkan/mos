@@ -1,0 +1,107 @@
+{% extends "base.html" %}
+
+{% block title %}Store Deletion Information - {{ store.name }}{% endblock %}
+
+{% block content %}
+<div class="container-fluid mt-4">
+    <div class="row">
+        <div class="col-lg-8 mx-auto">
+            <div class="card">
+                <div class="card-header bg-warning text-dark">
+                    <h5 class="mb-0">
+                        <i class="fas fa-exclamation-triangle me-2"></i>
+                        Store Deletion Impact Analysis
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-info">
+                        <h6><i class="fas fa-info-circle me-2"></i>Store Information</h6>
+                        <strong>Name:</strong> {{ store.name }}<br>
+                        {% if store.address %}<strong>Address:</strong> {{ store.address }}<br>{% endif %}
+                        {% if store.manager %}<strong>Manager:</strong> {{ store.manager.full_name }} ({{ store.manager.username }})<br>{% endif %}
+                        <strong>Created:</strong> {{ store.created_at.strftime('%Y-%m-%d') }}
+                    </div>
+
+                    {% if dependencies.blocking %}
+                    <div class="alert alert-danger">
+                        <h6><i class="fas fa-ban me-2"></i>Cannot Delete - Critical Dependencies Found</h6>
+                        <p>This store cannot be safely deleted because it contains critical business data that must be preserved:</p>
+                        <ul class="mb-0">
+                            {% for dep in dependencies.blocking %}
+                            <li><strong>{{ dep.count }} {{ dep.type }}:</strong> {{ dep.description }}</li>
+                            {% endfor %}
+                        </ul>
+                        <hr>
+                        <small class="text-muted">
+                            <i class="fas fa-lightbulb me-1"></i>
+                            To delete this store, you must first transfer or archive these records using the appropriate management tools.
+                        </small>
+                    </div>
+                    {% endif %}
+
+                    {% if dependencies.cleanup %}
+                    <div class="alert alert-warning">
+                        <h6><i class="fas fa-broom me-2"></i>Items That Will Be Cleaned Up</h6>
+                        <p>The following data will be safely removed or updated during deletion:</p>
+                        <ul class="mb-0">
+                            {% for dep in dependencies.cleanup %}
+                            <li><strong>{{ dep.count }} {{ dep.type }}:</strong> {{ dep.description }}</li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                    {% endif %}
+
+                    {% if not dependencies.blocking and not dependencies.cleanup %}
+                    <div class="alert alert-success">
+                        <h6><i class="fas fa-check-circle me-2"></i>Safe to Delete</h6>
+                        <p>This store has no dependencies and can be safely deleted without affecting any other data.</p>
+                    </div>
+                    {% endif %}
+
+                    <div class="d-flex justify-content-between mt-4">
+                        <a href="{{ url_for('stores.index') }}" class="btn btn-secondary">
+                            <i class="fas fa-arrow-left me-2"></i>Back to Stores
+                        </a>
+                        
+                        {% if not dependencies.blocking %}
+                        <form method="POST" action="{{ url_for('stores.delete_store', id=store.id) }}" 
+                              onsubmit="return confirm('Are you sure you want to permanently delete {{ store.name }}? This action cannot be undone.')">
+                            <button type="submit" class="btn btn-danger">
+                                <i class="fas fa-trash me-2"></i>Permanently Delete Store
+                            </button>
+                        </form>
+                        {% else %}
+                        <button type="button" class="btn btn-danger" disabled>
+                            <i class="fas fa-ban me-2"></i>Cannot Delete (Dependencies Exist)
+                        </button>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            {% if dependencies.blocking %}
+            <div class="card mt-4">
+                <div class="card-header bg-info text-white">
+                    <h6 class="mb-0"><i class="fas fa-question-circle me-2"></i>How to Resolve Dependencies</h6>
+                </div>
+                <div class="card-body">
+                    <h6>Sales Transactions:</h6>
+                    <p>Sales data represents completed business transactions and cannot be deleted. Consider archiving old sales or transferring them to a central records store.</p>
+                    
+                    <h6>Purchase Orders:</h6>
+                    <p>Purchase order records are part of your supply chain audit trail. Archive completed orders or transfer pending orders to another store.</p>
+                    
+                    <h6>Cash Register Records:</h6>
+                    <p>These represent financial audit trails that must be preserved for compliance. Archive these records before store deletion.</p>
+                    
+                    <small class="text-muted">
+                        <i class="fas fa-info-circle me-1"></i>
+                        Contact your system administrator for guidance on data archival and transfer procedures.
+                    </small>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

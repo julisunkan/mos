@@ -1,7 +1,7 @@
 from flask import Blueprint, render_template, redirect, url_for, flash, request, abort, jsonify
 from flask_login import login_required, current_user
 from forms import StoreForm, StockTransferForm, PurchaseOrderForm, SupplierForm
-from models import Store, UserStore, StoreStock, Product, StockTransfer, StockTransferItem, PurchaseOrder, PurchaseOrderItem, Supplier, User
+from models import Store, UserStore, StoreStock, Product, StockTransfer, StockTransferItem, PurchaseOrder, PurchaseOrderItem, Supplier, User, Sale, PromotionCode, CashRegister, SaleReturn
 from app import db
 from utils import admin_required, generate_transfer_number, generate_po_number
 from datetime import datetime
@@ -181,6 +181,179 @@ def new_supplier():
             flash(f'Error creating supplier: {str(e)}', 'error')
     
     return render_template('stores/supplier_form.html', form=form, title='New Supplier')
+
+@stores_bp.route('/<int:id>/delete', methods=['POST'])
+@login_required
+@admin_required
+def delete_store(id):
+    """Safely delete a store with comprehensive relationship cleanup"""
+    store = Store.query.get_or_404(id)
+    
+    try:
+        # Check for dependencies and provide detailed warnings
+        warnings = []
+        blocking_dependencies = []
+        
+        # Check for sales (these prevent deletion)
+        sales_count = Sale.query.filter_by(store_id=id).count()
+        if sales_count > 0:
+            blocking_dependencies.append(f"{sales_count} sales transactions")
+        
+        # Check for purchase orders (these prevent deletion)  
+        po_count = PurchaseOrder.query.filter_by(store_id=id).count()
+        if po_count > 0:
+            blocking_dependencies.append(f"{po_count} purchase orders")
+        
+        # Check for cash registers (these prevent deletion)
+        cash_register_count = CashRegister.query.filter_by(store_id=id).count()
+        if cash_register_count > 0:
+            blocking_dependencies.append(f"{cash_register_count} cash register records")
+        
+        # Check for returns related to sales from this store (these prevent deletion)
+        returns_count = db.session.query(SaleReturn).join(Sale, SaleReturn.original_sale_id == Sale.id).filter(Sale.store_id == id).count()
+        if returns_count > 0:
+            blocking_dependencies.append(f"{returns_count} return records")
+        
+        # If there are blocking dependencies, refuse deletion
+        if blocking_dependencies:
+            flash(f'Cannot delete store "{store.name}". It has critical business data: {", ".join(blocking_dependencies)}. '
+                  'You must first transfer or remove these records to safely delete the store.', 'error')
+            return redirect(url_for('stores.index'))
+        
+        # Check for non-blocking dependencies that will be cleaned up
+        assigned_users = User.query.filter_by(store_id=id).count()
+        if assigned_users > 0:
+            warnings.append(f"{assigned_users} users will be unassigned from this store")
+        
+        user_store_assignments = UserStore.query.filter_by(store_id=id).count()
+        if user_store_assignments > 0:
+            warnings.append(f"{user_store_assignments} user-store relationship records will be removed")
+        
+        stock_items = StoreStock.query.filter_by(store_id=id).count()
+        if stock_items > 0:
+            warnings.append(f"{stock_items} inventory items will be removed from this store")
+        
+        promotion_codes = PromotionCode.query.filter_by(store_id=id).count()
+        if promotion_codes > 0:
+            warnings.append(f"{promotion_codes} store-specific promotion codes will be removed")
+        
+        # Proceed with safe deletion - clean up all relationships
+        
+        # 1. Unassign users from this store
+        User.query.filter_by(store_id=id).update({User.store_id: None})
+        
+        # 2. Remove user-store assignments
+        UserStore.query.filter_by(store_id=id).delete()
+        
+        # 3. Remove store stock items
+        StoreStock.query.filter_by(store_id=id).delete()
+        
+        # 4. Remove store-specific promotion codes
+        PromotionCode.query.filter_by(store_id=id).delete()
+        
+        # 5. Handle pending stock transfers involving this store
+        # Set transfers to cancelled status rather than deleting them
+        pending_transfers_from = StockTransfer.query.filter_by(from_store_id=id, status='Pending').all()
+        for transfer in pending_transfers_from:
+            transfer.status = 'Cancelled'
+            transfer.notes = f"Cancelled due to source store deletion. {transfer.notes or ''}".strip()
+        
+        pending_transfers_to = StockTransfer.query.filter_by(to_store_id=id, status='Pending').all()
+        for transfer in pending_transfers_to:
+            transfer.status = 'Cancelled'  
+            transfer.notes = f"Cancelled due to destination store deletion. {transfer.notes or ''}".strip()
+        
+        # 6. Finally delete the store itself
+        db.session.delete(store)
+        
+        # Commit all changes
+        db.session.commit()
+        
+        # Show success message with details of what was cleaned up
+        success_message = f'Store "{store.name}" has been safely deleted.'
+        if warnings:
+            success_message += f' Cleaned up: {", ".join(warnings)}.'
+        
+        flash(success_message, 'success')
+        
+    except Exception as e:
+        db.session.rollback()
+        flash(f'Error deleting store: {str(e)}', 'error')
+    
+    return redirect(url_for('stores.index'))
+
+@stores_bp.route('/<int:id>/deletion-info')
+@login_required
+@admin_required 
+def store_deletion_info(id):
+    """Show detailed information about what will be affected by store deletion"""
+    store = Store.query.get_or_404(id)
+    
+    # Gather dependency information
+    dependencies = {
+        'blocking': [],
+        'cleanup': []
+    }
+    
+    # Blocking dependencies
+    sales_count = Sale.query.filter_by(store_id=id).count()
+    if sales_count > 0:
+        dependencies['blocking'].append({
+            'type': 'Sales Transactions', 
+            'count': sales_count,
+            'description': 'Historical sales data that cannot be deleted'
+        })
+    
+    po_count = PurchaseOrder.query.filter_by(store_id=id).count()
+    if po_count > 0:
+        dependencies['blocking'].append({
+            'type': 'Purchase Orders',
+            'count': po_count, 
+            'description': 'Supply chain records that must be preserved'
+        })
+    
+    cash_register_count = CashRegister.query.filter_by(store_id=id).count() 
+    if cash_register_count > 0:
+        dependencies['blocking'].append({
+            'type': 'Cash Register Records',
+            'count': cash_register_count,
+            'description': 'Financial audit trail records'
+        })
+    
+    # Non-blocking dependencies that will be cleaned up
+    assigned_users = User.query.filter_by(store_id=id).all()
+    if assigned_users:
+        dependencies['cleanup'].append({
+            'type': 'User Assignments',
+            'count': len(assigned_users),
+            'description': f'Users: {", ".join([u.username for u in assigned_users])} will be unassigned'
+        })
+    
+    user_store_assignments = UserStore.query.filter_by(store_id=id).count()
+    if user_store_assignments > 0:
+        dependencies['cleanup'].append({
+            'type': 'User-Store Relationships',
+            'count': user_store_assignments,
+            'description': 'Internal assignment records will be removed'
+        })
+    
+    stock_items = StoreStock.query.filter_by(store_id=id).count()
+    if stock_items > 0:
+        dependencies['cleanup'].append({
+            'type': 'Inventory Items',
+            'count': stock_items,
+            'description': 'Store-specific product stock records will be removed'
+        })
+    
+    promotion_codes = PromotionCode.query.filter_by(store_id=id).count()
+    if promotion_codes > 0:
+        dependencies['cleanup'].append({
+            'type': 'Promotion Codes',
+            'count': promotion_codes,
+            'description': 'Store-specific promotional offers will be removed'
+        })
+    
+    return render_template('stores/deletion_info.html', store=store, dependencies=dependencies)
 
 @stores_bp.route('/purchase-orders')
 @login_required
