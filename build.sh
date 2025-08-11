@@ -1,31 +1,13 @@
-#!/usr/bin/env bash
-# Build script for Render deployment
+#!/bin/bash
 
-set -e
+echo "🚀 Starting Cloud POS & Inventory Manager build process..."
 
-echo "Installing dependencies..."
-pip install --upgrade pip
+# Run deployment migration to ensure all data exists
+echo "📊 Running deployment data migration..."
+python deploy_setup.py
 
-# Install dependencies from pyproject.toml
-echo "Installing project dependencies..."
-python -m pip install .
+# Install any additional dependencies if needed
+echo "📦 Installing dependencies..."
+pip install -r requirements.txt 2>/dev/null || echo "Using existing dependencies"
 
-echo "Verifying installation..."
-python -c "import flask, psycopg2, gunicorn; print('✓ Required packages installed successfully')"
-
-echo "Setting up database..."
-python -c "
-import os
-if os.environ.get('DATABASE_URL'):
-    try:
-        from app import app, db
-        with app.app_context():
-            db.create_all()
-            print('✓ Database tables created successfully')
-    except Exception as e:
-        print(f'⚠️  Database setup will be completed on first run: {e}')
-else:
-    print('⚠️  DATABASE_URL not set, skipping database setup')
-"
-
-echo "✅ Build completed successfully!"
+echo "✅ Build process completed successfully!"

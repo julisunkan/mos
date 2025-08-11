@@ -135,9 +135,21 @@ def dashboard_stats_api():
         'low_stock_count': low_stock_count
     })
 
-# Create tables and default data
+# Create tables and ensure deployment data exists
 with app.app_context():
     db.create_all()
+    
+    # Run deployment migration on startup
+    try:
+        from migrations.simple_deploy_migration import ensure_data_exists
+        ensure_data_exists()
+    except Exception as e:
+        print(f"Note: Advanced deployment migration error: {e}")
+        print("Attempting fallback data seeding...")
+        try:
+            exec(open('seed_data.py').read())
+        except Exception as seed_error:
+            print(f"Warning: Fallback seed data creation also failed: {seed_error}")
     
     # Create default roles and admin user if they don't exist
     from utils import create_default_data
