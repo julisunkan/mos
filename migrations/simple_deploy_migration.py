@@ -270,8 +270,8 @@ def ensure_data_exists():
                 
                 if not prod_exists and product_data['category_id']:
                     execute_sql("""
-                        INSERT INTO products (name, sku, category_id, cost_price, selling_price, stock_quantity, is_active, tax_rate)
-                        VALUES (:name, :sku, :category_id, :cost_price, :selling_price, :stock_quantity, :is_active, :tax_rate)
+                        INSERT INTO products (name, sku, category_id, cost_price, selling_price, stock_quantity, is_active, tax_rate, low_stock_threshold)
+                        VALUES (:name, :sku, :category_id, :cost_price, :selling_price, :stock_quantity, :is_active, :tax_rate, :low_stock_threshold)
                     """, {
                         'name': product_data['name'],
                         'sku': product_data['sku'],
@@ -280,7 +280,8 @@ def ensure_data_exists():
                         'selling_price': product_data['selling_price'],
                         'stock_quantity': product_data['stock_quantity'],
                         'is_active': True,
-                        'tax_rate': 10.00
+                        'tax_rate': 10.00,
+                        'low_stock_threshold': 5
                     })
                     
                     # Get product ID for store stock
@@ -293,13 +294,12 @@ def ensure_data_exists():
                     
                     if not stock_exists:
                         execute_sql("""
-                            INSERT INTO store_stock (store_id, product_id, quantity, low_stock_threshold)
-                            VALUES (:store_id, :product_id, :quantity, :threshold)
+                            INSERT INTO store_stock (store_id, product_id, quantity)
+                            VALUES (:store_id, :product_id, :quantity)
                         """, {
                             'store_id': product_data['store_id'],
                             'product_id': product_id,
-                            'quantity': product_data['stock_quantity'],
-                            'threshold': 5
+                            'quantity': product_data['stock_quantity']
                         })
                     
                     changes_made = True
