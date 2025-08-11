@@ -350,12 +350,12 @@ def return_details(return_id):
     }
     
     # Add return items
-    for item in sale_return.items:
+    for item in sale_return.return_items:
         return_data['items'].append({
             'product_name': item.product.name,
-            'quantity_returned': item.quantity_returned,
+            'quantity_returned': item.quantity,
             'unit_price': float(item.unit_price),
-            'total_amount': float(item.total_amount)
+            'total_amount': float(item.total_refund)
         })
     
     return jsonify(return_data)
