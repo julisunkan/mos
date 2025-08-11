@@ -19,19 +19,20 @@ sales_bp = Blueprint('sales', __name__)
 def new_sale():
     """Display the new sale page"""
     # Get products for the current user's store - only products that have stock in their store
-    if current_user.role == 'admin':
+    if current_user.role == 'Admin':
         products = Product.query.filter_by(is_active=True).all()
     else:
         if current_user.store_id:
-            # Only show products that have stock in the user's assigned store
+            # Only show products that are assigned to the user's store (regardless of quantity)
+            # This allows cashiers to see all available products and the system will handle stock validation during sale
             from models import StoreStock
             products = db.session.query(Product).join(StoreStock).filter(
                 Product.is_active == True,
-                StoreStock.store_id == current_user.store_id,
-                StoreStock.quantity > 0
+                StoreStock.store_id == current_user.store_id
             ).all()
         else:
             products = []
+            flash('You are not assigned to any store. Please contact your administrator.', 'warning')
     
     customers = Customer.query.filter_by(is_active=True).all()
     
@@ -52,14 +53,13 @@ def search_products():
     base_query = Product.query.filter(Product.is_active == True)
     
     # Filter by user's store if not admin
-    if current_user.role != 'admin':
+    if current_user.role != 'Admin':
         if not current_user.store_id:
             return jsonify([])
-        # Only search products available in user's store
+        # Only search products assigned to user's store
         from models import StoreStock
         products = base_query.join(StoreStock).filter(
             StoreStock.store_id == current_user.store_id,
-            StoreStock.quantity > 0,
             or_(
                 Product.name.ilike(f'%{query}%'),
                 Product.sku.ilike(f'%{query}%'),

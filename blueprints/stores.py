@@ -5,6 +5,7 @@ from models import Store, UserStore, StoreStock, Product, StockTransfer, StockTr
 from app import db
 from utils import admin_required, generate_transfer_number, generate_po_number
 from datetime import datetime
+from blueprints.store_assignment_helper import ensure_store_has_products, fix_store_setup
 
 stores_bp = Blueprint('stores', __name__)
 
@@ -52,22 +53,10 @@ def new_store():
                 # No manager specified, store created without assignment
                 flash(f'Store {store.name} created successfully! Remember to assign a manager or cashiers.', 'info')
             
-            # Auto-assign some default products to the new store (optional)
-            # This helps new stores get started with basic inventory
-            default_products = Product.query.filter_by(is_active=True).limit(5).all()
-            for product in default_products:
-                # Check if product is not already assigned to any store
-                existing_assignment = StoreStock.query.filter_by(
-                    store_id=store.id,
-                    product_id=product.id
-                ).first()
-                
-                if not existing_assignment:
-                    store_stock = StoreStock()
-                    store_stock.store_id = store.id
-                    store_stock.product_id = product.id
-                    store_stock.quantity = 0  # Start with 0, admin can adjust later
-                    db.session.add(store_stock)
+            # Auto-assign products to the new store using helper function
+            success, message, products_assigned = ensure_store_has_products(store.id, min_products=5)
+            if success and products_assigned > 0:
+                flash(f'{message}. {products_assigned} products auto-assigned for immediate operation.', 'info')
             
             db.session.commit()
             return redirect(url_for('stores.index'))
