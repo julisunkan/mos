@@ -18,18 +18,25 @@ sales_bp = Blueprint('sales', __name__)
 @login_required
 def new_sale():
     """Display the new sale page"""
-    # Get products for the current user's store - only products that have stock in their store
+    # Get products for the current user's store
     if current_user.role == 'Admin':
         products = Product.query.filter_by(is_active=True).all()
     else:
         if current_user.store_id:
-            # Only show products that are assigned to the user's store (regardless of quantity)
-            # This allows cashiers to see all available products and the system will handle stock validation during sale
+            # Only show products that are assigned to the user's store
             from models import StoreStock
-            products = db.session.query(Product).join(StoreStock).filter(
+            # Join with StoreStock to get store-specific quantities
+            products_with_stock = db.session.query(Product, StoreStock.quantity).join(StoreStock).filter(
                 Product.is_active == True,
                 StoreStock.store_id == current_user.store_id
             ).all()
+            
+            # Create product objects with store-specific stock quantities
+            products = []
+            for product, store_quantity in products_with_stock:
+                # Temporarily set the stock_quantity to store-specific quantity for display
+                product.store_stock_quantity = store_quantity
+                products.append(product)
         else:
             products = []
             flash('You are not assigned to any store. Please contact your administrator.', 'warning')
@@ -58,14 +65,27 @@ def search_products():
             return jsonify([])
         # Only search products assigned to user's store
         from models import StoreStock
-        products = base_query.join(StoreStock).filter(
+        products_with_stock = base_query.join(StoreStock).filter(
             StoreStock.store_id == current_user.store_id,
             or_(
                 Product.name.ilike(f'%{query}%'),
                 Product.sku.ilike(f'%{query}%'),
                 Product.barcode.ilike(f'%{query}%')
             )
-        ).limit(20).all()
+        ).add_columns(StoreStock.quantity).limit(20).all()
+        
+        # Format for JSON response with store-specific quantities
+        products = []
+        for product, store_quantity in products_with_stock:
+            products.append({
+                'id': product.id,
+                'name': product.name,
+                'sku': product.sku,
+                'barcode': product.barcode,
+                'selling_price': float(product.selling_price),
+                'stock_quantity': store_quantity,  # Use store-specific quantity
+                'tax_rate': float(product.tax_rate or 0)
+            })
     else:
         # Admin can search all products
         products = base_query.filter(

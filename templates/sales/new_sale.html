@@ -20,20 +20,29 @@
                 
                 <!-- Product Grid -->
                 <div class="row" id="productGrid">
-                    {% for product in products %}
-                    <div class="col-md-4 col-sm-6 mb-3">
-                        <div class="card product-card h-100" style="cursor: pointer;" 
-                             onclick="addToCart({{ product.id }}, '{{ product.name|replace("'", "\\'") }}', {{ product.selling_price }}, {{ product.stock_quantity }}, {{ product.tax_rate or 0 }})">
-                            <div class="card-body text-center">
-                                <h6 class="card-title">{{ product.name }}</h6>
-                                <p class="card-text">
-                                    <strong>${{ "%.2f"|format(product.selling_price) }}</strong><br>
-                                    <small class="text-muted">Stock: {{ product.stock_quantity }}</small>
-                                </p>
+                    {% if products %}
+                        {% for product in products %}
+                        <div class="col-md-4 col-sm-6 mb-3">
+                            <div class="card product-card h-100" style="cursor: pointer;" 
+                                 onclick="addToCart({{ product.id }}, '{{ product.name|replace("'", "\\'") }}', {{ product.selling_price }}, {{ product.store_stock_quantity or product.stock_quantity }}, {{ product.tax_rate or 0 }})">
+                                <div class="card-body text-center">
+                                    <h6 class="card-title">{{ product.name }}</h6>
+                                    <p class="card-text">
+                                        <strong>${{ "%.2f"|format(product.selling_price) }}</strong><br>
+                                        <small class="text-muted">Stock: {{ product.store_stock_quantity or product.stock_quantity }}</small>
+                                    </p>
+                                </div>
                             </div>
                         </div>
-                    </div>
-                    {% endfor %}
+                        {% endfor %}
+                    {% else %}
+                        <div class="col-12">
+                            <div class="alert alert-info text-center">
+                                <h5>No Products Available</h5>
+                                <p class="mb-0">No products are assigned to your store or available for sale.</p>
+                            </div>
+                        </div>
+                    {% endif %}
                 </div>
             </div>
         </div>
