@@ -26,6 +26,8 @@ Successfully migrated from Replit Agent to standard Replit environment. The appl
 - Comprehensive admin interfaces for managing store-product assignments
 - Real-time cashier store assignment management with product count tracking
 - Store-specific inventory management with quantity controls
+- Auto-assignment functionality: managers automatically assigned to stores upon creation
+- Auto-product assignment: new stores get basic product assignments for immediate operation
 - Scalable architecture ready for multiple stores and complex inventory setups
 
 ### Complete Refund Approval System Implemented (August 11, 2025)

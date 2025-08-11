@@ -38,8 +38,38 @@ def new_store():
         
         try:
             db.session.add(store)
+            db.session.flush()  # Get the store ID
+            
+            # Auto-assign store to its manager if specified
+            if manager_id:
+                manager = User.query.get(manager_id)
+                if manager and not manager.store_id:  # Only if user doesn't have a store yet
+                    manager.store_id = store.id
+                    flash(f'Store {store.name} created and assigned to manager {manager.username}!', 'success')
+                else:
+                    flash(f'Store {store.name} created successfully!', 'success')
+            else:
+                # No manager specified, store created without assignment
+                flash(f'Store {store.name} created successfully! Remember to assign a manager or cashiers.', 'info')
+            
+            # Auto-assign some default products to the new store (optional)
+            # This helps new stores get started with basic inventory
+            default_products = Product.query.filter_by(is_active=True).limit(5).all()
+            for product in default_products:
+                # Check if product is not already assigned to any store
+                existing_assignment = StoreStock.query.filter_by(
+                    store_id=store.id,
+                    product_id=product.id
+                ).first()
+                
+                if not existing_assignment:
+                    store_stock = StoreStock()
+                    store_stock.store_id = store.id
+                    store_stock.product_id = product.id
+                    store_stock.quantity = 0  # Start with 0, admin can adjust later
+                    db.session.add(store_stock)
+            
             db.session.commit()
-            flash(f'Store {store.name} created successfully!', 'success')
             return redirect(url_for('stores.index'))
         except Exception as e:
             db.session.rollback()
@@ -69,8 +99,31 @@ def edit_store(id):
         store.manager_id = manager_id
         
         try:
+            # Handle manager assignment changes
+            old_manager_id = store.manager_id
+            
+            # If manager changed, update assignments
+            if old_manager_id != manager_id:
+                # Remove old manager assignment if they're only assigned to this store
+                if old_manager_id:
+                    old_manager = User.query.get(old_manager_id)
+                    if old_manager and old_manager.store_id == store.id:
+                        old_manager.store_id = None
+                
+                # Assign new manager if specified
+                if manager_id:
+                    new_manager = User.query.get(manager_id)
+                    if new_manager and not new_manager.store_id:  # Only if user doesn't have a store yet
+                        new_manager.store_id = store.id
+                        flash(f'Store {store.name} updated and assigned to manager {new_manager.username}!', 'success')
+                    else:
+                        flash(f'Store {store.name} updated successfully!', 'success')
+                else:
+                    flash(f'Store {store.name} updated successfully!', 'success')
+            else:
+                flash(f'Store {store.name} updated successfully!', 'success')
+            
             db.session.commit()
-            flash(f'Store {store.name} updated successfully!', 'success')
             return redirect(url_for('stores.index'))
         except Exception as e:
             db.session.rollback()

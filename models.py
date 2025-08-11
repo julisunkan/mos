@@ -23,7 +23,7 @@ class User(UserMixin, db.Model):
     
     # Relationships
     sales = db.relationship('Sale', backref='user', lazy=True)
-    default_store = db.relationship('Store', backref='default_users')
+    default_store = db.relationship('Store', foreign_keys=[store_id], backref='assigned_users')
     
     def set_password(self, password):
         self.password_hash = generate_password_hash(password)
@@ -203,12 +203,14 @@ class Store(db.Model):
     address = db.Column(db.Text)
     phone = db.Column(db.String(20))
     email = db.Column(db.String(120))
+    manager_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=True)
     is_active = db.Column(db.Boolean, default=True, nullable=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     
     # Relationships
     users = db.relationship('UserStore', backref='store', lazy=True)
     stock_items = db.relationship('StoreStock', backref='store', lazy=True)
+    manager = db.relationship('User', foreign_keys=[manager_id], backref='managed_stores')
     
     def __repr__(self):
         return f'<Store {self.name}>'
