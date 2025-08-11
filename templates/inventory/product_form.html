@@ -70,7 +70,14 @@
                             
                             <div class="col-md-6 mb-3">
                                 {{ form.barcode.label(class="form-label") }}
-                                {{ form.barcode(class="form-control") }}
+                                {{ form.barcode(class="form-control" + (" is-invalid" if form.barcode.errors else "")) }}
+                                {% if form.barcode.errors %}
+                                    <div class="invalid-feedback">
+                                        {% for error in form.barcode.errors %}
+                                            {{ error }}
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
                             </div>
                         </div>
                         

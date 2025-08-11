@@ -19,11 +19,11 @@
                         
                         <div class="mb-3">
                             {{ form.name.label(class="form-label") }}
-                            {{ form.name(class="form-control") }}
+                            {{ form.name(class="form-control" + (" is-invalid" if form.name.errors else "")) }}
                             {% if form.name.errors %}
-                                <div class="text-danger">
+                                <div class="invalid-feedback">
                                     {% for error in form.name.errors %}
-                                        <small>{{ error }}</small>
+                                        {{ error }}
                                     {% endfor %}
                                 </div>
                             {% endif %}

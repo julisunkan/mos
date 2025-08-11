@@ -1,8 +1,9 @@
 from flask_wtf import FlaskForm
 from wtforms import StringField, TextAreaField, FloatField, IntegerField, BooleanField, SelectField, SelectMultipleField, PasswordField, DateField
-from wtforms.validators import DataRequired, Length, Email, Optional, NumberRange
+from wtforms.validators import DataRequired, Length, Email, Optional, NumberRange, ValidationError
 from wtforms.widgets import CheckboxInput, ListWidget
 from flask_login import current_user
+from models import Product, User, Category, Store
 
 class LoginForm(FlaskForm):
     username = StringField('Username', validators=[DataRequired(), Length(min=4, max=25)])
@@ -25,16 +26,51 @@ class UserForm(FlaskForm):
     store_id = SelectField('Assigned Store', coerce=int, validators=[Optional()])
     is_active = BooleanField('Active', default=True)
     
-    def __init__(self, *args, **kwargs):
+    def __init__(self, user=None, *args, **kwargs):
         super(UserForm, self).__init__(*args, **kwargs)
+        self.user = user  # Store the user being edited for validation
         # Remove Super Admin from choices if current user is not Super Admin
         if hasattr(current_user, 'role') and current_user.is_authenticated and current_user.role != 'Super Admin':
             self.role.choices = [(choice[0], choice[1]) for choice in self.role.choices if choice[0] != 'Super Admin']
+    
+    def validate_username(self, field):
+        # Check for existing username, excluding current user if editing
+        query = User.query.filter(User.username == field.data)
+        if self.user:
+            query = query.filter(User.id != self.user.id)
+        
+        existing_user = query.first()
+        if existing_user:
+            raise ValidationError(f'Username "{field.data}" is already taken. Please choose a different username.')
+    
+    def validate_email(self, field):
+        # Check for existing email, excluding current user if editing
+        query = User.query.filter(User.email == field.data)
+        if self.user:
+            query = query.filter(User.id != self.user.id)
+        
+        existing_user = query.first()
+        if existing_user:
+            raise ValidationError(f'Email "{field.data}" is already registered. Please use a different email address.')
 
 class CategoryForm(FlaskForm):
     name = StringField('Category Name', validators=[DataRequired(), Length(max=100)])
     description = TextAreaField('Description', validators=[Optional(), Length(max=255)])
     is_active = BooleanField('Active', default=True)
+    
+    def __init__(self, category=None, *args, **kwargs):
+        super(CategoryForm, self).__init__(*args, **kwargs)
+        self.category = category  # Store the category being edited for validation
+    
+    def validate_name(self, field):
+        # Check for existing category name, excluding current category if editing
+        query = Category.query.filter(Category.name == field.data)
+        if self.category:
+            query = query.filter(Category.id != self.category.id)
+        
+        existing_category = query.first()
+        if existing_category:
+            raise ValidationError(f'Category name "{field.data}" already exists. Please choose a different name.')
 
 class CompanyProfileForm(FlaskForm):
     company_name = StringField('Company Name', validators=[DataRequired(), Length(max=200)])
@@ -126,6 +162,32 @@ class ProductForm(FlaskForm):
     tax_rate = FloatField('Tax Rate (%)', validators=[Optional(), NumberRange(min=0, max=100)], default=0)
     store_ids = SelectMultipleField('Available in Stores', coerce=int, validators=[Optional()])
     is_active = BooleanField('Active', default=True)
+    
+    def __init__(self, product=None, *args, **kwargs):
+        super(ProductForm, self).__init__(*args, **kwargs)
+        self.product = product  # Store the product being edited for validation
+    
+    def validate_sku(self, field):
+        if field.data:
+            # Check for existing SKU, excluding current product if editing
+            query = Product.query.filter(Product.sku == field.data)
+            if self.product:
+                query = query.filter(Product.id != self.product.id)
+            
+            existing_product = query.first()
+            if existing_product:
+                raise ValidationError(f'SKU "{field.data}" is already in use by product: {existing_product.name}')
+    
+    def validate_barcode(self, field):
+        if field.data:
+            # Check for existing barcode, excluding current product if editing
+            query = Product.query.filter(Product.barcode == field.data)
+            if self.product:
+                query = query.filter(Product.id != self.product.id)
+            
+            existing_product = query.first()
+            if existing_product:
+                raise ValidationError(f'Barcode "{field.data}" is already in use by product: {existing_product.name}')
 
 class CustomerForm(FlaskForm):
     name = StringField('Customer Name', validators=[DataRequired(), Length(max=100)])
