@@ -1,7 +1,7 @@
 from flask import Blueprint, render_template, redirect, url_for, flash, request, jsonify
 from flask_login import login_required, current_user
 from forms import ProductForm, CategoryForm
-from models import Product, Category, Store, StoreStock
+from models import Product, Category, StoreStock, Store
 from app import db
 from utils import generate_sku
 from datetime import datetime
@@ -179,11 +179,16 @@ def delete_product(id):
     
     product = Product.query.get_or_404(id)
     
+    # Check if product has existing sales records
     if product.sale_items:
         flash('Cannot delete product with existing sales records.', 'error')
         return redirect(url_for('inventory.products'))
     
     try:
+        # First delete all related store_stock records
+        StoreStock.query.filter_by(product_id=product.id).delete()
+        
+        # Then delete the product
         db.session.delete(product)
         db.session.commit()
         flash(f'Product {product.name} deleted successfully!', 'success')

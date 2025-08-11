@@ -237,8 +237,8 @@ class StoreStock(db.Model):
     quantity = db.Column(db.Integer, nullable=False, default=0)
     last_updated = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     
-    # Relationships
-    product = db.relationship('Product', backref='store_stocks')
+    # Relationships with cascade delete when product is deleted
+    product = db.relationship('Product', backref=db.backref('store_stocks', cascade='all, delete-orphan'))
     
     # Unique constraint to prevent duplicate store-product combinations
     __table_args__ = (db.UniqueConstraint('store_id', 'product_id', name='_store_product_uc'),)
