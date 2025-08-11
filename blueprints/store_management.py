@@ -122,26 +122,31 @@ def remove_product_from_store():
 @admin_required
 def cashier_assignments():
     """Show all cashier store assignments"""
-    cashiers = User.query.filter(User.role.in_(['Cashier', 'Manager'])).all()
-    stores = Store.query.filter_by(is_active=True).all()
-    
-    # Get summary data
-    assignment_data = []
-    for cashier in cashiers:
-        store_name = cashier.default_store.name if cashier.store_id and cashier.default_store else 'No Store Assigned'
-        product_count = 0
-        if cashier.store_id:
-            product_count = StoreStock.query.filter_by(store_id=cashier.store_id).count()
+    try:
+        # Get all users that can be assigned to stores (not just Cashier/Manager, but all except Admin)
+        cashiers = User.query.filter(User.role.in_(['Cashier', 'Manager'])).all()
+        stores = Store.query.filter_by(is_active=True).all()
         
-        assignment_data.append({
-            'cashier': cashier,
-            'store_name': store_name,
-            'product_count': product_count
-        })
-    
-    return render_template('admin/cashier_assignments.html', 
-                         assignment_data=assignment_data, 
-                         stores=stores)
+        # Get summary data
+        assignment_data = []
+        for cashier in cashiers:
+            store_name = cashier.default_store.name if cashier.store_id and cashier.default_store else 'No Store Assigned'
+            product_count = 0
+            if cashier.store_id:
+                product_count = StoreStock.query.filter_by(store_id=cashier.store_id).count()
+            
+            assignment_data.append({
+                'cashier': cashier,
+                'store_name': store_name,
+                'product_count': product_count
+            })
+        
+        return render_template('admin/cashier_assignments.html', 
+                             assignment_data=assignment_data, 
+                             stores=stores)
+    except Exception as e:
+        flash(f'Error loading cashier assignments: {str(e)}', 'error')
+        return redirect(url_for('admin.users'))
 
 @store_management_bp.route('/api/assign_cashier_to_store', methods=['POST'])
 @login_required
