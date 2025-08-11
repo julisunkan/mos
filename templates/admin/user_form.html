@@ -26,14 +26,22 @@
                         
                         <div class="row">
                             <div class="col-md-6 mb-3">
-                                {{ form.username.label(class="form-label") }}
-                                {{ form.username(class="form-control" + (" is-invalid" if form.username.errors else "")) }}
-                                {% if form.username.errors %}
-                                    <div class="invalid-feedback">
-                                        {% for error in form.username.errors %}
-                                            {{ error }}
-                                        {% endfor %}
-                                    </div>
+                                {% if is_editing_other_admin %}
+                                    {{ form.username.label(class="form-label text-muted") }}
+                                    <small class="text-warning d-block">
+                                        <i class="fas fa-lock me-1"></i>Username editing disabled for admin accounts
+                                    </small>
+                                    {{ form.username(class="form-control", readonly=true) }}
+                                {% else %}
+                                    {{ form.username.label(class="form-label") }}
+                                    {{ form.username(class="form-control" + (" is-invalid" if form.username.errors else "")) }}
+                                    {% if form.username.errors %}
+                                        <div class="invalid-feedback">
+                                            {% for error in form.username.errors %}
+                                                {{ error }}
+                                            {% endfor %}
+                                        </div>
+                                    {% endif %}
                                 {% endif %}
                             </div>
                             

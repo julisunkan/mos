@@ -57,7 +57,7 @@ def edit_user(id):
     user = User.query.get_or_404(id)
     form = UserForm(obj=user)
     
-    # Security checks: Regular admin cannot edit Super Admin or another admin's password
+    # Security checks: Regular admin cannot edit Super Admin or another admin's password/username
     is_editing_super_admin = user.role == 'Super Admin' and current_user.role != 'Super Admin'
     is_editing_other_admin = user.role in ['Admin', 'Super Admin'] and user.id != current_user.id
     
@@ -80,6 +80,11 @@ def edit_user(id):
     form.password.validators = []
     
     if form.validate_on_submit():
+        # Admins cannot edit usernames of other admins (including Super Admins)
+        if is_editing_other_admin and form.username.data != user.username:
+            flash('You cannot change the username of other admin accounts.', 'error')
+            return render_template('admin/user_form.html', form=form, title='Edit User', user=user, is_editing_other_admin=is_editing_other_admin)
+        
         user.username = form.username.data
         user.email = form.email.data
         user.first_name = form.first_name.data

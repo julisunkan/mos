@@ -51,10 +51,12 @@ Successfully migrated from Replit Agent to standard Replit environment. The appl
 - New hierarchical admin structure: Super Admin > Admin > Manager/Cashier/Accountant
 - Super Admin can manage all user accounts including other admins
 - Regular Admins cannot edit or delete Super Admin accounts
-- Regular Admins cannot edit passwords of other admin accounts
+- Regular Admins cannot edit passwords OR usernames of other admin accounts
 - Super Admin accounts protected from regular admin access
 - Form restrictions prevent non-Super Admins from creating Super Admin accounts
 - Template security controls with visual indicators for protected accounts
+- Username field becomes read-only when editing other admin accounts
+- Backend validation prevents username changes for admin accounts
 - Auto-seeding creates both Super Admin (superadmin/super123) and Admin (admin/admin123) accounts
 
 # User Preferences
