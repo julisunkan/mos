@@ -120,9 +120,9 @@ def process_return():
         # Note: customer_id and store_id not in current schema
         return_record.return_reason = reason
         return_record.notes = f"Refund method: {refund_method}"
-        return_record.status = 'Completed'
+        return_record.status = 'Pending'  # Requires admin approval
         return_record.return_amount = 0  # Will be calculated
-        return_record.processed_at = datetime.utcnow()
+        return_record.processed_at = None  # Will be set when approved
         
         db.session.add(return_record)
         db.session.flush()  # Get the return ID
@@ -160,10 +160,8 @@ def process_return():
             
             db.session.add(return_item)
             
-            # Update product stock (return to inventory)
-            product = Product.query.get(sale_item.product_id)
-            if product:
-                product.stock_quantity += return_quantity
+            # NOTE: Stock will be restored when admin approves the return
+            # Do not update inventory until approved
             
             # Add to return totals
             return_subtotal += refund_amount

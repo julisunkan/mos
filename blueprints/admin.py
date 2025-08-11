@@ -276,7 +276,6 @@ def edit_user_stores(user_id):
 def returns():
     """Display returns management page"""
     from flask import jsonify
-    from datetime import datetime, timedelta
     
     # Get filter parameters
     start_date = request.args.get('start_date')
@@ -377,6 +376,12 @@ def approve_return(return_id):
         sale_return.status = 'Processed'
         sale_return.processed_at = datetime.utcnow()
         
+        # Restore inventory for approved returns
+        for item in sale_return.return_items:
+            product = Product.query.get(item.product_id)
+            if product:
+                product.stock_quantity += item.quantity
+        
         db.session.commit()
         
         return jsonify({
@@ -407,11 +412,7 @@ def reject_return(return_id):
         sale_return.status = 'Rejected'
         sale_return.notes = f"{sale_return.notes or ''}\n\nREJECTED: {reason}".strip()
         
-        # Reverse stock adjustments if any were made
-        for item in sale_return.items:
-            product = item.product
-            if product:
-                product.stock_quantity -= item.quantity_returned
+        # No inventory adjustment needed for rejection since inventory wasn't restored yet
         
         db.session.commit()
         

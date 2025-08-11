@@ -100,10 +100,19 @@
                         </div>
                     </div>
 
+                    <div class="row mt-2">
+                        <div class="col-12">
+                            <div class="alert alert-warning">
+                                <i class="fas fa-exclamation-triangle me-2"></i>
+                                <strong>Note:</strong> All returns require admin approval before processing. The refund will be processed only after an administrator approves this return request.
+                            </div>
+                        </div>
+                    </div>
+
                     <div class="row mt-3">
                         <div class="col-12">
-                            <button type="button" class="btn btn-success" onclick="processReturn()">
-                                <i class="fas fa-check"></i> Process Return
+                            <button type="button" class="btn btn-warning" onclick="processReturn()">
+                                <i class="fas fa-paper-plane"></i> Submit Return Request
                             </button>
                             <button type="button" class="btn btn-secondary ms-2" onclick="clearForm()">
                                 <i class="fas fa-times"></i> Cancel
@@ -285,7 +294,7 @@ function processReturn() {
         showLoading(false);
         
         if (data.success) {
-            showAlert(`Return processed successfully! Return #${data.return_number}. Refund amount: $${data.refund_amount.toFixed(2)}`, 'success');
+            showAlert(`Return request submitted successfully! Return #${data.return_number}. This return is now pending admin approval. Refund amount: $${data.refund_amount.toFixed(2)}`, 'success');
             clearForm();
         } else {
             showAlert(data.error || 'Error processing return', 'danger');
