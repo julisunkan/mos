@@ -204,8 +204,8 @@ def send_whatsapp(phone_number, message):
     print(f"WhatsApp to {phone_number}: {message}")
     return True
 
-def calculate_tax(amount, tax_rate):
-    """Calculate tax amount"""
+def calculate_tax_amount(amount, tax_rate):
+    """Calculate tax amount for a given amount and rate"""
     return float(amount) * (float(tax_rate) / 100)
 
 def create_default_data():

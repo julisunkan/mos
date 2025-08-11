@@ -39,10 +39,10 @@ def ensure_data_exists():
             changes_made = False
             
             # 1. Ensure company profile exists
-            result = db.session.execute(db.text("SELECT COUNT(*) FROM company_profiles")).scalar()
+            result = db.session.execute(db.text("SELECT COUNT(*) FROM company_profile")).scalar()
             if result == 0:
                 execute_sql("""
-                    INSERT INTO company_profiles (company_name, address, phone, email, default_currency, default_tax_rate, receipt_footer)
+                    INSERT INTO company_profile (company_name, address, phone, email, default_currency, default_tax_rate, receipt_footer)
                     VALUES (:name, :address, :phone, :email, :currency, :tax_rate, :footer)
                 """, {
                     'name': 'Cloud POS Demo Company',
