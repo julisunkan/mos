@@ -37,6 +37,8 @@ Successfully migrated from Replit Agent to standard Replit environment. The appl
 - POS system properly recognizes store assignments and shows correct products
 - Store assignment helper module includes sync functionality to fix inconsistencies
 - Primary store concept: first assigned store becomes user's primary store for POS access
+- Enhanced store creation to automatically handle manager assignments and product allocations
+- Robust duplicate prevention ensures consistent store-user-product relationships
 
 ### Complete Refund Approval System Implemented (August 11, 2025)
 - Cashiers can submit return requests that go to "Pending" status

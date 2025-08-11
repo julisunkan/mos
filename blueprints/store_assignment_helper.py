@@ -33,7 +33,7 @@ def assign_user_to_store(user_id, store_id):
 def ensure_store_has_products(store_id, min_products=3):
     """
     Ensure a store has at least minimum number of products assigned
-    Auto-assigns products if needed
+    Auto-assigns products if needed with proper validation
     Returns (success: bool, message: str, products_assigned: int)
     """
     try:
@@ -51,21 +51,30 @@ def ensure_store_has_products(store_id, min_products=3):
         assigned_product_ids = db.session.query(StoreStock.product_id).filter_by(store_id=store_id).all()
         assigned_product_ids = [pid[0] for pid in assigned_product_ids]
         
+        # Get available products that aren't already assigned
         available_products = Product.query.filter(
             Product.is_active == True,
-            ~Product.id.in_(assigned_product_ids)
+            ~Product.id.in_(assigned_product_ids) if assigned_product_ids else True
         ).limit(min_products - current_assignments).all()
         
         products_assigned = 0
         for product in available_products:
-            store_stock = StoreStock()
-            store_stock.store_id = store_id
-            store_stock.product_id = product.id
-            store_stock.quantity = 10  # Default starter quantity
-            db.session.add(store_stock)
-            products_assigned += 1
+            # Double-check to avoid duplicate assignments
+            existing = StoreStock.query.filter_by(
+                store_id=store_id,
+                product_id=product.id
+            ).first()
+            
+            if not existing:
+                store_stock = StoreStock()
+                store_stock.store_id = store_id
+                store_stock.product_id = product.id
+                store_stock.quantity = 10  # Default starter quantity
+                db.session.add(store_stock)
+                products_assigned += 1
         
-        db.session.commit()
+        if products_assigned > 0:
+            db.session.commit()
         
         total_products = current_assignments + products_assigned
         return True, f"Assigned {products_assigned} products to {store.name}. Total: {total_products}", products_assigned

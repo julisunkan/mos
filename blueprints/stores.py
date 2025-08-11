@@ -44,8 +44,17 @@ def new_store():
             # Auto-assign store to its manager if specified
             if manager_id:
                 manager = User.query.get(manager_id)
-                if manager and not manager.store_id:  # Only if user doesn't have a store yet
+                if manager:
+                    # Always assign the manager to the store, even if they have another store
                     manager.store_id = store.id
+                    
+                    # Also create UserStore relationship for consistency
+                    user_store = UserStore()
+                    user_store.user_id = manager_id
+                    user_store.store_id = store.id
+                    user_store.is_default = True
+                    db.session.add(user_store)
+                    
                     flash(f'Store {store.name} created and assigned to manager {manager.username}!', 'success')
                 else:
                     flash(f'Store {store.name} created successfully!', 'success')
@@ -102,8 +111,23 @@ def edit_store(id):
                 # Assign new manager if specified
                 if manager_id:
                     new_manager = User.query.get(manager_id)
-                    if new_manager and not new_manager.store_id:  # Only if user doesn't have a store yet
+                    if new_manager:
+                        # Always assign the manager to the store
                         new_manager.store_id = store.id
+                        
+                        # Create UserStore relationship if it doesn't exist
+                        existing_relationship = UserStore.query.filter_by(
+                            user_id=manager_id, 
+                            store_id=store.id
+                        ).first()
+                        
+                        if not existing_relationship:
+                            user_store = UserStore()
+                            user_store.user_id = manager_id
+                            user_store.store_id = store.id
+                            user_store.is_default = True
+                            db.session.add(user_store)
+                        
                         flash(f'Store {store.name} updated and assigned to manager {new_manager.username}!', 'success')
                     else:
                         flash(f'Store {store.name} updated successfully!', 'success')
