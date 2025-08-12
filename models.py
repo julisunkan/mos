@@ -75,7 +75,7 @@ class Product(db.Model):
     name = db.Column(db.String(200), nullable=False)
     description = db.Column(db.Text)
     sku = db.Column(db.String(50), unique=True, nullable=False, index=True)
-    barcode = db.Column(db.String(50), unique=True, index=True)
+    barcode = db.Column(db.String(50), unique=True, nullable=True, index=True)
     category_id = db.Column(db.Integer, db.ForeignKey('categories.id'), nullable=False)
     cost_price = db.Column(db.Numeric(10, 2), nullable=False, default=0.00)
     selling_price = db.Column(db.Numeric(10, 2), nullable=False, default=0.00)

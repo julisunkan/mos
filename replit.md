@@ -48,6 +48,14 @@ A comprehensive Point of Sale (POS) and inventory management system built with F
     - Stock levels automatically update after sales (both global and store-specific)
     - Fixed close button (X) styling to be red instead of black
     - Resolved all stock availability issues across all stores (100+ units each)
+  - **Database Migration**: Migrated from PostgreSQL to MySQL for PythonAnywhere hosting
+    - Updated dependencies: replaced psycopg2-binary with PyMySQL
+    - Modified database configuration to support MySQL connection strings
+    - Fixed model compatibility issues (barcode field nullable)
+    - Created MySQL-specific setup script (mysql_setup.py)
+    - Added PythonAnywhere configuration (pythonanywhere_config.py)
+    - Created comprehensive migration guide (MYSQL_MIGRATION_GUIDE.md)
+    - Maintained all existing functionality during migration
 
 ## Default Login Credentials
 - Super Admin: username 'superadmin', password 'super123'
