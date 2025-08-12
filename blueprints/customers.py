@@ -12,6 +12,8 @@ def index():
     page = request.args.get('page', 1, type=int)
     search = request.args.get('search', '')
     customer_type = request.args.get('type', '')
+    success_msg = request.args.get('success')
+    error_msg = request.args.get('error')
     
     query = Customer.query
     
@@ -34,7 +36,9 @@ def index():
     return render_template('customers/index.html', 
                          customers=customers,
                          search=search,
-                         selected_type=customer_type)
+                         selected_type=customer_type,
+                         success_message=success_msg,
+                         error_message=error_msg)
 
 @customers_bp.route('/new', methods=['GET', 'POST'])
 @login_required
@@ -58,11 +62,11 @@ def new_customer():
         try:
             db.session.add(customer)
             db.session.commit()
-            flash(f'Customer {customer.name} created successfully!', 'success')
-            return redirect(url_for('customers.index'))
+            return redirect(url_for('customers.index', success=f'Customer {customer.name} created successfully!'))
         except Exception as e:
             db.session.rollback()
-            flash(f'Error creating customer: {str(e)}', 'error')
+            return render_template('customers/customer_form.html', form=form, title='New Customer',
+                                 error_message=f'Error creating customer: {str(e)}')
     
     return render_template('customers/customer_form.html', form=form, title='New Customer')
 
@@ -87,11 +91,11 @@ def edit_customer(id):
         
         try:
             db.session.commit()
-            flash(f'Customer {customer.name} updated successfully!', 'success')
-            return redirect(url_for('customers.index'))
+            return redirect(url_for('customers.index', success=f'Customer {customer.name} updated successfully!'))
         except Exception as e:
             db.session.rollback()
-            flash(f'Error updating customer: {str(e)}', 'error')
+            return render_template('customers/customer_form.html', form=form, title='Edit Customer', customer=customer,
+                                 error_message=f'Error updating customer: {str(e)}')
     
     return render_template('customers/customer_form.html', form=form, title='Edit Customer', customer=customer)
 

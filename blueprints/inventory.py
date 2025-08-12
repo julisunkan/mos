@@ -14,6 +14,8 @@ def products():
     page = request.args.get('page', 1, type=int)
     search = request.args.get('search', '')
     category_id = request.args.get('category', type=int)
+    success_msg = request.args.get('success')
+    error_msg = request.args.get('error')
     
     query = Product.query
     
@@ -38,7 +40,9 @@ def products():
                          products=products, 
                          categories=categories,
                          search=search,
-                         selected_category=category_id)
+                         selected_category=category_id,
+                         success_message=success_msg,
+                         error_message=error_msg)
 
 @inventory_bp.route('/products/new', methods=['GET', 'POST'])
 @login_required
@@ -60,8 +64,8 @@ def new_product():
     if form.validate_on_submit():
         # Validate that at least one store is selected
         if not form.store_ids.data:
-            flash('Please select at least one store for this product.', 'error')
-            return render_template('inventory/product_form.html', form=form, title='New Product')
+            return render_template('inventory/product_form.html', form=form, title='New Product',
+                                 error_message='Please select at least one store for this product.')
             
         product = Product(
             name=form.name.data,
@@ -92,11 +96,11 @@ def new_product():
                 db.session.add(store_stock)
             
             db.session.commit()
-            flash(f'Product {product.name} created successfully!', 'success')
-            return redirect(url_for('inventory.products'))
+            return redirect(url_for('inventory.products', success=f'Product {product.name} created successfully!'))
         except Exception as e:
             db.session.rollback()
-            flash(f'Error creating product: {str(e)}', 'error')
+            return render_template('inventory/product_form.html', form=form, title='New Product',
+                                 error_message=f'Error creating product: {str(e)}')
     
     return render_template('inventory/product_form.html', form=form, title='New Product')
 
@@ -126,8 +130,8 @@ def edit_product(id):
     if form.validate_on_submit():
         # Validate that at least one store is selected
         if not form.store_ids.data:
-            flash('Please select at least one store for this product.', 'error')
-            return render_template('inventory/product_form.html', form=form, title='Edit Product', product=product)
+            return render_template('inventory/product_form.html', form=form, title='Edit Product', product=product,
+                                 error_message='Please select at least one store for this product.')
             
         product.name = form.name.data
         product.description = form.description.data
@@ -162,11 +166,11 @@ def edit_product(id):
         
         try:
             db.session.commit()
-            flash(f'Product {product.name} updated successfully!', 'success')
-            return redirect(url_for('inventory.products'))
+            return redirect(url_for('inventory.products', success=f'Product {product.name} updated successfully!'))
         except Exception as e:
             db.session.rollback()
-            flash(f'Error updating product: {str(e)}', 'error')
+            return render_template('inventory/product_form.html', form=form, title='Edit Product', product=product,
+                                 error_message=f'Error updating product: {str(e)}')
     
     return render_template('inventory/product_form.html', form=form, title='Edit Product', product=product)
 
@@ -218,10 +222,13 @@ def low_stock():
 @login_required
 def categories():
     page = request.args.get('page', 1, type=int)
+    success_msg = request.args.get('success')
+    error_msg = request.args.get('error')
     categories = Category.query.paginate(
         page=page, per_page=20, error_out=False
     )
-    return render_template('inventory/categories.html', categories=categories)
+    return render_template('inventory/categories.html', categories=categories, 
+                         success_message=success_msg, error_message=error_msg)
 
 @inventory_bp.route('/categories/new', methods=['GET', 'POST'])
 @login_required
@@ -238,11 +245,11 @@ def new_category():
         try:
             db.session.add(category)
             db.session.commit()
-            flash(f'Category {category.name} created successfully!', 'success')
-            return redirect(url_for('inventory.categories'))
+            return redirect(url_for('inventory.categories', success=f'Category {category.name} created successfully!'))
         except Exception as e:
             db.session.rollback()
-            flash(f'Error creating category: {str(e)}', 'error')
+            return render_template('inventory/category_form.html', form=form, title='New Category',
+                                 error_message=f'Error creating category: {str(e)}')
     
     return render_template('inventory/category_form.html', form=form, title='New Category')
 
@@ -259,11 +266,11 @@ def edit_category(id):
         
         try:
             db.session.commit()
-            flash(f'Category {category.name} updated successfully!', 'success')
-            return redirect(url_for('inventory.categories'))
+            return redirect(url_for('inventory.categories', success=f'Category {category.name} updated successfully!'))
         except Exception as e:
             db.session.rollback()
-            flash(f'Error updating category: {str(e)}', 'error')
+            return render_template('inventory/category_form.html', form=form, title='Edit Category', category=category,
+                                 error_message=f'Error updating category: {str(e)}')
     
     return render_template('inventory/category_form.html', form=form, title='Edit Category', category=category)
 
