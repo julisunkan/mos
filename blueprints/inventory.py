@@ -71,7 +71,7 @@ def new_product():
             name=form.name.data,
             description=form.description.data,
             sku=form.sku.data,
-            barcode=form.barcode.data,
+            barcode=form.barcode.data if form.barcode.data else None,
             category_id=form.category_id.data,
             cost_price=form.cost_price.data,
             selling_price=form.selling_price.data,
@@ -136,7 +136,7 @@ def edit_product(id):
         product.name = form.name.data
         product.description = form.description.data
         product.sku = form.sku.data
-        product.barcode = form.barcode.data
+        product.barcode = form.barcode.data if form.barcode.data else None
         product.category_id = form.category_id.data
         product.cost_price = form.cost_price.data
         product.selling_price = form.selling_price.data

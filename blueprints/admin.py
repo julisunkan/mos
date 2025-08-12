@@ -32,7 +32,7 @@ def new_user():
     
     # Populate store choices
     stores = Store.query.filter_by(is_active=True).all()
-    form.store_id.choices = [(0, '--- No Store ---')] + [(s.id, s.name) for s in stores]
+    form.store_id.choices = [('0', '--- No Store ---')] + [(str(s.id), s.name) for s in stores]
     
     if form.validate_on_submit():
         # Check for existing username
@@ -54,7 +54,7 @@ def new_user():
         user.last_name = form.last_name.data
         user.role = form.role.data
         user.active = form.is_active.data == '1'
-        user.store_id = form.store_id.data if form.store_id.data != 0 else None
+        user.store_id = int(form.store_id.data) if form.store_id.data != '0' else None
         user.set_password(form.password.data)
         
         try:
@@ -85,13 +85,13 @@ def edit_user(id):
     
     # Populate store choices
     stores = Store.query.filter_by(is_active=True).all()
-    form.store_id.choices = [(0, '--- No Store ---')] + [(s.id, s.name) for s in stores]
+    form.store_id.choices = [('0', '--- No Store ---')] + [(str(s.id), s.name) for s in stores]
     
     # Set current store selection
     if user.store_id:
-        form.store_id.data = user.store_id
+        form.store_id.data = str(user.store_id)
     else:
-        form.store_id.data = 0
+        form.store_id.data = '0'
     
     # Password is optional for edits, but restricted for other admins
     form.password.validators = []
@@ -125,7 +125,7 @@ def edit_user(id):
         user.last_name = form.last_name.data
         user.role = form.role.data
         user.active = form.is_active.data == '1'
-        user.store_id = form.store_id.data if form.store_id.data != 0 else None
+        user.store_id = int(form.store_id.data) if form.store_id.data != '0' else None
         
         # Only allow password changes if not editing another admin
         if form.password.data and not is_editing_other_admin:
