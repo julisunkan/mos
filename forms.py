@@ -109,6 +109,7 @@ class SaleForm(FlaskForm):
         ('Mobile Money', 'Mobile Money')
     ], default='Cash')
     discount_amount = FloatField('Discount', default=0.0, validators=[Optional(), NumberRange(min=0)])
+    amount_tendered = FloatField('Amount Tendered', default=0.0, validators=[Optional(), NumberRange(min=0)])
     notes = TextAreaField('Notes', validators=[Optional(), Length(max=500)])
 
 class CashRegisterForm(FlaskForm):

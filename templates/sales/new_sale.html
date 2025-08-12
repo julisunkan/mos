@@ -91,12 +91,34 @@
                 <!-- Payment Method -->
                 <div class="mb-3">
                     <label for="paymentMethod" class="form-label">Payment Method</label>
-                    <select class="form-select" id="paymentMethod">
+                    <select class="form-select" id="paymentMethod" onchange="togglePaymentFields()">
                         <option value="cash">Cash</option>
                         <option value="card">Card</option>
                         <option value="digital_wallet">Digital Wallet</option>
                         <option value="bank_transfer">Bank Transfer</option>
                     </select>
+                </div>
+                
+                <!-- Cash Payment Fields -->
+                <div id="cashPaymentFields" style="display: block;">
+                    <div class="mb-3">
+                        <label for="amountTendered" class="form-label">Amount Tendered</label>
+                        <div class="input-group">
+                            <span class="input-group-text">{{ get_currency_symbol() }}</span>
+                            <input type="number" class="form-control" id="amountTendered" 
+                                   placeholder="0.00" step="0.01" min="0" 
+                                   oninput="calculateChange()" onkeyup="calculateChange()">
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="changeAmount" class="form-label">Change</label>
+                        <div class="input-group">
+                            <span class="input-group-text">{{ get_currency_symbol() }}</span>
+                            <input type="number" class="form-control" id="changeAmount" 
+                                   placeholder="0.00" readonly style="background-color: #f8f9fa;">
+                        </div>
+                    </div>
                 </div>
                 
                 <!-- Process Sale Button -->
@@ -249,6 +271,50 @@ function updateCartTotals() {
     document.getElementById('cartSubtotal').textContent = `${window.currencySymbol}${subtotal.toFixed(2)}`;
     document.getElementById('cartTax').textContent = `${window.currencySymbol}${tax.toFixed(2)}`;
     document.getElementById('cartTotal').textContent = `${window.currencySymbol}${total.toFixed(2)}`;
+    
+    // Update change calculation when totals change
+    calculateChange();
+}
+
+function togglePaymentFields() {
+    const paymentMethod = document.getElementById('paymentMethod').value;
+    const cashFields = document.getElementById('cashPaymentFields');
+    
+    if (paymentMethod === 'cash') {
+        cashFields.style.display = 'block';
+        calculateChange();
+    } else {
+        cashFields.style.display = 'none';
+        document.getElementById('amountTendered').value = '';
+        document.getElementById('changeAmount').value = '';
+    }
+}
+
+function calculateChange() {
+    const paymentMethod = document.getElementById('paymentMethod').value;
+    const amountTenderedInput = document.getElementById('amountTendered');
+    const changeAmountInput = document.getElementById('changeAmount');
+    
+    if (paymentMethod !== 'cash') {
+        return;
+    }
+    
+    const amountTendered = parseFloat(amountTenderedInput.value) || 0;
+    const totalElement = document.getElementById('cartTotal');
+    const totalText = totalElement.textContent.replace(window.currencySymbol, '').replace(',', '');
+    const total = parseFloat(totalText) || 0;
+    
+    const change = Math.max(0, amountTendered - total);
+    changeAmountInput.value = change.toFixed(2);
+    
+    // Visual feedback for insufficient amount
+    if (amountTendered > 0 && amountTendered < total) {
+        amountTenderedInput.classList.add('is-invalid');
+        changeAmountInput.classList.add('is-invalid');
+    } else {
+        amountTenderedInput.classList.remove('is-invalid');
+        changeAmountInput.classList.remove('is-invalid');
+    }
 }
 
 function clearCart() {
@@ -264,11 +330,29 @@ function processSale() {
     
     const customerSelect = document.getElementById('customerSelect');
     const paymentMethod = document.getElementById('paymentMethod');
+    const amountTendered = document.getElementById('amountTendered');
+    const changeAmount = document.getElementById('changeAmount');
+    
+    // Validate cash payment
+    if (paymentMethod.value === 'cash') {
+        const tendered = parseFloat(amountTendered.value) || 0;
+        const totalElement = document.getElementById('cartTotal');
+        const totalText = totalElement.textContent.replace(window.currencySymbol, '').replace(',', '');
+        const total = parseFloat(totalText) || 0;
+        
+        if (tendered < total) {
+            alert('Amount tendered is less than the total amount');
+            amountTendered.focus();
+            return;
+        }
+    }
     
     const saleData = {
         items: cart,
         customer_id: customerSelect.value || null,
-        payment_method: paymentMethod.value
+        payment_method: paymentMethod.value,
+        amount_tendered: paymentMethod.value === 'cash' ? parseFloat(amountTendered.value) : null,
+        change_amount: paymentMethod.value === 'cash' ? parseFloat(changeAmount.value) : null
     };
     
     // Disable button to prevent double submission

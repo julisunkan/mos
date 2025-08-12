@@ -10,7 +10,7 @@ from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.lib.units import inch
 from reportlab.lib import colors
 from app import db
-from models import Product, Sale, SaleItem, Customer, Store
+from models import Product, Sale, SaleItem, Customer, Store, StoreStock
 
 sales_bp = Blueprint('sales', __name__)
 
@@ -199,6 +199,17 @@ def process_sale():
         sale.subtotal = subtotal
         sale.tax_amount = tax_amount
         sale.total_amount = total_amount
+        
+        # Handle amount tendered and change for cash payments
+        if payment_method.lower() == 'cash':
+            amount_tendered = data.get('amount_tendered', total_amount)
+            change_amount = data.get('change_amount', 0)
+            
+            sale.amount_tendered = amount_tendered
+            sale.change_amount = change_amount
+        else:
+            sale.amount_tendered = None
+            sale.change_amount = None
         
         db.session.commit()
         
