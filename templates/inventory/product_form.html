@@ -156,32 +156,27 @@
                         
                         <div class="mb-3">
                             {{ form.store_ids.label(class="form-label") }}<span class="text-danger">*</span>
-                            <div class="border rounded p-3" style="max-height: 200px; overflow-y: auto;">
-                                {% for value, label in form.store_ids.choices %}
-                                <div class="form-check">
-                                    <input class="form-check-input store-checkbox" type="checkbox" name="store_ids" value="{{ value }}" id="store_{{ value }}" 
-                                           {% if form.store_ids.data and value in form.store_ids.data %}checked{% endif %}>
-                                    <label class="form-check-label" for="store_{{ value }}">
-                                        {{ label }}
-                                    </label>
-                                </div>
-                                {% endfor %}
-                            </div>
+                            {{ form.store_ids(class="form-select" + (" is-invalid" if form.store_ids.errors else ""), multiple=true, size="6") }}
                             {% if form.store_ids.errors %}
-                                <div class="text-danger mt-1">
+                                <div class="invalid-feedback">
                                     {% for error in form.store_ids.errors %}
-                                        <small>{{ error }}</small>
+                                        {{ error }}
                                     {% endfor %}
                                 </div>
                             {% endif %}
-                            <small class="form-text text-muted">Select at least one store where this product will be available</small>
+                            <small class="form-text text-muted">Hold Ctrl/Cmd to select multiple stores where this product will be available</small>
                         </div>
                         
                         <div class="mb-3">
-                            <div class="form-check">
-                                {{ form.is_active(class="form-check-input") }}
-                                {{ form.is_active.label(class="form-check-label") }}
-                            </div>
+                            {{ form.is_active.label(class="form-label") }}
+                            {{ form.is_active(class="form-select" + (" is-invalid" if form.is_active.errors else "")) }}
+                            {% if form.is_active.errors %}
+                                <div class="invalid-feedback">
+                                    {% for error in form.is_active.errors %}
+                                        {{ error }}
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
                         </div>
                         
                         <div class="d-flex justify-content-between">
@@ -199,27 +194,14 @@
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    // Handle store selection validation
-    const storeCheckboxes = document.querySelectorAll('.store-checkbox');
-    const allCheckboxes = document.querySelectorAll('.form-check-input');
+    // Handle store selection validation for multi-select dropdown
+    const storeSelect = document.querySelector('select[name="store_ids"]');
     const form = document.querySelector('form');
     
-    // Ensure checkboxes are clickable
-    allCheckboxes.forEach(function(checkbox) {
-        checkbox.style.pointerEvents = 'auto';
-        checkbox.style.zIndex = '999';
-        checkbox.style.position = 'relative';
-        
-        // Add click handler to ensure checkbox works
-        checkbox.addEventListener('click', function(e) {
-            e.stopPropagation();
-            // For debugging: console.log('Checkbox clicked:', checkbox.checked);
-        });
-    });
-    
     function validateStoreSelection() {
-        const checkedStores = document.querySelectorAll('.store-checkbox:checked');
-        return checkedStores.length > 0;
+        if (!storeSelect) return true;
+        const selectedStores = Array.from(storeSelect.selectedOptions);
+        return selectedStores.length > 0;
     }
     
     if (form) {

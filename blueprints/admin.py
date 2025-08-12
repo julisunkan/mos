@@ -53,7 +53,7 @@ def new_user():
         user.first_name = form.first_name.data
         user.last_name = form.last_name.data
         user.role = form.role.data
-        user.active = form.is_active.data
+        user.active = form.is_active.data == '1'
         user.store_id = form.store_id.data if form.store_id.data != 0 else None
         user.set_password(form.password.data)
         
@@ -124,7 +124,7 @@ def edit_user(id):
         user.first_name = form.first_name.data
         user.last_name = form.last_name.data
         user.role = form.role.data
-        user.active = form.is_active.data
+        user.active = form.is_active.data == '1'
         user.store_id = form.store_id.data if form.store_id.data != 0 else None
         
         # Only allow password changes if not editing another admin

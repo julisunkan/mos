@@ -53,28 +53,14 @@
 
                         <div class="mb-4">
                             {{ form.store_ids.label(class="form-label") }}
-                            <div class="row">
-                                {% for store_choice in form.store_ids.choices %}
-                                <div class="col-md-4 mb-2">
-                                    <div class="form-check">
-                                        <input class="form-check-input" type="checkbox" 
-                                               name="store_ids" value="{{ store_choice[0] }}" 
-                                               id="store_{{ store_choice[0] }}"
-                                               {% if store_choice[0] in (form.store_ids.data or []) %}checked{% endif %}>
-                                        <label class="form-check-label" for="store_{{ store_choice[0] }}">
-                                            {{ store_choice[1] }}
-                                        </label>
-                                    </div>
-                                </div>
-                                {% endfor %}
-                            </div>
+                            {{ form.store_ids(class="form-select" + (" is-invalid" if form.store_ids.errors else ""), multiple=true, size="8") }}
                             {% if form.store_ids.errors %}
-                                <div class="text-danger mt-1">
+                                <div class="invalid-feedback">
                                     {% for error in form.store_ids.errors %}{{ error }}{% endfor %}
                                 </div>
                             {% endif %}
                             <small class="form-text text-muted">
-                                Select one or more stores this user can access. Users need store access to use POS and inventory features.
+                                Hold Ctrl/Cmd to select multiple stores this user can access. Users need store access to use POS and inventory features.
                             </small>
                         </div>
 

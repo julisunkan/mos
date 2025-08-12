@@ -52,7 +52,7 @@ def new_customer():
             address=form.address.data,
             customer_type=form.customer_type.data,
             credit_limit=form.credit_limit.data,
-            is_active=form.is_active.data
+            is_active=form.is_active.data == '1'
         )
         
         try:
@@ -83,7 +83,7 @@ def edit_customer(id):
         customer.address = form.address.data
         customer.customer_type = form.customer_type.data
         customer.credit_limit = form.credit_limit.data
-        customer.is_active = form.is_active.data
+        customer.is_active = form.is_active.data == '1'
         
         try:
             db.session.commit()

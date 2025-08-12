@@ -8,7 +8,7 @@ from models import Product, User, Category, Store
 class LoginForm(FlaskForm):
     username = StringField('Username', validators=[DataRequired(), Length(min=4, max=25)])
     password = PasswordField('Password', validators=[DataRequired()])
-    remember_me = BooleanField('Remember Me')
+    remember_me = SelectField('Remember Me', choices=[('0', 'No'), ('1', 'Yes')], default='0')
 
 class UserForm(FlaskForm):
     username = StringField('Username', validators=[DataRequired(), Length(min=4, max=25)])
@@ -24,7 +24,7 @@ class UserForm(FlaskForm):
         ('Accountant', 'Accountant')
     ], validators=[DataRequired()])
     store_id = SelectField('Assigned Store', coerce=int, validators=[Optional()])
-    is_active = BooleanField('Active', default=True)
+    is_active = SelectField('Status', choices=[('1', 'Active'), ('0', 'Inactive')], default='1')
     
     def __init__(self, user=None, *args, **kwargs):
         super(UserForm, self).__init__(*args, **kwargs)
@@ -56,7 +56,7 @@ class UserForm(FlaskForm):
 class CategoryForm(FlaskForm):
     name = StringField('Category Name', validators=[DataRequired(), Length(max=100)])
     description = TextAreaField('Description', validators=[Optional(), Length(max=255)])
-    is_active = BooleanField('Active', default=True)
+    is_active = SelectField('Status', choices=[('1', 'Active'), ('0', 'Inactive')], default='1')
     
     def __init__(self, category=None, *args, **kwargs):
         super(CategoryForm, self).__init__(*args, **kwargs)
@@ -92,13 +92,13 @@ class CompanyProfileForm(FlaskForm):
     receipt_footer = TextAreaField('Receipt Footer', validators=[Optional(), Length(max=500)])
     logo_url = StringField('Logo URL', validators=[Optional(), Length(max=500)])
 
-class MultiCheckboxField(SelectMultipleField):
-    widget = ListWidget(prefix_label=False)
-    option_widget = CheckboxInput()
+class MultiSelectField(SelectMultipleField):
+    # Use standard SelectMultipleField without checkbox widgets
+    pass
 
 class UserStoreAssignmentForm(FlaskForm):
     user_id = SelectField('Select User', coerce=int, validators=[DataRequired()])
-    store_ids = MultiCheckboxField('Assign to Stores', coerce=int, validators=[Optional()])
+    store_ids = MultiSelectField('Assign to Stores', coerce=int, validators=[Optional()])
 
 class SaleForm(FlaskForm):
     customer_id = SelectField('Customer', coerce=int, validators=[Optional()])
@@ -126,7 +126,7 @@ class StoreForm(FlaskForm):
     phone = StringField('Phone', validators=[Optional(), Length(max=20)])
     email = StringField('Email', validators=[Optional(), Email()])
     manager_id = SelectField('Store Manager', coerce=int, validators=[Optional()])
-    is_active = BooleanField('Active', default=True)
+    is_active = SelectField('Status', choices=[('1', 'Active'), ('0', 'Inactive')], default='1')
 
 class StockTransferForm(FlaskForm):
     from_store_id = SelectField('From Store', coerce=int, validators=[DataRequired()])
@@ -147,7 +147,7 @@ class SupplierForm(FlaskForm):
     email = StringField('Email', validators=[Optional(), Email()])
     phone = StringField('Phone', validators=[Optional(), Length(max=20)])
     address = TextAreaField('Address', validators=[Optional(), Length(max=500)])
-    is_active = BooleanField('Active', default=True)
+    is_active = SelectField('Status', choices=[('1', 'Active'), ('0', 'Inactive')], default='1')
 
 class ProductForm(FlaskForm):
     name = StringField('Product Name', validators=[DataRequired(), Length(max=200)])
@@ -161,7 +161,7 @@ class ProductForm(FlaskForm):
     low_stock_threshold = IntegerField('Low Stock Threshold', validators=[Optional(), NumberRange(min=0)], default=10)
     tax_rate = FloatField('Tax Rate (%)', validators=[Optional(), NumberRange(min=0, max=100)], default=0)
     store_ids = SelectMultipleField('Available in Stores', coerce=int, validators=[Optional()])
-    is_active = BooleanField('Active', default=True)
+    is_active = SelectField('Status', choices=[('1', 'Active'), ('0', 'Inactive')], default='1')
     
     def __init__(self, product=None, *args, **kwargs):
         super(ProductForm, self).__init__(*args, **kwargs)
@@ -200,4 +200,4 @@ class CustomerForm(FlaskForm):
         ('VIP', 'VIP')
     ], default='Retail')
     credit_limit = FloatField('Credit Limit', validators=[Optional(), NumberRange(min=0)], default=0.00)
-    is_active = BooleanField('Active', default=True)
+    is_active = SelectField('Status', choices=[('1', 'Active'), ('0', 'Inactive')], default='1')

@@ -74,7 +74,7 @@ def new_product():
             stock_quantity=form.stock_quantity.data,
             low_stock_threshold=form.low_stock_threshold.data,
             tax_rate=form.tax_rate.data,
-            is_active=form.is_active.data
+            is_active=form.is_active.data == '1'
         )
         
         try:
@@ -139,7 +139,7 @@ def edit_product(id):
         product.stock_quantity = form.stock_quantity.data
         product.low_stock_threshold = form.low_stock_threshold.data
         product.tax_rate = form.tax_rate.data
-        product.is_active = form.is_active.data
+        product.is_active = form.is_active.data == '1'
         
         # Update store assignments
         selected_store_ids = set(form.store_ids.data)
@@ -232,7 +232,7 @@ def new_category():
         category = Category(
             name=form.name.data,
             description=form.description.data,
-            is_active=form.is_active.data
+            is_active=form.is_active.data == '1'
         )
         
         try:
@@ -255,7 +255,7 @@ def edit_category(id):
     if form.validate_on_submit():
         category.name = form.name.data
         category.description = form.description.data
-        category.is_active = form.is_active.data
+        category.is_active = form.is_active.data == '1'
         
         try:
             db.session.commit()

@@ -127,11 +127,12 @@
                                placeholder="Brief description of the image">
                     </div>
                     
-                    <div class="form-check">
-                        <input class="form-check-input" type="checkbox" id="isPrimary" name="is_primary">
-                        <label class="form-check-label" for="isPrimary">
-                            Set as Primary Image
-                        </label>
+                    <div class="mb-3">
+                        <label for="isPrimary" class="form-label">Image Type</label>
+                        <select class="form-select" id="isPrimary" name="is_primary">
+                            <option value="0">Secondary Image</option>
+                            <option value="1">Primary Image</option>
+                        </select>
                     </div>
                 </div>
                 <div class="modal-footer">
