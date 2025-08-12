@@ -190,6 +190,9 @@ def process_sale():
             # Update store-specific stock
             store_stock.quantity -= quantity
             
+            # Also update global product stock
+            product.stock_quantity -= quantity
+            
             # Add to sale totals
             subtotal += item_subtotal
             tax_amount += item_tax
