@@ -719,3 +719,105 @@ textarea,
 .main-content *:not(.btn):not(.badge):not(.alert) {
     color: var(--dark-color);
 }
+
+/* Additional fixes for admin pages and tables */
+.table-dark {
+    background-color: white !important;
+    color: var(--dark-color) !important;
+}
+
+.table-dark th,
+.table-dark td,
+.table-dark thead th {
+    background-color: white !important;
+    color: var(--dark-color) !important;
+    border-color: #e5e7eb !important;
+}
+
+.table-dark thead th {
+    background: var(--primary-gradient) !important;
+    color: white !important;
+}
+
+/* Fix any Bootstrap dark classes */
+.bg-dark {
+    background: white !important;
+    color: var(--dark-color) !important;
+}
+
+.text-white {
+    color: var(--dark-color) !important;
+}
+
+/* Ensure admin pages are properly styled */
+.admin-content,
+.admin-content * {
+    color: var(--dark-color) !important;
+}
+
+/* Fix pagination and other dark elements */
+.pagination .page-link {
+    color: var(--primary-color) !important;
+    background-color: white !important;
+    border-color: #e5e7eb !important;
+}
+
+.pagination .page-item.active .page-link {
+    background: var(--primary-gradient) !important;
+    border-color: var(--primary-color) !important;
+    color: white !important;
+}
+
+/* Comprehensive fixes for all Bootstrap dark elements */
+.bg-secondary,
+.bg-primary,
+.bg-info,
+.bg-success,
+.bg-warning,
+.bg-danger {
+    color: white !important;
+}
+
+/* Container and wrapper fixes */
+.container,
+.container-fluid,
+.row,
+.col,
+.col-12,
+.col-md-6,
+.col-lg-4 {
+    color: var(--dark-color) !important;
+}
+
+/* Headings and text elements */
+h1, h2, h3, h4, h5, h6,
+.h1, .h2, .h3, .h4, .h5, .h6 {
+    color: var(--dark-color) !important;
+}
+
+p, span, div, td, th, li, a:not(.btn) {
+    color: inherit !important;
+}
+
+/* Admin specific overrides */
+.admin-page,
+.admin-page * {
+    color: var(--dark-color) !important;
+}
+
+/* Ensure no dark backgrounds override our light theme */
+[class*="bg-dark"],
+[class*="table-dark"],
+[class*="navbar-dark"] {
+    background: white !important;
+    color: var(--dark-color) !important;
+}
+
+/* Fix any remaining text visibility issues */
+.text-muted {
+    color: #6b7280 !important;
+}
+
+.small, small {
+    color: #6b7280 !important;
+}
