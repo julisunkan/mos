@@ -13,8 +13,8 @@
     --success-color: #00f2fe;
     --warning-color: #ffb347;
     --danger-color: #ff6b6b;
-    --dark-color: #1f2937;
-    --light-color: #ffffff;
+    --dark-color: #000000;
+    --light-color: #fef3c7;
     
     --border-radius: 12px;
     --border-radius-lg: 16px;
@@ -29,28 +29,28 @@
 
 /* Light Theme (Default) */
 [data-theme="light"] {
-    --bg-primary: #ffffff;
-    --bg-secondary: #f8fafc;
-    --bg-gradient: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
-    --text-primary: #1f2937;
-    --text-secondary: #4b5563;
-    --border-color: #e5e7eb;
-    --card-bg: #ffffff;
-    --nav-bg: #ffffff;
-    --header-gradient: linear-gradient(135deg, #f8fafc 0%, #e5e7eb 100%);
+    --bg-primary: #fef3c7;
+    --bg-secondary: #fde68a;
+    --bg-gradient: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+    --text-primary: #000000;
+    --text-secondary: #1f2937;
+    --border-color: #f59e0b;
+    --card-bg: #fef3c7;
+    --nav-bg: #fef3c7;
+    --header-gradient: linear-gradient(135deg, #fde68a 0%, #f59e0b 100%);
 }
 
 /* Grey Theme */
 [data-theme="grey"] {
-    --bg-primary: #ffffff;
-    --bg-secondary: #f1f5f9;
-    --bg-gradient: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
-    --text-primary: #1f2937;
-    --text-secondary: #4b5563;
-    --border-color: #d1d5db;
-    --card-bg: #ffffff;
-    --nav-bg: #f8fafc;
-    --header-gradient: linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%);
+    --bg-primary: #fef3c7;
+    --bg-secondary: #fde68a;
+    --bg-gradient: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+    --text-primary: #000000;
+    --text-secondary: #1f2937;
+    --border-color: #f59e0b;
+    --card-bg: #fef3c7;
+    --nav-bg: #fde68a;
+    --header-gradient: linear-gradient(135deg, #fde68a 0%, #f59e0b 100%);
 }
 
 /* Modern Base Styling */
@@ -65,7 +65,7 @@ body {
     margin: 0;
     padding: 0;
     line-height: 1.6;
-    color: var(--text-primary) !important;
+    color: #000000 !important;
     transition: var(--transition);
 }
 
@@ -886,7 +886,7 @@ p, span, div, td, th, li, a:not(.btn) {
     color: #6b7280 !important;
 }
 
-/* Complete removal of ALL dark backgrounds */
+/* Force yellow background and black text on all elements */
 .navbar-dark,
 .bg-dark,
 .bg-primary,
@@ -903,7 +903,7 @@ p, span, div, td, th, li, a:not(.btn) {
 .btn-dark,
 .dropdown-menu-dark {
     background: var(--bg-primary) !important;
-    color: var(--text-primary) !important;
+    color: #000000 !important;
     border-color: var(--border-color) !important;
 }
 
@@ -912,7 +912,7 @@ p, span, div, td, th, li, a:not(.btn) {
     background: inherit !important;
 }
 
-/* Ensure specific elements are always light */
+/* Ensure specific elements use yellow background and black text */
 body,
 .app-container,
 .main-content,
@@ -930,7 +930,7 @@ body,
 .form-select,
 .btn:not(.btn-primary):not(.btn-success):not(.btn-warning):not(.btn-danger) {
     background: var(--bg-primary) !important;
-    color: var(--text-primary) !important;
+    color: #000000 !important;
 }
 
 /* Override any gradient that might be too dark */
@@ -963,11 +963,11 @@ body,
 
 /* Update text colors for theme support */
 .text-muted {
-    color: var(--text-secondary) !important;
+    color: #1f2937 !important;
 }
 
 .small, small {
-    color: var(--text-secondary) !important;
+    color: #1f2937 !important;
 }
 
 /* Update all text elements for theme support */
@@ -981,7 +981,8 @@ select,
 textarea,
 .form-control,
 .form-select {
-    color: var(--text-primary) !important;
+    color: #000000 !important;
+    background: var(--bg-primary) !important;
 }
 
 /* Container and wrapper fixes for theme support */
@@ -992,21 +993,22 @@ textarea,
 .col-12,
 .col-md-6,
 .col-lg-4 {
-    color: var(--text-primary) !important;
+    color: #000000 !important;
 }
 
 /* Headings and text elements for theme support */
 h1, h2, h3, h4, h5, h6,
 .h1, .h2, .h3, .h4, .h5, .h6 {
-    color: var(--text-primary) !important;
+    color: #000000 !important;
 }
 
 p, span, div, td, th, li, a:not(.btn) {
-    color: inherit !important;
+    color: #000000 !important;
 }
 
 /* Make sure all content areas have proper themed colors */
 .main-content,
 .main-content *:not(.btn):not(.badge):not(.alert) {
-    color: var(--text-primary);
+    color: #000000 !important;
+    background: var(--bg-primary) !important;
 }
