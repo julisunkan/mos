@@ -357,22 +357,22 @@ body {
 
 .btn-primary {
     background: var(--primary-gradient);
-    color: white;
+    color: #dc2626;
 }
 
 .btn-success {
     background: var(--success-gradient);
-    color: white;
+    color: #dc2626;
 }
 
 .btn-warning {
     background: linear-gradient(135deg, var(--warning-color) 0%, #ffa726 100%);
-    color: white;
+    color: #dc2626;
 }
 
 .btn-danger {
     background: linear-gradient(135deg, var(--danger-color) 0%, #e53e3e 100%);
-    color: white;
+    color: #dc2626;
 }
 
 .btn-outline-primary {
@@ -383,7 +383,7 @@ body {
 
 .btn-outline-primary:hover {
     background: var(--primary-gradient);
-    color: white;
+    color: #dc2626;
     border-color: transparent;
 }
 
@@ -946,20 +946,7 @@ body,
     color: var(--text-primary) !important;
 }
 
-/* Theme Switcher Styles */
-.theme-option {
-    cursor: pointer;
-    transition: var(--transition);
-}
-
-.theme-option:hover {
-    background: var(--bg-secondary) !important;
-}
-
-.theme-option.active {
-    background: var(--primary-gradient) !important;
-    color: white !important;
-}
+/* Removed theme switcher styles */
 
 /* Update text colors for theme support */
 .text-muted {
