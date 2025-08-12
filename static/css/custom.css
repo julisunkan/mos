@@ -53,6 +53,43 @@
     --header-gradient: linear-gradient(135deg, #fde68a 0%, #f59e0b 100%);
 }
 
+/* Enhanced Form Controls - Checkboxes with Red Ticks */
+.form-check-input {
+    width: 1.25rem;
+    height: 1.25rem;
+    border: 2px solid #dc3545;
+    border-radius: 4px;
+    background-color: #fff;
+    background-image: none;
+    background-repeat: no-repeat;
+    background-position: center;
+    background-size: contain;
+    appearance: none;
+    transition: all 0.15s ease-in-out;
+    cursor: pointer;
+}
+
+.form-check-input:checked {
+    background-color: #dc3545;
+    border-color: #dc3545;
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20'%3e%3cpath fill='none' stroke='%23fff' stroke-linecap='round' stroke-linejoin='round' stroke-width='3' d='m6 10 3 3 6-6'/%3e%3c/svg%3e");
+}
+
+.form-check-input:focus {
+    border-color: #dc3545;
+    outline: 0;
+    box-shadow: 0 0 0 0.2rem rgba(220, 53, 69, 0.25);
+}
+
+.form-check-input:hover:not(:checked) {
+    border-color: #dc3545;
+    background-color: rgba(220, 53, 69, 0.1);
+}
+
+.store-checkbox {
+    accent-color: #dc3545 !important;
+}
+
 /* Modern Base Styling */
 * {
     box-sizing: border-box;
