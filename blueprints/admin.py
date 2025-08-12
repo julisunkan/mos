@@ -1,7 +1,7 @@
 from flask import Blueprint, render_template, request, redirect, url_for, flash
 from flask_login import login_required, current_user
 from datetime import datetime, timedelta
-from models import User, Category, CompanyProfile, AuditLog, SaleReturn, SaleReturnItem, Store, UserStore, Product
+from models import User, Category, CompanyProfile, AuditLog, SaleReturn, SaleReturnItem, Store, UserStore, Product, StoreStock, Sale, SaleItem, Customer, CashRegister
 from forms import UserForm, CategoryForm, CompanyProfileForm, UserStoreAssignmentForm
 from app import db
 from utils import admin_required
@@ -481,7 +481,22 @@ def approve_return(return_id):
         for item in sale_return.return_items:
             product = Product.query.get(item.product_id)
             if product:
-                product.stock_quantity += item.quantity
+                # Update store-specific stock instead of global stock  
+                # Need to get store_id from the sale_return's original sale
+                original_sale = sale_return.sale
+                if original_sale:
+                    store_stock = StoreStock.query.filter_by(
+                        product_id=item.product_id,
+                        store_id=original_sale.store_id
+                    ).first()
+                    if store_stock:
+                        store_stock.quantity += item.quantity
+                    else:
+                        new_store_stock = StoreStock()
+                        new_store_stock.product_id = item.product_id
+                        new_store_stock.store_id = original_sale.store_id
+                        new_store_stock.quantity = item.quantity
+                        db.session.add(new_store_stock)
         
         db.session.commit()
         

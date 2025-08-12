@@ -71,12 +71,11 @@ def open_register():
     
     form = CashRegisterForm()
     if form.validate_on_submit():
-        register = CashRegister(
-            user_id=current_user.id,
-            store_id=user_store.store_id,
-            opening_balance=form.opening_balance.data,
-            is_open=True
-        )
+        register = CashRegister()
+        register.user_id = current_user.id
+        register.store_id = user_store.store_id
+        register.opening_balance = form.opening_balance.data
+        register.is_open = True
         
         try:
             db.session.add(register)
@@ -142,15 +141,14 @@ def process_sale():
             return jsonify({'error': 'No open cash register'}), 400
         
         # Create the sale
-        sale = Sale(
-            receipt_number=generate_receipt_number(),
-            user_id=current_user.id,
-            store_id=register.store_id,
-            customer_id=data.get('customer_id') if data.get('customer_id') else None,
-            payment_method=data.get('payment_method', 'Cash'),
-            discount_amount=float(data.get('discount', 0)),
-            notes=data.get('notes', '')
-        )
+        sale = Sale()
+        sale.receipt_number = generate_receipt_number()
+        sale.user_id = current_user.id
+        sale.store_id = register.store_id
+        sale.customer_id = data.get('customer_id') if data.get('customer_id') else None
+        sale.payment_method = data.get('payment_method', 'Cash')
+        sale.discount_amount = float(data.get('discount', 0))
+        sale.notes = data.get('notes', '')
         
         db.session.add(sale)
         db.session.flush()  # Get the sale ID
@@ -179,13 +177,12 @@ def process_sale():
             total_price = unit_price * quantity
             
             # Create sale item
-            sale_item = SaleItem(
-                sale_id=sale.id,
-                product_id=product.id,
-                quantity=quantity,
-                unit_price=unit_price,
-                total_price=total_price
-            )
+            sale_item = SaleItem()
+            sale_item.sale_id = sale.id
+            sale_item.product_id = product.id
+            sale_item.quantity = quantity
+            sale_item.unit_price = unit_price
+            sale_item.total_price = total_price
             
             db.session.add(sale_item)
             
@@ -229,29 +226,27 @@ def hold_sale():
         hold_number = generate_hold_number()
         
         # Create held sale record
-        held_sale = HeldSale(
-            hold_number=hold_number,
-            user_id=current_user.id,
-            customer_id=data.get('customer_id'),
-            subtotal=data.get('subtotal', 0),
-            tax_amount=data.get('tax_amount', 0),
-            discount_amount=data.get('discount_amount', 0),
-            total_amount=data.get('total_amount', 0),
-            notes=data.get('notes', '')
-        )
+        held_sale = HeldSale()
+        held_sale.hold_number = hold_number
+        held_sale.user_id = current_user.id
+        held_sale.customer_id = data.get('customer_id')
+        held_sale.subtotal = data.get('subtotal', 0)
+        held_sale.tax_amount = data.get('tax_amount', 0)
+        held_sale.discount_amount = data.get('discount_amount', 0)
+        held_sale.total_amount = data.get('total_amount', 0)
+        held_sale.notes = data.get('notes', '')
         
         db.session.add(held_sale)
         db.session.flush()  # Get the ID
         
         # Add held sale items
         for item in data.get('items', []):
-            held_item = HeldSaleItem(
-                held_sale_id=held_sale.id,
-                product_id=item['product_id'],
-                quantity=item['quantity'],
-                unit_price=item['unit_price'],
-                total_price=item['total_price']
-            )
+            held_item = HeldSaleItem()
+            held_item.held_sale_id = held_sale.id
+            held_item.product_id = item['product_id']
+            held_item.quantity = item['quantity']
+            held_item.unit_price = item['unit_price']
+            held_item.total_price = item['total_price']
             db.session.add(held_item)
         
         db.session.commit()
@@ -328,9 +323,9 @@ def resume_sale(sale_id):
         }
     })
 
-@pos_bp.route('/returns')
+@pos_bp.route('/pos_returns')
 @login_required
-def returns():
+def pos_returns():
     """Display returns and refunds page"""
     from forms import ReturnForm
     form = ReturnForm()
@@ -474,14 +469,13 @@ def process_return():
         return_number = generate_return_number()
         
         # Create return record
-        sale_return = SaleReturn(
-            return_number=return_number,
-            original_sale_id=original_sale.id,
-            user_id=current_user.id,
-            return_reason=return_reason,
-            notes=notes,
-            status='Processed'
-        )
+        sale_return = SaleReturn()
+        sale_return.return_number = return_number
+        sale_return.original_sale_id = original_sale.id
+        sale_return.user_id = current_user.id
+        sale_return.return_reason = return_reason
+        sale_return.notes = notes
+        sale_return.status = 'Processed'
         
         db.session.add(sale_return)
         db.session.flush()  # Get the return ID
@@ -510,39 +504,47 @@ def process_return():
             total_return_amount += return_amount
             
             # Create return item record
-            return_item = SaleReturnItem(
-                return_id=sale_return.id,
-                product_id=original_item.product_id,
-                original_sale_item_id=original_item.id,
-                quantity_returned=return_qty,
-                unit_price=unit_price,
-                total_amount=return_amount
-            )
+            return_item = SaleReturnItem()
+            return_item.return_id = sale_return.id
+            return_item.product_id = original_item.product_id
+            return_item.original_sale_item_id = original_item.id
+            return_item.quantity = return_qty
+            return_item.unit_price = unit_price
+            return_item.total_refund = return_amount
             
             db.session.add(return_item)
             
-            # Restore stock
-            product = Product.query.get(original_item.product_id)
-            if product:
-                product.stock_quantity += return_qty
+            # Restore store-specific stock instead of global stock
+            store_stock = StoreStock.query.filter_by(
+                product_id=original_item.product_id,
+                store_id=original_sale.store_id
+            ).first()
+            if store_stock:
+                store_stock.quantity += return_qty
+            else:
+                # Create store stock entry if it doesn't exist
+                new_store_stock = StoreStock()
+                new_store_stock.product_id = original_item.product_id
+                new_store_stock.store_id = original_sale.store_id
+                new_store_stock.quantity = return_qty
+                db.session.add(new_store_stock)
         
         # Update return total
         sale_return.return_amount = total_return_amount
         sale_return.processed_at = datetime.utcnow()
         
         # Create negative sale entry for refund tracking
-        refund_sale = Sale(
-            receipt_number=f"REF-{return_number}",
-            user_id=current_user.id,
-            store_id=original_sale.store_id,
-            customer_id=original_sale.customer_id,
-            payment_method=original_sale.payment_method,
-            subtotal=-total_return_amount,
-            tax_amount=0,  # Tax calculation for returns can be added later
-            discount_amount=0,
-            total_amount=-total_return_amount,
-            notes=f'REFUND for {original_sale.receipt_number} - {return_reason}'
-        )
+        refund_sale = Sale()
+        refund_sale.receipt_number = f"REF-{return_number}"
+        refund_sale.user_id = current_user.id
+        refund_sale.store_id = original_sale.store_id
+        refund_sale.customer_id = original_sale.customer_id
+        refund_sale.payment_method = original_sale.payment_method
+        refund_sale.subtotal = -total_return_amount
+        refund_sale.tax_amount = 0  # Tax calculation for returns can be added later
+        refund_sale.discount_amount = 0
+        refund_sale.total_amount = -total_return_amount
+        refund_sale.notes = f'REFUND for {original_sale.receipt_number} - {return_reason}'
         
         db.session.add(refund_sale)
         db.session.commit()
@@ -682,9 +684,9 @@ def print_receipt(receipt_number):
     
     return response
 
-@pos_bp.route('/returns')
+@pos_bp.route('/pos_returns_v2')
 @login_required 
-def returns():
+def pos_returns_v2():
     """Display returns management page for cashiers"""
     # Get recent sales that can be returned (within last 30 days)
     from datetime import datetime, timedelta
@@ -697,23 +699,4 @@ def returns():
     
     return render_template('pos/returns.html', recent_sales=recent_sales)
 
-@pos_bp.route('/api/sale/<int:sale_id>/details')
-@login_required
-def get_sale_details(sale_id):
-    """Get sale details for returns processing"""
-    sale = Sale.query.get_or_404(sale_id)
-    
-    return jsonify({
-        'id': sale.id,
-        'receipt_number': sale.receipt_number,
-        'created_at': sale.created_at.isoformat(),
-        'customer_name': sale.customer.name if sale.customer else None,
-        'total_amount': float(sale.total_amount),
-        'items': [{
-            'id': item.id,
-            'product_name': item.product.name,
-            'quantity': item.quantity,
-            'unit_price': float(item.unit_price),
-            'total_price': float(item.total_price)
-        } for item in sale.items]
-    })
+

@@ -122,7 +122,17 @@ def process_sale():
         
         # Get user's primary store (use default store if no assignment)
         user_store = current_user.store_assignments[0] if current_user.store_assignments else None
-        store_id = user_store.store_id if user_store else (current_user.store_id if current_user.store_id else 1)
+        if user_store:
+            store_id = user_store.store_id
+        elif current_user.store_id:
+            store_id = current_user.store_id
+        else:
+            # Check if there's at least one store available as fallback
+            from models import Store
+            default_store = Store.query.filter_by(is_active=True).first()
+            if not default_store:
+                return jsonify({'error': 'No active stores available. Contact administrator.'}), 400
+            store_id = default_store.id
         
         # Calculate totals
         subtotal = 0
@@ -153,10 +163,15 @@ def process_sale():
             quantity = int(item_data['quantity'])
             unit_price = float(item_data['unit_price'])
             
-            # Check stock
-            if product.stock_quantity < quantity:
+            # Check store-specific stock
+            store_stock = StoreStock.query.filter_by(
+                product_id=product.id,
+                store_id=store_id
+            ).first()
+            
+            if not store_stock or store_stock.quantity < quantity:
                 db.session.rollback()
-                return jsonify({'error': f'Insufficient stock for {product.name}'}), 400
+                return jsonify({'error': f'Insufficient stock for {product.name} in this store'}), 400
             
             # Calculate item totals
             item_subtotal = quantity * unit_price
@@ -172,8 +187,8 @@ def process_sale():
             sale_item.total_price = item_total
             db.session.add(sale_item)
             
-            # Update product stock
-            product.stock_quantity -= quantity
+            # Update store-specific stock
+            store_stock.quantity -= quantity
             
             # Add to sale totals
             subtotal += item_subtotal

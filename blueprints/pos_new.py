@@ -381,7 +381,7 @@ def download_receipt(receipt_number):
         
         # Receipt header
         p.setFont("Helvetica-Bold", 16)
-        text = p.beginText(width/2, height-50)
+        text = p.beginText(int(width/2), int(height-50))
         text.setFont("Helvetica-Bold", 16)
         text.textLine("Cloud POS & Inventory Manager")
         p.drawText(text)
@@ -725,7 +725,7 @@ def process_return():
                 return jsonify({'error': f'Sale item {item_id} not found'}), 404
             
             # Check available quantity to return
-            existing_returns = db.session.query(db.func.sum(SaleReturnItem.quantity_returned)).filter_by(
+            existing_returns = db.session.query(db.func.sum(SaleReturnItem.quantity)).filter_by(
                 original_sale_item_id=item_id
             ).join(SaleReturn).filter(
                 SaleReturn.status == 'Processed'
@@ -775,15 +775,25 @@ def process_return():
             return_item.return_id = sale_return.id
             return_item.product_id = original_item.product_id
             return_item.original_sale_item_id = original_item.id
-            return_item.quantity_returned = quantity
+            return_item.quantity = quantity
             return_item.unit_price = original_item.unit_price
-            return_item.total_amount = amount
+            return_item.total_refund = amount
             
             db.session.add(return_item)
             
-            # Restore inventory
-            product = original_item.product
-            product.stock_quantity += quantity
+            # Restore store-specific inventory instead of global stock
+            store_stock = StoreStock.query.filter_by(
+                product_id=original_item.product_id,
+                store_id=original_sale.store_id
+            ).first()
+            if store_stock:
+                store_stock.quantity += quantity
+            else:
+                new_store_stock = StoreStock()
+                new_store_stock.product_id = original_item.product_id
+                new_store_stock.store_id = original_sale.store_id
+                new_store_stock.quantity = quantity
+                db.session.add(new_store_stock)
         
         # Deduct from cash register (for cash refunds)
         if original_sale.payment_method == 'Cash':
