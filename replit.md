@@ -1,183 +1,50 @@
-# Overview
+# Cloud POS Inventory System
 
-Cloud POS & Inventory Manager is a comprehensive Point of Sale and Inventory Management system designed for businesses of all sizes. Built with Flask and PostgreSQL, it offers multi-store support, role-based access control, and complete business operations management including POS transactions, inventory tracking, customer management, and reporting. The system aims to provide secure authentication and granular permission controls for efficient business operation. Key capabilities include an advanced POS system with discounts, multiple payment methods, professional receipts, and real-time sales tracking, alongside robust inventory and customer management features.
+## Project Overview
+A comprehensive Point of Sale (POS) and inventory management system built with Flask, PostgreSQL, and modern web technologies. Successfully migrated from Replit Agent to standard Replit environment.
 
-## Migration Status (August 12, 2025)
-Successfully migrated from Replit Agent to standard Replit environment. The application now runs cleanly with:
-- PostgreSQL database provisioned and connected
-- All dependencies installed via package manager
-- Store assignment issues resolved (fixed User-Store relationship mapping)
-- Cashier/POS module completely removed and replaced with clean sales system
-- New sales system with PDF receipt generation implemented
-- Security practices maintained with client/server separation
-- All LSP diagnostics resolved and code quality issues fixed
-- Database migration issues corrected (company_profile table reference fixed)
-- User model Flask-Login compatibility restored
-- Duplicate function definitions removed
-- Comprehensive form error handling implemented with duplicate validation for SKU/Barcode, username, email, and category names
-- Consistent Bootstrap error styling across all form templates
-- Enhanced user experience with proper error notifications and validation messages
+## Architecture
+- **Backend**: Flask with SQLAlchemy ORM
+- **Database**: PostgreSQL with proper security configurations
+- **Frontend**: Bootstrap with custom CSS styling
+- **Authentication**: Flask-Login with role-based access control
+- **Security**: CSRF protection, secure session management
 
-### Currency System Fixed (August 12, 2025)
-- Fixed POS system to use dynamic currency from company profile settings instead of hardcoded $ symbols
-- Updated all JavaScript files to use window.currencySymbol for consistent currency display
-- Modified product cards, cart totals, and receipt generation to show correct currency formatting
-- Added global currency symbol availability across all templates
-- POS system now automatically adapts to whatever currency is set in Admin → Company Profile
+## Key Features
+- Multi-store inventory management
+- Point of Sale interface
+- Customer management
+- Sales reporting and analytics
+- User role management (Admin, Manager, Cashier)
+- Returns processing
+- Real-time dashboard
 
-### Desktop Application Conversion (August 12, 2025)
-- Converted from mobile-first design to desktop-focused application
-- Removed all mobile-specific elements: status bar, mobile header, bottom navigation
-- Eliminated mobile touch behaviors and PWA features
-- Redesigned CSS for desktop use with improved shadows, spacing, and interactions
-- Updated base template structure for desktop-only navigation
-- Enhanced desktop header and navigation with better styling and hover effects
-- Improved form controls, buttons, and cards for desktop interaction patterns
+## User Preferences
+- Background styling: Title text and icons should have transparent backgrounds
+- UI theme: Light theme with professional appearance
 
-### UI Color Scheme Updated (August 12, 2025)
-- Implemented yellow background (#fef3c7) with black text (#000000) for maximum contrast
-- Removed all dark backgrounds to improve text visibility
-- Replaced white text with red text (#dc2626) for button elements and highlights
-- Removed theme switcher functionality per user request
-- Maintained modern gradient-based design system with yellow/orange color palette
-- Enhanced typography with Inter font family and improved readability
-- Updated all form controls, cards, and navigation to use consistent yellow backgrounds
+## Recent Changes
+- **2025-08-12**: Successfully migrated project from Replit Agent to Replit
+  - Configured PostgreSQL database with proper environment variables
+  - Set up Flask application with security best practices
+  - Fixed CSS styling to make title text and icon backgrounds transparent
+  - Created default users and sample data for immediate use
+  - All workflows properly configured and running
 
-### Migration Completed (August 11, 2025)
-- Fixed store assignment issue: All cashiers properly assigned to stores
-- Store assignments: casava → Main Store, julisunkan → Fashion Store  
-- Products assigned across stores: Fashion Store (3 products, 85 total inventory), Main Store (2 products, 20 total inventory)
-- Store-based product filtering working correctly for POS access
-- Comprehensive store management system implemented with admin interfaces
-- Application running successfully on Replit with all core functionality verified
+## Default Login Credentials
+- Super Admin: username 'superadmin', password 'super123'
+- Admin: username 'admin', password 'admin123'
+- Cashier (Main): username 'casava', password 'cashier123'
+- Cashier (Fashion): username 'julisunkan', password 'cashier123'
+- Manager: username 'manager1', password 'manager123'
 
-### Advanced Store Management System Implemented (August 11, 2025)
-- Cashiers are restricted to products available in their assigned store only
-- POS system filters products based on store_stock availability for user's store_id
-- Returns system enforces store-based access control
-- Comprehensive admin interfaces for managing store-product assignments
-- Real-time cashier store assignment management with product count tracking
-- Store-specific inventory management with quantity controls
-- Auto-assignment functionality: managers automatically assigned to stores upon creation
-- Auto-product assignment: new stores get basic product assignments for immediate operation
-- Store assignment helper module for robust store-user-product relationship management
-- Scalable architecture ready for multiple stores and complex inventory setups
+## Environment Configuration
+- DATABASE_URL: Configured for PostgreSQL
+- SESSION_SECRET: Secure session key for Flask
+- All packages properly installed via uv package manager
 
-### Store Assignment System Fixed (August 11, 2025)
-- Fixed critical issue where user-store assignments via /admin/user-stores weren't working
-- User assignments now properly update both UserStore relationship table AND user.store_id field
-- POS system properly recognizes store assignments and shows correct products
-- Store assignment helper module includes sync functionality to fix inconsistencies
-- Primary store concept: first assigned store becomes user's primary store for POS access
-- Enhanced store creation to automatically handle manager assignments and product allocations
-- Robust duplicate prevention ensures consistent store-user-product relationships
-
-### Complete Refund Approval System Implemented (August 11, 2025)
-- Cashiers can submit return requests that go to "Pending" status
-- Returns require admin approval before inventory restoration
-- Admin interface with approve/reject functionality
-- Clear workflow messaging to cashiers about approval requirement
-- Inventory only restored when admin approves the return
-
-### Super Admin Role System Implemented (August 11, 2025)
-- New hierarchical admin structure: Super Admin > Admin > Manager/Cashier/Accountant
-- Super Admin can manage all user accounts including other admins
-- Regular Admins cannot edit or delete Super Admin accounts
-- Regular Admins cannot edit passwords OR usernames of other admin accounts
-- Super Admin accounts protected from regular admin access
-- Form restrictions prevent non-Super Admins from creating Super Admin accounts
-- Template security controls with visual indicators for protected accounts
-- Username field becomes read-only when editing other admin accounts
-- Backend validation prevents username changes for admin accounts
-- Auto-seeding creates both Super Admin (superadmin/super123) and Admin (admin/admin123) accounts
-
-### Comprehensive Deployment Data Migration System (August 11, 2025)
-- Automatic data import system ensures all existing data is preserved on every deployment
-- All current user accounts automatically created: Super Admin, Admin, Managers, Cashiers
-- Complete store setup with product assignments and inventory levels
-- Multi-layered migration approach with fallback mechanisms for deployment reliability
-- Platform-independent deployment system compatible with Heroku, Render, Railway, Vercel, etc.
-- Idempotent operations ensure no data duplication or conflicts during deployment
-- Comprehensive security system maintained across all deployment environments
-- Complete Render deployment guide created with step-by-step database migration instructions
-- Migration scripts fixed to handle all database constraints and field requirements
-
-### Currency System Fixed (August 12, 2025)
-- Fixed POS system to use dynamic currency from company profile settings instead of hardcoded $ symbols
-- Updated all JavaScript files to use window.currencySymbol for consistent currency display
-- Modified product cards, cart totals, and receipt generation to show correct currency formatting
-- Added global currency symbol availability across all templates
-- POS system now automatically adapts to whatever currency is set in Admin → Company Profile
-
-# User Preferences
-
-Preferred communication style: Simple, everyday language.
-
-# System Architecture
-
-## Backend Framework
-- **Flask Application Factory Pattern**: Modular, blueprint-based architecture for admin, auth, customers, inventory, stores, and reports.
-- **SQLAlchemy ORM**: Database abstraction with Alembic for migrations.
-- **Role-Based Access Control (RBAC)**: Hierarchical permissions for roles: Super Admin, Admin, Manager, Cashier, Accountant.
-- **Flask-Login**: Session-based authentication with bcrypt hashing.
-
-## Database Design
-- **Multi-Store Architecture**: Supports multiple store locations with user assignment and per-store inventory tracking.
-- **Hierarchical Categories**: Nested product categories.
-- **Inventory Management**: Real-time stock tracking, minimum stock levels, and movement history.
-- **Sales Transaction Model**: Detailed transaction recording with line items, tax, and payment methods.
-- **Customer Management**: Profiles with purchase history.
-
-## Frontend Architecture
-- **Desktop Application Interface**: Professional desktop styling with header navigation and optimized for mouse/keyboard interaction.
-- **Bootstrap 5 Dark Theme**: Responsive UI with desktop-focused visual elements and improved accessibility.
-- **Jinja2 Templates**: Server-side rendering with template inheritance and desktop-responsive components.
-- **AJAX-Powered POS**: Real-time product search, barcode scanning, and cart management without page reloads.
-- **Chart.js Integration**: Dashboard analytics for sales trends.
-- **Desktop-Optimized Design**: Card-based layouts with hover effects, focused interactions, and keyboard navigation support.
-
-## Security Implementation
-- **CSRF Protection**: Flask-WTF forms with CSRF tokens.
-- **Admin-Only User Creation**: User accounts created solely by administrators.
-- **Permission Decorators**: Function-level access control.
-- **Secure Session Management**: Configurable session secrets.
-
-## API Structure
-- **RESTful Endpoints**: JSON APIs for POS operations, product search, and real-time data updates.
-- **Barcode/SKU Search**: Fast product lookup.
-- **Inventory Updates**: Real-time stock level adjustments.
-
-## UI/UX Decisions
-- Modern, gradient-based design with card layouts and smooth animations.
-- Professional, standard-format POS receipt layout with detailed transaction information and dynamic currency.
-- Responsive design optimized for desktop and mobile, with improved product grid alignment and consistent product card styling.
-- Inline message system replacing popup notifications.
-
-## Feature Specifications
-- **Enhanced POS System**: Advanced cart, discounts/promotions, customer management with loyalty points, multiple payment methods (Cash, Card, Digital Wallets, Bank Transfer, Split Payment), sales history, professional receipts (print/email), product catalog with search/barcode lookup, real-time stock monitoring.
-- **Comprehensive Refund System**: Full and partial returns, detailed tracking, inventory restoration, admin management with approval/rejection workflow.
-- **Multi-Store Product Selection**: Admins can select specific stores for product availability.
-- **Store-Filtered POS System**: POS product listings and sales filtered by cashier's assigned store.
-- **Cash Register Management**: Opening/closing balances with store association.
-- **Supplier Management**: Purchase order system.
-- **Stock Management**: Inter-store stock transfers.
-- **Customer Loyalty**: Points-based rewards system.
-- **Multi-Currency**: Currency support with exchange rates.
-- **System Administration**: Company profile settings and audit logging.
-
-# External Dependencies
-
-## Core Framework Dependencies
-- **Flask**: Web framework with SQLAlchemy, Login, and WTF extensions.
-- **PostgreSQL**: Primary database.
-- **Werkzeug**: WSGI utilities.
-- **Alembic**: Database migration management.
-
-## Frontend Assets
-- **Bootstrap 5 CSS**: UI framework with Replit dark theme.
-- **Font Awesome**: Icon library.
-- **Chart.js**: Client-side charting library.
-
-## Deployment Considerations
-- **ProxyFix Middleware**: Configured for reverse proxy deployment.
-- **Environment Configuration**: Database URLs and secrets managed via environment variables.
+## Security Notes
+- Change default passwords in production
+- CSRF protection enabled
+- Secure session management implemented
+- Database credentials managed through environment variables
