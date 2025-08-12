@@ -247,14 +247,14 @@ body {
 }
 
 .desktop-nav-item.active {
-    background: var(--primary-gradient);
-    color: white;
-    border-color: transparent;
+    background: transparent;
+    color: var(--text-primary);
+    border-color: var(--border-color);
     box-shadow: var(--shadow-lg);
 }
 
 .desktop-nav-item.active::before {
-    left: 0;
+    left: -100%;
 }
 
 /* Enhanced Main Content */
