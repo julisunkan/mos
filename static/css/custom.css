@@ -55,35 +55,40 @@
 
 /* Enhanced Form Controls - Checkboxes with Red Ticks */
 .form-check-input {
-    width: 1.25rem;
-    height: 1.25rem;
-    border: 2px solid #dc3545;
-    border-radius: 4px;
-    background-color: #fff;
-    background-image: none;
-    background-repeat: no-repeat;
-    background-position: center;
-    background-size: contain;
-    appearance: none;
-    transition: all 0.15s ease-in-out;
-    cursor: pointer;
+    width: 1.25rem !important;
+    height: 1.25rem !important;
+    border: 2px solid #dc3545 !important;
+    border-radius: 4px !important;
+    background-color: #fff !important;
+    background-image: none !important;
+    background-repeat: no-repeat !important;
+    background-position: center !important;
+    background-size: contain !important;
+    -webkit-appearance: none !important;
+    -moz-appearance: none !important;
+    appearance: none !important;
+    transition: all 0.15s ease-in-out !important;
+    cursor: pointer !important;
+    position: relative !important;
+    z-index: 1 !important;
+    pointer-events: all !important;
 }
 
 .form-check-input:checked {
-    background-color: #dc3545;
-    border-color: #dc3545;
-    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20'%3e%3cpath fill='none' stroke='%23fff' stroke-linecap='round' stroke-linejoin='round' stroke-width='3' d='m6 10 3 3 6-6'/%3e%3c/svg%3e");
+    background-color: #dc3545 !important;
+    border-color: #dc3545 !important;
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20'%3e%3cpath fill='none' stroke='%23fff' stroke-linecap='round' stroke-linejoin='round' stroke-width='3' d='m6 10 3 3 6-6'/%3e%3c/svg%3e") !important;
 }
 
 .form-check-input:focus {
-    border-color: #dc3545;
-    outline: 0;
-    box-shadow: 0 0 0 0.2rem rgba(220, 53, 69, 0.25);
+    border-color: #dc3545 !important;
+    outline: 0 !important;
+    box-shadow: 0 0 0 0.2rem rgba(220, 53, 69, 0.25) !important;
 }
 
 .form-check-input:hover:not(:checked) {
-    border-color: #dc3545;
-    background-color: rgba(220, 53, 69, 0.1);
+    border-color: #dc3545 !important;
+    background-color: rgba(220, 53, 69, 0.1) !important;
 }
 
 .store-checkbox {
@@ -891,6 +896,16 @@ textarea,
 /* Fix any remaining white text issues */
 * {
     color: inherit;
+}
+
+/* Ensure form checkboxes are always interactive */
+.form-check-input,
+.store-checkbox,
+input[type="checkbox"] {
+    pointer-events: auto !important;
+    position: relative !important;
+    z-index: 999 !important;
+    user-select: none !important;
 }
 
 /* Ensure form inputs have proper text color */

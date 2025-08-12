@@ -201,7 +201,21 @@
 document.addEventListener('DOMContentLoaded', function() {
     // Handle store selection validation
     const storeCheckboxes = document.querySelectorAll('.store-checkbox');
+    const allCheckboxes = document.querySelectorAll('.form-check-input');
     const form = document.querySelector('form');
+    
+    // Ensure checkboxes are clickable
+    allCheckboxes.forEach(function(checkbox) {
+        checkbox.style.pointerEvents = 'auto';
+        checkbox.style.zIndex = '999';
+        checkbox.style.position = 'relative';
+        
+        // Add click handler to ensure checkbox works
+        checkbox.addEventListener('click', function(e) {
+            e.stopPropagation();
+            // For debugging: console.log('Checkbox clicked:', checkbox.checked);
+        });
+    });
     
     function validateStoreSelection() {
         const checkedStores = document.querySelectorAll('.store-checkbox:checked');
