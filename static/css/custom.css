@@ -39,7 +39,7 @@ body {
     margin: 0;
     padding: 0;
     line-height: 1.6;
-    color: #374151;
+    color: #1f2937 !important;
 }
 
 /* App Container */
@@ -250,7 +250,7 @@ body {
     margin: 0;
     font-weight: 700;
     font-size: 1.25rem;
-    color: var(--dark-color);
+    color: var(--dark-color) !important;
     display: flex;
     align-items: center;
     gap: 12px;
@@ -352,7 +352,7 @@ body {
 
 .form-label {
     font-weight: 600;
-    color: var(--dark-color);
+    color: var(--dark-color) !important;
     margin-bottom: 8px;
     font-size: 0.95rem;
     letter-spacing: 0.5px;
@@ -399,7 +399,7 @@ body {
     font-size: 1rem;
     font-weight: 700;
     margin-bottom: 8px;
-    color: var(--dark-color);
+    color: var(--dark-color) !important;
 }
 
 /* Enhanced Tables */
@@ -655,4 +655,67 @@ body {
         transition: none !important;
         animation: none !important;
     }
+}
+
+/* Text visibility fixes */
+.card-text,
+.card p,
+.card span,
+.text-muted,
+.table td,
+.table th,
+input,
+select,
+textarea,
+.form-control,
+.form-select {
+    color: var(--dark-color) !important;
+}
+
+/* Ensure all text on white backgrounds is dark */
+.bg-white,
+.bg-light,
+.card,
+.modal-body,
+.dropdown-menu {
+    color: var(--dark-color) !important;
+}
+
+.bg-white *,
+.bg-light *,
+.card *,
+.modal-body *,
+.dropdown-menu * {
+    color: inherit !important;
+}
+
+/* Override Bootstrap's text colors for better visibility */
+.text-dark {
+    color: var(--dark-color) !important;
+}
+
+.text-secondary {
+    color: #6b7280 !important;
+}
+
+/* Ensure proper contrast for all interactive elements */
+.btn:not(.btn-primary):not(.btn-success):not(.btn-warning):not(.btn-danger) {
+    color: var(--dark-color) !important;
+}
+
+/* Fix any remaining white text issues */
+* {
+    color: inherit;
+}
+
+/* Ensure form inputs have proper text color */
+.form-control::placeholder,
+.form-select option {
+    color: #6b7280 !important;
+}
+
+/* Make sure all content areas have proper text color */
+.main-content,
+.main-content *:not(.btn):not(.badge):not(.alert) {
+    color: var(--dark-color);
 }
