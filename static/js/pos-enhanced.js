@@ -564,10 +564,10 @@ class EnhancedPOS {
                     ${this.cart.map(item => `
                         <div class="d-flex justify-content-between">
                             <div>${item.name}</div>
-                            <div>$${this.formatCurrency(item.total)}</div>
+                            <div>${window.currencySymbol || '$'}${this.formatCurrency(item.total)}</div>
                         </div>
                         <div class="small text-muted">
-                            ${item.quantity} x $${this.formatCurrency(item.unit_price)}
+                            ${item.quantity} x ${window.currencySymbol || '$'}${this.formatCurrency(item.unit_price)}
                         </div>
                     `).join('')}
                 </div>
@@ -576,22 +576,22 @@ class EnhancedPOS {
                 <div class="receipt-summary">
                     <div class="d-flex justify-content-between">
                         <div>Subtotal:</div>
-                        <div>$${this.formatCurrency(subtotal)}</div>
+                        <div>${window.currencySymbol || '$'}${this.formatCurrency(subtotal)}</div>
                     </div>
                     ${discount > 0 ? `
                         <div class="d-flex justify-content-between">
                             <div>Discount:</div>
-                            <div>-$${this.formatCurrency(discount)}</div>
+                            <div>-${window.currencySymbol || '$'}${this.formatCurrency(discount)}</div>
                         </div>
                     ` : ''}
                     <div class="d-flex justify-content-between">
                         <div>Tax:</div>
-                        <div>$${this.formatCurrency(tax)}</div>
+                        <div>${window.currencySymbol || '$'}${this.formatCurrency(tax)}</div>
                     </div>
                     <hr>
                     <div class="d-flex justify-content-between fw-bold">
                         <div>Total:</div>
-                        <div>$${this.formatCurrency(saleData.total_amount)}</div>
+                        <div>${window.currencySymbol || '$'}${this.formatCurrency(saleData.total_amount)}</div>
                     </div>
                     
                     <div class="mt-3">
@@ -602,11 +602,11 @@ class EnhancedPOS {
                         ${this.paymentMethod === 'cash' ? `
                             <div class="d-flex justify-content-between">
                                 <div>Amount Tendered:</div>
-                                <div>$${this.formatCurrency(saleData.amount_tendered || 0)}</div>
+                                <div>${window.currencySymbol || '$'}${this.formatCurrency(saleData.amount_tendered || 0)}</div>
                             </div>
                             <div class="d-flex justify-content-between">
                                 <div>Change:</div>
-                                <div>$${this.formatCurrency(saleData.change_amount || 0)}</div>
+                                <div>${window.currencySymbol || '$'}${this.formatCurrency(saleData.change_amount || 0)}</div>
                             </div>
                         ` : ''}
                     </div>
@@ -698,7 +698,7 @@ class EnhancedPOS {
                                 <td>${new Date(sale.created_at).toLocaleString()}</td>
                                 <td>${sale.customer_name || 'Walk-in'}</td>
                                 <td>${sale.item_count}</td>
-                                <td>$${this.formatCurrency(sale.total_amount)}</td>
+                                <td>${window.currencySymbol || '$'}${this.formatCurrency(sale.total_amount)}</td>
                                 <td>${sale.payment_method}</td>
                                 <td>
                                     <button class="btn btn-sm btn-outline-primary" onclick="posSystem.viewSaleDetails(${sale.id})">

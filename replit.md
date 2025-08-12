@@ -2,7 +2,7 @@
 
 Cloud POS & Inventory Manager is a comprehensive Point of Sale and Inventory Management system designed for businesses of all sizes. Built with Flask and PostgreSQL, it offers multi-store support, role-based access control, and complete business operations management including POS transactions, inventory tracking, customer management, and reporting. The system aims to provide secure authentication and granular permission controls for efficient business operation. Key capabilities include an advanced POS system with discounts, multiple payment methods, professional receipts, and real-time sales tracking, alongside robust inventory and customer management features.
 
-## Migration Status (August 11, 2025)
+## Migration Status (August 12, 2025)
 Successfully migrated from Replit Agent to standard Replit environment. The application now runs cleanly with:
 - PostgreSQL database provisioned and connected
 - All dependencies installed via package manager
@@ -76,6 +76,13 @@ Successfully migrated from Replit Agent to standard Replit environment. The appl
 - Comprehensive security system maintained across all deployment environments
 - Complete Render deployment guide created with step-by-step database migration instructions
 - Migration scripts fixed to handle all database constraints and field requirements
+
+### Currency System Fixed (August 12, 2025)
+- Fixed POS system to use dynamic currency from company profile settings instead of hardcoded $ symbols
+- Updated all JavaScript files to use window.currencySymbol for consistent currency display
+- Modified product cards, cart totals, and receipt generation to show correct currency formatting
+- Added global currency symbol availability across all templates
+- POS system now automatically adapts to whatever currency is set in Admin → Company Profile
 
 # User Preferences
 
