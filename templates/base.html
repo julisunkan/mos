@@ -2,14 +2,8 @@
 <html lang="en" data-bs-theme="dark">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}Cloud POS{% endblock %}</title>
-    
-    <!-- PWA Meta Tags -->
-    <meta name="theme-color" content="#2563eb">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="apple-mobile-web-app-title" content="Cloud POS">
     
     <!-- Bootstrap CSS -->
     <link href="https://cdn.replit.com/agent/bootstrap-agent-dark-theme.min.css" rel="stylesheet">
@@ -30,28 +24,9 @@
 </head>
 <body>
     <div class="app-container">
-        <!-- Mobile Status Bar -->
-        <div class="status-bar d-md-none">
-            <span id="current-time">9:41</span>
-            <span>
-                <i class="fas fa-signal"></i>
-                <i class="fas fa-wifi"></i>
-                <i class="fas fa-battery-three-quarters"></i>
-            </span>
-        </div>
         {% if current_user.is_authenticated %}
-        <!-- Mobile Header -->
-        <div class="mobile-header d-md-none">
-            <h1>
-                <i class="fas fa-store me-2"></i>{% block mobile_title %}Cloud POS{% endblock %}
-            </h1>
-            <div class="user-info">
-                Welcome back, {{ current_user.first_name }}!
-            </div>
-        </div>
-
         <!-- Desktop Header -->
-        <div class="desktop-header d-none d-md-flex">
+        <div class="desktop-header">
             <div class="desktop-brand">
                 <a href="{{ url_for('dashboard') }}" class="brand-link">
                     <i class="fas fa-store me-2"></i>Cloud POS
@@ -73,8 +48,8 @@
             </div>
         </div>
 
-        <!-- Desktop Navigation (same as mobile) -->
-        <div class="desktop-nav d-none d-md-flex">
+        <!-- Desktop Navigation -->
+        <div class="desktop-nav">
             <a href="{{ url_for('dashboard') }}" class="desktop-nav-item {% if request.endpoint == 'dashboard' %}active{% endif %}">
                 <i class="fas fa-home"></i>
                 <span>Home</span>
@@ -117,32 +92,6 @@
         
         <!-- Page Content -->
         {% block content %}{% endblock %}
-        
-        {% if current_user.is_authenticated %}
-        <!-- Mobile Bottom Navigation -->
-        <div class="bottom-nav d-md-none">
-            <a href="{{ url_for('dashboard') }}" class="bottom-nav-item {% if request.endpoint == 'dashboard' %}active{% endif %}">
-                <i class="fas fa-home"></i>
-                <span>Home</span>
-            </a>
-            <a href="{{ url_for('sales.new_sale') }}" class="bottom-nav-item {% if 'sales' in request.endpoint %}active{% endif %}">
-                <i class="fas fa-cash-register"></i>
-                <span>Sales</span>
-            </a>
-            <a href="{{ url_for('inventory.products') }}" class="bottom-nav-item {% if 'inventory' in request.endpoint %}active{% endif %}">
-                <i class="fas fa-boxes"></i>
-                <span>Inventory</span>
-            </a>
-            <a href="{{ url_for('returns.index') }}" class="bottom-nav-item {% if 'returns' in request.endpoint %}active{% endif %}">
-                <i class="fas fa-undo"></i>
-                <span>Returns</span>
-            </a>
-            <a href="{{ url_for('customers.index') }}" class="bottom-nav-item {% if 'customers' in request.endpoint %}active{% endif %}">
-                <i class="fas fa-users"></i>
-                <span>Customers</span>
-            </a>
-        </div>
-        {% endif %}
     </div>
 
     <!-- Bootstrap JS -->
@@ -152,50 +101,7 @@
     <script src="{{ url_for('static', filename='js/dashboard.js') }}?v={{ range(1, 10000) | random }}"></script>
 
     
-    <!-- Mobile App JS -->
-    <script>
-        // Update mobile time
-        function updateTime() {
-            const now = new Date();
-            const timeString = now.toLocaleTimeString('en-US', { 
-                hour12: false, 
-                hour: '2-digit', 
-                minute: '2-digit' 
-            });
-            const timeElement = document.getElementById('current-time');
-            if (timeElement) {
-                timeElement.textContent = timeString;
-            }
-        }
-        
-        // Update time every minute
-        setInterval(updateTime, 60000);
-        updateTime();
-        
-        // Add mobile app behaviors
-        document.addEventListener('DOMContentLoaded', function() {
-            // Prevent zoom on double tap
-            let lastTouchEnd = 0;
-            document.addEventListener('touchend', function (event) {
-                const now = (new Date()).getTime();
-                if (now - lastTouchEnd <= 300) {
-                    event.preventDefault();
-                }
-                lastTouchEnd = now;
-            }, false);
-            
-            // Add touch feedback to cards
-            document.querySelectorAll('.card, .btn').forEach(element => {
-                element.addEventListener('touchstart', function() {
-                    this.style.transform = 'scale(0.98)';
-                });
-                
-                element.addEventListener('touchend', function() {
-                    this.style.transform = '';
-                });
-            });
-        });
-    </script>
+
     
     <script>
         // Global currency configuration for all JavaScript files
