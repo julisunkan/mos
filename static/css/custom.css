@@ -5,7 +5,7 @@
     --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     --secondary-gradient: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
     --success-gradient: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
-    --dark-gradient: linear-gradient(135deg, #6b7280 0%, #9ca3af 100%);
+    --dark-gradient: linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%);
     
     --primary-color: #667eea;
     --secondary-color: #764ba2;
@@ -13,8 +13,8 @@
     --success-color: #00f2fe;
     --warning-color: #ffb347;
     --danger-color: #ff6b6b;
-    --dark-color: #4b5563;
-    --light-color: #f8fafc;
+    --dark-color: #1f2937;
+    --light-color: #ffffff;
     
     --border-radius: 12px;
     --border-radius-lg: 16px;
@@ -31,26 +31,26 @@
 [data-theme="light"] {
     --bg-primary: #ffffff;
     --bg-secondary: #f8fafc;
-    --bg-gradient: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+    --bg-gradient: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
     --text-primary: #1f2937;
-    --text-secondary: #6b7280;
+    --text-secondary: #4b5563;
     --border-color: #e5e7eb;
     --card-bg: #ffffff;
     --nav-bg: #ffffff;
-    --header-gradient: linear-gradient(135deg, #6b7280 0%, #9ca3af 100%);
+    --header-gradient: linear-gradient(135deg, #f8fafc 0%, #e5e7eb 100%);
 }
 
 /* Grey Theme */
 [data-theme="grey"] {
-    --bg-primary: #f1f5f9;
-    --bg-secondary: #e2e8f0;
-    --bg-gradient: linear-gradient(135deg, #cbd5e1 0%, #94a3b8 100%);
-    --text-primary: #0f172a;
-    --text-secondary: #475569;
-    --border-color: #cbd5e1;
-    --card-bg: #f8fafc;
-    --nav-bg: #f1f5f9;
-    --header-gradient: linear-gradient(135deg, #475569 0%, #64748b 100%);
+    --bg-primary: #ffffff;
+    --bg-secondary: #f1f5f9;
+    --bg-gradient: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+    --text-primary: #1f2937;
+    --text-secondary: #4b5563;
+    --border-color: #d1d5db;
+    --card-bg: #ffffff;
+    --nav-bg: #f8fafc;
+    --header-gradient: linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%);
 }
 
 /* Modern Base Styling */
@@ -105,7 +105,7 @@ body {
 }
 
 .desktop-brand .brand-link {
-    color: white;
+    color: var(--text-primary);
     text-decoration: none;
     font-size: 1.75rem;
     font-weight: 800;
@@ -160,19 +160,18 @@ body {
 }
 
 .desktop-user-info .btn {
-    background: rgba(255, 255, 255, 0.1);
-    border: 2px solid rgba(255, 255, 255, 0.2);
-    color: white;
+    background: var(--bg-primary);
+    border: 2px solid var(--border-color);
+    color: var(--text-primary);
     padding: 12px 24px;
     border-radius: var(--border-radius);
     font-weight: 600;
-    backdrop-filter: blur(10px);
     transition: var(--transition);
 }
 
 .desktop-user-info .btn:hover {
-    background: rgba(255, 255, 255, 0.2);
-    border-color: rgba(255, 255, 255, 0.4);
+    background: var(--bg-secondary);
+    border-color: var(--primary-color);
     transform: translateY(-2px);
     box-shadow: var(--shadow-md);
 }
@@ -865,12 +864,17 @@ p, span, div, td, th, li, a:not(.btn) {
     color: var(--dark-color) !important;
 }
 
-/* Ensure no dark backgrounds override our light theme */
+/* Ensure absolutely NO dark backgrounds anywhere */
 [class*="bg-dark"],
 [class*="table-dark"],
-[class*="navbar-dark"] {
-    background: white !important;
-    color: var(--dark-color) !important;
+[class*="navbar-dark"],
+[class*="btn-dark"],
+.dark,
+.bg-black,
+.text-bg-dark {
+    background: var(--bg-primary) !important;
+    color: var(--text-primary) !important;
+    border-color: var(--border-color) !important;
 }
 
 /* Fix any remaining text visibility issues */
@@ -882,50 +886,57 @@ p, span, div, td, th, li, a:not(.btn) {
     color: #6b7280 !important;
 }
 
-/* Additional dark background fixes */
+/* Complete removal of ALL dark backgrounds */
 .navbar-dark,
-.bg-primary.text-white,
-.bg-secondary.text-white,
-.bg-dark.text-white {
-    background: #f8fafc !important;
-    color: var(--dark-color) !important;
-}
-
-/* Make any Bootstrap dark utility classes brighter */
+.bg-dark,
+.bg-primary,
+.bg-secondary,
+.bg-info,
+.bg-success,
+.bg-warning,
+.bg-danger,
 .text-bg-dark,
 .text-bg-primary,
-.text-bg-secondary {
-    background: #f1f5f9 !important;
-    color: var(--dark-color) !important;
+.text-bg-secondary,
+.alert-dark,
+.table-dark,
+.btn-dark,
+.dropdown-menu-dark {
+    background: var(--bg-primary) !important;
+    color: var(--text-primary) !important;
+    border-color: var(--border-color) !important;
 }
 
-/* Fix dark alert backgrounds */
-.alert-dark {
-    background: #f1f5f9 !important;
-    color: var(--dark-color) !important;
-    border-color: #e2e8f0 !important;
+/* Force all backgrounds to be light */
+* {
+    background: inherit !important;
 }
 
-/* Ensure all potentially dark elements are readable */
-.bg-gradient {
-    background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%) !important;
-    color: var(--dark-color) !important;
-}
-
-/* Override any remaining dark text on dark backgrounds */
-.bg-dark *,
-.navbar-dark *,
-[class*="bg-primary"] *,
-[class*="bg-secondary"] * {
-    color: var(--dark-color) !important;
-}
-
-/* Specifically target navigation and header areas that might be too dark */
+/* Ensure specific elements are always light */
+body,
+.app-container,
+.main-content,
+.container,
+.row,
+.col,
+.card,
 .navbar,
 .header,
-.main-header {
-    background: white !important;
-    color: var(--dark-color) !important;
+.dropdown-menu,
+.modal,
+.alert,
+.table,
+.form-control,
+.form-select,
+.btn:not(.btn-primary):not(.btn-success):not(.btn-warning):not(.btn-danger) {
+    background: var(--bg-primary) !important;
+    color: var(--text-primary) !important;
+}
+
+/* Override any gradient that might be too dark */
+.bg-gradient {
+    background: var(--bg-gradient) !important;
+    color: var(--text-primary) !important;
 }
 
 /* Make dropdown backgrounds bright */
