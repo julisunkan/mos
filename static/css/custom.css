@@ -5,7 +5,7 @@
     --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     --secondary-gradient: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
     --success-gradient: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
-    --dark-gradient: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
+    --dark-gradient: linear-gradient(135deg, #6b7280 0%, #9ca3af 100%);
     
     --primary-color: #667eea;
     --secondary-color: #764ba2;
@@ -13,7 +13,7 @@
     --success-color: #00f2fe;
     --warning-color: #ffb347;
     --danger-color: #ff6b6b;
-    --dark-color: #2c3e50;
+    --dark-color: #4b5563;
     --light-color: #f8fafc;
     
     --border-radius: 12px;
@@ -849,4 +849,57 @@ p, span, div, td, th, li, a:not(.btn) {
 
 .small, small {
     color: #6b7280 !important;
+}
+
+/* Additional dark background fixes */
+.navbar-dark,
+.bg-primary.text-white,
+.bg-secondary.text-white,
+.bg-dark.text-white {
+    background: #f8fafc !important;
+    color: var(--dark-color) !important;
+}
+
+/* Make any Bootstrap dark utility classes brighter */
+.text-bg-dark,
+.text-bg-primary,
+.text-bg-secondary {
+    background: #f1f5f9 !important;
+    color: var(--dark-color) !important;
+}
+
+/* Fix dark alert backgrounds */
+.alert-dark {
+    background: #f1f5f9 !important;
+    color: var(--dark-color) !important;
+    border-color: #e2e8f0 !important;
+}
+
+/* Ensure all potentially dark elements are readable */
+.bg-gradient {
+    background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%) !important;
+    color: var(--dark-color) !important;
+}
+
+/* Override any remaining dark text on dark backgrounds */
+.bg-dark *,
+.navbar-dark *,
+[class*="bg-primary"] *,
+[class*="bg-secondary"] * {
+    color: var(--dark-color) !important;
+}
+
+/* Specifically target navigation and header areas that might be too dark */
+.navbar,
+.header,
+.main-header {
+    background: white !important;
+    color: var(--dark-color) !important;
+}
+
+/* Make dropdown backgrounds bright */
+.dropdown-menu,
+.dropdown-item {
+    background: white !important;
+    color: var(--dark-color) !important;
 }
