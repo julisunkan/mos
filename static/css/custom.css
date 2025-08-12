@@ -80,7 +80,7 @@ body {
 
 /* Enhanced Desktop Header */
 .desktop-header {
-    background: var(--header-gradient);
+    background: transparent;
     padding: 20px 40px;
     display: flex;
     justify-content: space-between;
@@ -99,8 +99,8 @@ body {
     left: 0;
     right: 0;
     bottom: 0;
-    background: var(--primary-gradient);
-    opacity: 0.1;
+    background: transparent;
+    opacity: 0;
     z-index: 0;
 }
 
