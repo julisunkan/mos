@@ -41,6 +41,13 @@ A comprehensive Point of Sale (POS) and inventory management system built with F
     - Created reusable message component template
     - Updated inventory, customers, admin, and auth blueprints with consistent messaging
     - Both flash messages and direct template messages supported
+  - **POS System Enhancements**: Added Amount Tendered and Change fields
+    - Fields appear only for cash payments with real-time change calculation
+    - Amount validation ensures sufficient payment before processing
+    - Backend properly saves tendered amount and change to database
+    - Stock levels automatically update after sales (both global and store-specific)
+    - Fixed close button (X) styling to be red instead of black
+    - Resolved all stock availability issues across all stores (100+ units each)
 
 ## Default Login Credentials
 - Super Admin: username 'superadmin', password 'super123'
