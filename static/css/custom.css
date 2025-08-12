@@ -53,6 +53,20 @@
     --header-gradient: linear-gradient(135deg, #fde68a 0%, #f59e0b 100%);
 }
 
+/* Red Close/Remove Buttons */
+.btn-danger,
+.btn-outline-danger {
+    color: white !important;
+    background-color: #dc3545 !important;
+    border-color: #dc3545 !important;
+}
+
+.btn-outline-danger:hover,
+.btn-danger:hover {
+    background-color: #c82333 !important;
+    border-color: #bd2130 !important;
+}
+
 /* Enhanced Form Controls - Checkboxes with Red Ticks */
 .form-check-input {
     width: 1.25rem !important;
