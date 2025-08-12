@@ -60,7 +60,8 @@ body {
     align-items: center;
     box-shadow: var(--shadow-lg);
     position: relative;
-    overflow: hidden;
+    overflow: visible;
+    z-index: 1000;
 }
 
 .desktop-header::before {
@@ -104,7 +105,30 @@ body {
 
 .desktop-user-info {
     position: relative;
-    z-index: 1;
+    z-index: 1100;
+}
+
+.desktop-user-info .dropdown {
+    position: relative;
+    z-index: 1100;
+}
+
+.desktop-user-info .dropdown-toggle {
+    position: relative;
+    z-index: 1000;
+}
+
+/* Ensure dropdown doesn't get clipped */
+.desktop-header {
+    overflow: visible !important;
+}
+
+/* Fix dropdown positioning issues */
+.dropdown-menu.show {
+    z-index: 1060 !important;
+    position: absolute !important;
+    display: block !important;
+    transform: translate3d(0px, 40px, 0px) !important;
 }
 
 .desktop-user-info .btn {
@@ -528,6 +552,11 @@ body {
     box-shadow: var(--shadow-lg);
     padding: 8px 0;
     background: white;
+    z-index: 1050 !important;
+    position: absolute !important;
+    top: 100% !important;
+    right: 0 !important;
+    margin-top: 5px !important;
 }
 
 .dropdown-item {
