@@ -17,7 +17,50 @@ function formatCurrency(amount) {
     return symbol + amount.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
 }
 
+// Theme Management
+class ThemeManager {
+    constructor() {
+        this.currentTheme = localStorage.getItem('theme') || 'light';
+        this.init();
+    }
+
+    init() {
+        this.applyTheme(this.currentTheme);
+        this.setupEventListeners();
+        this.updateActiveThemeButton();
+    }
+
+    applyTheme(theme) {
+        document.body.setAttribute('data-theme', theme);
+        localStorage.setItem('theme', theme);
+        this.currentTheme = theme;
+    }
+
+    setupEventListeners() {
+        document.addEventListener('click', (e) => {
+            if (e.target.classList.contains('theme-option')) {
+                e.preventDefault();
+                const theme = e.target.getAttribute('data-theme');
+                this.applyTheme(theme);
+                this.updateActiveThemeButton();
+            }
+        });
+    }
+
+    updateActiveThemeButton() {
+        document.querySelectorAll('.theme-option').forEach(btn => {
+            btn.classList.remove('active');
+            if (btn.getAttribute('data-theme') === this.currentTheme) {
+                btn.classList.add('active');
+            }
+        });
+    }
+}
+
 document.addEventListener('DOMContentLoaded', function() {
+    // Initialize theme system
+    new ThemeManager();
+    
     // Initialize tooltips
     var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
     var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
