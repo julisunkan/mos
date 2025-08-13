@@ -18,9 +18,9 @@ RUN apt-get update \
         libpq-dev \
     && rm -rf /var/lib/apt/lists/*
 
-# Copy requirements and install Python dependencies
-COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
+# Copy pyproject.toml and install Python dependencies
+COPY pyproject.toml .
+RUN pip install --no-cache-dir -e .
 
 # Copy project
 COPY . .

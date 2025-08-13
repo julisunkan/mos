@@ -1,4 +1,4 @@
-app = "cloudpos-inventory"
+app = "mos"
 primary_region = "ord"
 kill_signal = "SIGINT"
 kill_timeout = "5s"

@@ -24,6 +24,10 @@ A comprehensive Point of Sale (POS) and inventory management system built with F
 - UI theme: Light theme with professional appearance
 
 ## Recent Changes
+- **2025-08-13**: Fixed Fly.io deployment error and completed migration to Replit
+  - Modified Dockerfile to use pyproject.toml instead of requirements.txt
+  - Updated fly.toml app name to match user's deployment target "mos"
+  - Ensured all deployment configurations are compatible with Replit environment
 - **2025-08-13**: Successfully prepared app for Fly.io deployment with PostgreSQL
   - Created production-ready Dockerfile and fly.toml configuration
   - Built production_app.py with PostgreSQL-first architecture
