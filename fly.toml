@@ -1,63 +1,23 @@
-app = "mos"
-primary_region = "ord"
-kill_signal = "SIGINT"
-kill_timeout = "5s"
+# fly.toml app configuration file generated for mos-hfmoxq on 2025-08-13T08:24:18Z
+#
+# See https://fly.io/docs/reference/configuration/ for information about how to use this file.
+#
 
-[experimental]
-  auto_rollback = true
+app = 'mos-hfmoxq'
+primary_region = 'jnb'
 
-[env]
-  PORT = "8080"
-  FLASK_ENV = "production"
+[build]
 
 [http_service]
   internal_port = 8080
   force_https = true
-  auto_stop_machines = true
+  auto_stop_machines = 'stop'
   auto_start_machines = true
   min_machines_running = 0
-  processes = ["app"]
+  processes = ['app']
 
-  [[http_service.checks]]
-    grace_period = "10s"
-    interval = "30s"
-    method = "GET"
-    timeout = "5s"
-    path = "/auth/login"
-
-[deploy]
-  strategy = "bluegreen"
-
-[[services]]
-  protocol = "tcp"
-  internal_port = 8080
-  processes = ["app"]
-
-  [[services.ports]]
-    port = 80
-    handlers = ["http"]
-    force_https = true
-
-  [[services.ports]]
-    port = 443
-    handlers = ["tls", "http"]
-
-  [services.concurrency]
-    type = "connections"
-    hard_limit = 25
-    soft_limit = 20
-
-  [[services.tcp_checks]]
-    grace_period = "10s"
-    interval = "30s"
-    restart_limit = 0
-    timeout = "2s"
-
-  [[services.http_checks]]
-    grace_period = "10s"
-    interval = "30s"
-    method = "get"
-    path = "/auth/login"
-    protocol = "http"
-    restart_limit = 0
-    timeout = "5s"
+[[vm]]
+  memory = '1gb'
+  cpu_kind = 'shared'
+  cpus = 1
+  memory_mb = 1024
