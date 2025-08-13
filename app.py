@@ -24,15 +24,11 @@ app = Flask(__name__)
 # Configuration
 app.secret_key = os.environ.get("SESSION_SECRET", "dev-secret-key-change-in-production")
 
-# Handle MySQL URL format for PythonAnywhere
+# Database configuration for Replit
 database_url = os.environ.get("DATABASE_URL")
 if not database_url:
-    # Default MySQL connection for PythonAnywhere
-    mysql_user = os.environ.get("MYSQL_USER", "root")
-    mysql_password = os.environ.get("MYSQL_PASSWORD", "")
-    mysql_host = os.environ.get("MYSQL_HOST", "localhost")
-    mysql_db = os.environ.get("MYSQL_DATABASE", "cloudpos")
-    database_url = f"mysql+pymysql://{mysql_user}:{mysql_password}@{mysql_host}/{mysql_db}"
+    # Use SQLite for Replit development environment
+    database_url = "sqlite:///cloudpos.db"
 
 app.config["SQLALCHEMY_DATABASE_URI"] = database_url
 app.config["SQLALCHEMY_ENGINE_OPTIONS"] = {

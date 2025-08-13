@@ -23,4 +23,5 @@ dependencies = [
     "python-dotenv>=1.1.1",
     "pillow>=11.3.0",
     "reportlab>=4.4.3",
+    "psycopg2-binary>=2.9.10",
 ]
