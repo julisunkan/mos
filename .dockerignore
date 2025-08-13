@@ -1,0 +1,56 @@
+# Git
+.git
+.gitignore
+README.md
+
+# Python
+__pycache__
+*.pyc
+*.pyo
+*.pyd
+.Python
+env
+pip-log.txt
+pip-delete-this-directory.txt
+.tox
+.coverage
+.coverage.*
+.pytest_cache
+nosetests.xml
+.venv
+.env
+
+# Node.js (if any)
+node_modules/
+npm-debug.log
+
+# Replit specific
+.replit
+replit.nix
+.config/
+.upm/
+.local/
+
+# Development files
+*.db
+*.log
+cloudpos.db
+
+# Documentation
+*.md
+docs/
+missing_features_analysis.md
+attached_assets/
+
+# Migration files (not needed in production)
+MYSQL_MIGRATION_GUIDE.md
+RENDER_DEPLOYMENT_*.md
+mysql_setup.py
+pythonanywhere_config.py
+cookies*.txt
+start_postgresql.sh
+
+# Temporary files
+/tmp/
+*.tmp
+*.temp

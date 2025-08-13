@@ -8,8 +8,11 @@ from sqlalchemy.orm import DeclarativeBase
 from werkzeug.middleware.proxy_fix import ProxyFix
 from utils import format_currency, format_number, get_default_currency, get_currency_symbol
 
-# Configure logging
-logging.basicConfig(level=logging.DEBUG)
+# Configure logging for production
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s %(levelname)s %(name)s: %(message)s'
+)
 
 class Base(DeclarativeBase):
     pass
@@ -21,41 +24,35 @@ csrf = CSRFProtect()
 # Create the app
 app = Flask(__name__)
 
-# Configuration
-app.secret_key = os.environ.get("SESSION_SECRET", "dev-secret-key-change-in-production")
+# Production configuration
+app.secret_key = os.environ.get("SESSION_SECRET")
+if not app.secret_key:
+    raise RuntimeError("SESSION_SECRET environment variable is required for production")
 
-# Database configuration - prioritize PostgreSQL for production
+# Database configuration for production
 database_url = os.environ.get("DATABASE_URL")
-
 if not database_url:
-    # Development configuration
-    if os.environ.get("FLASK_ENV") == "production":
-        # Production requires PostgreSQL
-        raise RuntimeError("DATABASE_URL environment variable is required for production deployment")
-    else:
-        # Development fallback to SQLite
-        database_url = "sqlite:///cloudpos.db"
-        print("⚠️  Development mode: Using SQLite fallback")
-else:
-    print(f"✅ Using PostgreSQL database")
+    raise RuntimeError("DATABASE_URL environment variable is required for production deployment")
+
+# Handle different PostgreSQL URL formats
+if database_url.startswith("postgres://"):
+    database_url = database_url.replace("postgres://", "postgresql://", 1)
 
 app.config["SQLALCHEMY_DATABASE_URI"] = database_url
 app.config["SQLALCHEMY_ENGINE_OPTIONS"] = {
+    "pool_size": 10,
     "pool_recycle": 300,
     "pool_pre_ping": True,
+    "pool_timeout": 20,
 }
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
-app.config["WTF_CSRF_ENABLED"] = False  # Disable CSRF for API endpoints
+app.config["WTF_CSRF_ENABLED"] = True
 
 # Production settings
-if os.environ.get("FLASK_ENV") == "production":
-    app.config["DEBUG"] = False
-    app.config["TESTING"] = False
-    logging.getLogger().setLevel(logging.INFO)
-else:
-    app.config["DEBUG"] = True
+app.config["DEBUG"] = False
+app.config["TESTING"] = False
 
-# Middleware
+# Security headers middleware
 app.wsgi_app = ProxyFix(app.wsgi_app, x_proto=1, x_host=1)
 
 # Initialize extensions
@@ -87,7 +84,6 @@ from blueprints.sales import sales_bp
 from blueprints.returns import returns_bp
 from blueprints.store_management import store_management_bp
 from blueprints.pos import pos_bp
-
 
 app.register_blueprint(auth_bp, url_prefix='/auth')
 app.register_blueprint(admin_bp, url_prefix='/admin')
@@ -147,33 +143,41 @@ def dashboard_stats_api():
         'low_stock_count': low_stock_count
     })
 
+# Health check endpoint
+@app.route('/health')
+def health_check():
+    return jsonify({'status': 'healthy', 'timestamp': os.environ.get('FLY_ALLOC_ID', 'dev')})
+
 # Create tables and ensure deployment data exists
 with app.app_context():
-    db.create_all()
-    
-    # Run deployment migration on startup - moved to after dependencies are loaded
-    def run_deployment_migration():
-        try:
-            from migrations.simple_deploy_migration import ensure_data_exists
-            print("🚀 Starting deployment migration...")
-            ensure_data_exists()
-            print("✅ Deployment migration completed successfully")
-        except Exception as e:
-            print(f"❌ Migration failed: {e}")
-            print("🔄 Attempting fallback data seeding...")
+    try:
+        db.create_all()
+        
+        # Run production data initialization
+        def run_production_initialization():
             try:
-                exec(open('seed_data.py').read())
-                print("✅ Fallback seeding completed")
-            except Exception as fallback_error:
-                print(f"❌ Fallback also failed: {fallback_error}")
-                print("⚠️  Starting with empty database - admin setup required")
-    
-    # Run migration
-    run_deployment_migration()
-    
-    # Create default roles and admin user if they don't exist
-    from utils import create_default_data
-    create_default_data()
+                app.logger.info("Starting production initialization...")
+                from utils import create_default_data
+                create_default_data()
+                app.logger.info("Production initialization completed successfully")
+            except Exception as e:
+                app.logger.error(f"Production initialization failed: {e}")
+                # Try the migration scripts as fallback
+                try:
+                    from migrations.simple_deploy_migration import ensure_data_exists
+                    app.logger.info("Attempting migration fallback...")
+                    ensure_data_exists()
+                    app.logger.info("Fallback completed")
+                except Exception as fallback_error:
+                    app.logger.error(f"Fallback failed: {fallback_error}")
+                    app.logger.warning("Starting with empty database - manual setup required")
+        
+        # Run initialization
+        run_production_initialization()
+        
+    except Exception as e:
+        app.logger.error(f"Database initialization failed: {e}")
+        raise
 
 # Make utility functions available in templates
 @app.context_processor
@@ -181,4 +185,5 @@ def utility_processor():
     return dict(format_currency=format_currency, format_number=format_number, get_default_currency=get_default_currency)
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=5000, debug=True)
+    port = int(os.environ.get('PORT', 8080))
+    app.run(host='0.0.0.0', port=port)
