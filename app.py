@@ -24,11 +24,53 @@ app = Flask(__name__)
 # Configuration
 app.secret_key = os.environ.get("SESSION_SECRET", "dev-secret-key-change-in-production")
 
-# Database configuration for Replit
+# Database configuration with PostgreSQL preference and SQLite fallback
 database_url = os.environ.get("DATABASE_URL")
+
 if not database_url:
-    # Use SQLite for Replit development environment
+    # Try PostgreSQL first
+    try:
+        import psycopg2
+        # Try to connect to PostgreSQL with various configurations
+        possible_configs = [
+            # Unix socket connection
+            "postgresql:///postgres?host=/tmp",
+            # TCP connection with defaults
+            "postgresql://runner@localhost:5432/postgres",
+            # Standard localhost connection
+            "postgresql://localhost:5432/postgres",
+        ]
+        
+        for config in possible_configs:
+            try:
+                conn = psycopg2.connect(config)
+                conn.close()
+                # Create cloudpos database if connection successful
+                try:
+                    conn = psycopg2.connect(config)
+                    conn.autocommit = True
+                    cursor = conn.cursor()
+                    cursor.execute("CREATE DATABASE cloudpos")
+                    cursor.close()
+                    conn.close()
+                except psycopg2.errors.DuplicateDatabase:
+                    pass  # Database already exists
+                except Exception:
+                    pass  # Database creation failed, might already exist
+                
+                # Set the working database URL
+                database_url = config.replace("/postgres", "/cloudpos")
+                print(f"✅ Connected to PostgreSQL: {database_url}")
+                break
+            except Exception as e:
+                continue
+    except ImportError:
+        pass  # psycopg2 not available
+
+if not database_url:
+    # Fall back to SQLite
     database_url = "sqlite:///cloudpos.db"
+    print("⚠️  PostgreSQL not available, using SQLite fallback")
 
 app.config["SQLALCHEMY_DATABASE_URI"] = database_url
 app.config["SQLALCHEMY_ENGINE_OPTIONS"] = {
