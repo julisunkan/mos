@@ -668,7 +668,7 @@ def admin_review_report(report_id):
 @gen_bp.route("/manifest.json")
 def manifest():
     import json as _json
-    data = {"name":"KDP Interior & Cover Generator","short_name":"KDPGen","start_url":"/gen/","display":"standalone","background_color":"#2d1b69","theme_color":"#ff6b6b","icons":[{"src":"/static/gen/icon.png","sizes":"192x192","type":"image/png","purpose":"any"},{"src":"/static/gen/icon-maskable.png","sizes":"512x512","type":"image/png","purpose":"maskable"}]}
+    data = {"name":"KDP Interior with Cover Generator","short_name":"KDP Interior with Cover Generator","start_url":"/gen/","display":"standalone","background_color":"#2d1b69","theme_color":"#ff6b6b","icons":[{"src":"/static/gen/icon.png","sizes":"192x192","type":"image/png","purpose":"any"},{"src":"/static/gen/icon-maskable.png","sizes":"512x512","type":"image/png","purpose":"maskable"}]}
     return Response(_json.dumps(data), mimetype="application/manifest+json")
 
 @gen_bp.route("/sw.js")
