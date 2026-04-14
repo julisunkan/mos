@@ -288,7 +288,7 @@ def admin_review_report(report_id):
 @optimizer_bp.route("/manifest.json")
 def manifest():
     import json as _json
-    data = {"name":"KDP Title & Description Optimizer","short_name":"KDPOptimize","start_url":"/optimizer/","display":"standalone","background_color":"#0d3340","theme_color":"#f59e0b","icons":[{"src":"/static/optimizer/icon.png","sizes":"192x192","type":"image/png","purpose":"any"},{"src":"/static/optimizer/icon-maskable.png","sizes":"512x512","type":"image/png","purpose":"maskable"}]}
+    data = {"name":"KDP Book Metadata Optimizer","short_name":"KDP Book Metadata Optimizer","start_url":"/optimizer/","display":"standalone","background_color":"#0d3340","theme_color":"#f59e0b","icons":[{"src":"/static/optimizer/icon.png","sizes":"192x192","type":"image/png","purpose":"any"},{"src":"/static/optimizer/icon-maskable.png","sizes":"512x512","type":"image/png","purpose":"maskable"}]}
     return Response(_json.dumps(data), mimetype="application/manifest+json")
 
 @optimizer_bp.route("/sw.js")
