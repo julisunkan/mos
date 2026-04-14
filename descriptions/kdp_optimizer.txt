@@ -1,0 +1,108 @@
+================================================================================
+  KDP TITLE & DESCRIPTION OPTIMIZER — Full Description, Features & Keywords
+================================================================================
+
+APP NAME:       KDP Title & Description Optimizer
+SHORT NAME:     KDPOptimize
+URL PREFIX:     /optimizer/
+ADMIN PANEL:    /optimizer/julisunkan  (default password: admin123)
+THEME:          Dark Teal (#0d3340) & Amber (#f59e0b)
+
+────────────────────────────────────────────────────────────────────────────────
+DESCRIPTION
+────────────────────────────────────────────────────────────────────────────────
+
+KDP Title & Description Optimizer is an AI-powered metadata generation tool
+that helps Amazon KDP authors and publishers dramatically increase their book's
+discoverability and click-through rate by crafting perfectly optimised titles,
+descriptions, keywords, and category placements.
+
+Users provide basic information about their book — genre/category, target
+audience, a rough title idea, any initial keywords they have in mind, and
+optionally a short description hint. The AI (Llama 3.3 70B via Groq) then
+returns a complete, ready-to-use metadata package:
+
+  • 5 alternative title + subtitle combinations with reasoning for why each one
+    will perform well on Amazon's search algorithm.
+  • A full 400–600 word book description written with HTML formatting (paragraph
+    tags, bold text, bullet lists) — ready to paste directly into KDP's
+    description editor.
+  • 7 keyword phrases (max 50 characters each) optimised for Amazon search,
+    following KDP's 7-keyword-slot guidelines.
+  • 2 recommended KDP category paths with justification for each selection.
+  • 5 A+ Content benefit bullets in Feature → Benefit format.
+  • 3 SEO tips tailored to the specific genre and audience.
+
+Results are saved to the database and can be re-opened at any time. A one-click
+export downloads the entire optimisation report as a formatted plain-text file.
+
+────────────────────────────────────────────────────────────────────────────────
+FEATURES
+────────────────────────────────────────────────────────────────────────────────
+
+  1. Genre/category selector — dropdown populated with all 31 Amazon KDP main
+     categories (Arts & Photography, Business & Money, Children's Books,
+     Cookbooks, Health & Fitness, Mystery/Thriller, Romance, Self-Help, etc.).
+
+  2. 5 AI-generated title + subtitle options — each with a strategic explanation
+     of why it works for Amazon SEO and buyer psychology.
+
+  3. Full book description — 400–600 words with HTML formatting including hook
+     sentence, body paragraphs, bullet lists, and a call-to-action closing line.
+
+  4. 7 optimised keyword phrases — following KDP's exact keyword slot format,
+     max 50 characters each, covering long-tail and short-tail terms.
+
+  5. 2 recommended KDP category paths — full category breadcrumbs with
+     justification for why they are the best fit.
+
+  6. 5 A+ Content bullets — Feature → Benefit structure for Amazon A+ Content
+     modules.
+
+  7. 3 SEO tips — actionable recommendations specific to the genre and audience.
+
+  8. Export to TXT — download the full report as a formatted plain-text file
+     named kdp_metadata_[id].txt.
+
+  9. Result history — last 30 optimisation runs visible on the dashboard.
+
+ 10. Re-open past results — retrieve any past optimisation run by project ID.
+
+ 11. Admin panel — track total optimisations, configure Groq API key and
+     admin password.
+
+ 12. User report system — flag content issues; admins review and respond.
+
+ 13. PWA support — installable as a Progressive Web App.
+
+────────────────────────────────────────────────────────────────────────────────
+KEYWORDS
+────────────────────────────────────────────────────────────────────────────────
+
+  KDP book title optimizer
+  Amazon book description writer
+  KDP metadata generator
+  book SEO tool
+  KDP keyword generator
+  Amazon book listing optimizer
+  KDP title ideas generator
+  book description AI writer
+  Amazon self-publishing SEO
+  KDP category finder
+  book marketing tool
+  A+ content bullet points
+  KDP keyword research tool
+  Amazon book discoverability
+  book subtitle generator
+  KDP listing optimizer
+  AI book description writer
+  Amazon keyword optimization
+  self-publishing metadata tool
+  KDP book launch tool
+  long-tail keyword finder KDP
+  book blurb writer AI
+  Amazon KDP SEO optimizer
+  book title generator AI
+  KDP publishing assistant
+
+================================================================================

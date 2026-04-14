@@ -1,0 +1,134 @@
+================================================================================
+  KDP NICHE & KEYWORD FINDER — Full Description, Features & Keywords
+================================================================================
+
+APP NAME:       KDP Niche & Keyword Finder
+SHORT NAME:     KDPFinder
+URL PREFIX:     /finder/
+ADMIN PANEL:    /finder/julisunkan  (default password: admin123)
+THEME:          Deep Red-Black (#1a0a0a) & Gold (#ffd700)
+
+────────────────────────────────────────────────────────────────────────────────
+DESCRIPTION
+────────────────────────────────────────────────────────────────────────────────
+
+KDP Niche & Keyword Finder is an AI-powered market research tool that helps
+Amazon KDP publishers discover profitable publishing niches, evaluate competition
+levels, and identify the exact keywords buyers are using to find books in any
+topic area.
+
+Instead of spending hours manually searching Amazon, guessing at trends, or
+paying for expensive third-party keyword tools, users type a single topic or
+idea and get back a comprehensive research report in seconds. The AI analyses
+the market, identifies 5–8 distinct sub-niches within that topic, scores each
+one for opportunity and competition, provides estimated monthly search volumes
+and average Best Seller Rank (BSR) ranges, and lists 10 keyword phrases per
+niche plus 15–20 top-level keywords ranked by opportunity score.
+
+Every niche card includes:
+  • Competition rating (HIGH / MEDIUM / LOW)
+  • Opportunity score (1–10)
+  • Estimated monthly searches
+  • Average BSR range
+  • Price range for successful titles
+  • Trend direction (Growing / Stable / Declining)
+  • Content types that sell well (journals, workbooks, planners, etc.)
+  • 5 potential book title ideas
+  • Target audience description
+  • An insider tip with a specific, actionable recommendation
+
+The top-keywords section provides a ranked list of phrases with competition
+ratings, opportunity scores, average selling prices, and guidance on whether
+each keyword belongs in the title, subtitle, or keyword slots.
+
+Quick wins and books-to-avoid sections provide strategic guidance, and the
+seasonal trends section highlights demand patterns throughout the year.
+
+All research is saved to the database. Full results can be exported as a CSV
+file for use in spreadsheets, team sharing, or long-term planning.
+
+────────────────────────────────────────────────────────────────────────────────
+FEATURES
+────────────────────────────────────────────────────────────────────────────────
+
+  1. Niche discovery — identifies 5–8 distinct sub-niches within any topic with
+     full market analysis for each.
+
+  2. Opportunity scoring — each niche and keyword receives a numerical
+     opportunity score (1–10) based on demand vs. competition.
+
+  3. Competition analysis — HIGH / MEDIUM / LOW rating for both niches and
+     individual keywords.
+
+  4. Keyword research — 10 keywords per niche plus 15–20 global top keywords,
+     with monthly search estimates and placement recommendations.
+
+  5. BSR estimation — estimated average Best Seller Rank range to gauge how
+     competitive a niche is in practice.
+
+  6. Price range data — recommended retail price range based on what is
+     selling in the niche.
+
+  7. Trend indicator — Growing / Stable / Declining trend for each niche.
+
+  8. Content type suggestions — identifies which book formats perform best
+     (lined journal, workbook, planner, tracker, coloring book, etc.).
+
+  9. Title ideas — 5 ready-to-use potential book title ideas per niche.
+
+ 10. Target audience profiles — clear description of the ideal reader for
+     each niche.
+
+ 11. Insider tips — specific, actionable recommendations per niche based on
+     current market conditions.
+
+ 12. Quick wins — 3 immediately actionable recommendations for the overall topic.
+
+ 13. Books-to-avoid — warns about over-saturated sub-niches to steer clear of.
+
+ 14. Seasonal trends — insights into how demand shifts throughout the year.
+
+ 15. CSV export — download the full research report as a structured CSV file
+     with separate sections for niches, keywords, quick wins, and more.
+
+ 16. Search history — last 10 searches shown on the homepage; last 30 in the
+     admin history view.
+
+ 17. Admin panel — track total searches, configure Groq API key and admin
+     password.
+
+ 18. User report system — flag content issues; admins review and respond.
+
+ 19. PWA support — installable as a Progressive Web App.
+
+────────────────────────────────────────────────────────────────────────────────
+KEYWORDS
+────────────────────────────────────────────────────────────────────────────────
+
+  KDP niche finder
+  Amazon KDP keyword research
+  KDP market research tool
+  profitable niche finder
+  Amazon book niche analyzer
+  KDP keyword tool
+  self-publishing niche research
+  Amazon BSR research tool
+  KDP niche opportunity score
+  low content book niche finder
+  KDP keyword opportunity tool
+  Amazon publishing trend analyzer
+  book niche competition checker
+  KDP search volume estimator
+  self-publishing market research
+  Amazon KDP niche explorer
+  keyword research for KDP
+  KDP profitable niches 2024
+  Amazon book keyword finder
+  niche analysis for publishers
+  KDP category research tool
+  Amazon publishing keyword tool
+  book market analysis AI
+  KDP insider tips tool
+  self-publisher keyword strategy
+
+================================================================================

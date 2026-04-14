@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>KDP Title & Description Optimizer</title>
+<link rel="manifest" href="/optimizer/manifest.json">
+<link rel="icon" href="/static/optimizer/icon.png" type="image/png">
+<meta name="theme-color" content="#f59e0b">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/static/optimizer/style.css">
+</head>
+<body>
+<nav class="navbar">
+  <a href="/optimizer/" class="nav-brand">🚀 <span>KDPOptimize</span></a>
+  <div class="nav-links">
+    <a href="/optimizer/" class="active">Optimizer</a>
+  </div>
+</nav>
+
+<div id="notification" class="notification hidden"></div>
+
+<main class="main-container">
+  <header class="page-header">
+    <h1>KDP Book Metadata Optimizer</h1>
+    <p>Get AI-optimized titles, descriptions, keywords and categories that maximize your book's discoverability on Amazon.</p>
+  </header>
+
+  <!-- Input Form -->
+  <section class="card input-section">
+    <h2 class="section-title">📝 Book Details</h2>
+    <div class="form-row">
+      <div class="form-group">
+        <label>Genre / Category *</label>
+        <select id="genreSelect">
+          <option value="">Select a genre...</option>
+          {% for cat in categories %}
+          <option value="{{ cat }}">{{ cat }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Target Audience *</label>
+        <input type="text" id="audience" placeholder="e.g. Busy moms, beginners, entrepreneurs">
+      </div>
+    </div>
+    <div class="form-group">
+      <label>Rough Title Idea *</label>
+      <input type="text" id="roughTitle" placeholder="e.g. Daily Gratitude Journal for Women">
+    </div>
+    <div class="form-group">
+      <label>Initial Keywords <span class="optional">(comma separated)</span></label>
+      <input type="text" id="rawKeywords" placeholder="e.g. gratitude journal, mindfulness, self-care">
+    </div>
+    <div class="form-group">
+      <label>Description Hint <span class="optional">(optional)</span></label>
+      <textarea id="descHint" rows="2" placeholder="Brief description of your book content..."></textarea>
+    </div>
+    <button class="btn-optimize" onclick="optimizeMetadata()" id="optimizeBtn">
+      🚀 Optimize My Metadata
+    </button>
+  </section>
+
+  <!-- Loading -->
+  <div id="loadingState" class="loading-card hidden">
+    <div class="spinner-opt"></div>
+    <p>Optimizing your metadata with AI...</p>
+    <span class="loading-sub">Analyzing market trends and search patterns...</span>
+  </div>
+
+  <!-- Results -->
+  <div id="resultsArea" class="hidden">
+    <div class="results-toolbar">
+      <h2 class="section-title">✨ Optimized Results</h2>
+      <div class="toolbar-actions">
+        <button class="btn-outline" onclick="exportResults()">⬇ Export TXT</button>
+        <button class="btn-outline" onclick="copyAll()">📋 Copy All</button>
+        <button class="btn-outline" onclick="resetForm()">🔄 New Optimization</button>
+      </div>
+    </div>
+
+    <!-- Titles -->
+    <section class="card results-card">
+      <h3 class="card-title">📚 Optimized Titles (5 Options)</h3>
+      <div id="titlesList" class="titles-list"></div>
+    </section>
+
+    <!-- Description -->
+    <section class="card results-card">
+      <h3 class="card-title">📖 Book Description</h3>
+      <div class="desc-parts">
+        <div class="desc-hook" id="descHook"></div>
+        <div class="desc-body" id="descBody"></div>
+        <div class="desc-cta" id="descCta"></div>
+      </div>
+      <button class="btn-copy-inline" onclick="copyDesc()">📋 Copy Description</button>
+    </section>
+
+    <!-- Keywords -->
+    <section class="card results-card">
+      <h3 class="card-title">🔑 7 KDP Keywords</h3>
+      <div id="keywordsList" class="keywords-list"></div>
+      <button class="btn-copy-inline" onclick="copyKeywords()">📋 Copy Keywords</button>
+    </section>
+
+    <!-- Categories -->
+    <section class="card results-card">
+      <h3 class="card-title">📂 Recommended Categories</h3>
+      <div id="categoriesList" class="categories-list"></div>
+    </section>
+
+    <!-- A+ Bullets -->
+    <section class="card results-card">
+      <h3 class="card-title">⭐ A+ Content Bullets</h3>
+      <div id="bulletsList" class="bullets-list"></div>
+      <button class="btn-copy-inline" onclick="copyBullets()">📋 Copy Bullets</button>
+    </section>
+
+    <!-- SEO Tips -->
+    <section class="card results-card tips-card">
+      <h3 class="card-title">💡 SEO Tips</h3>
+      <div id="tipsList" class="tips-list"></div>
+    </section>
+
+    <!-- Inline Report -->
+    <div class="report-section" id="reportSection">
+      <button class="btn-report" id="reportToggleBtn" onclick="toggleReportForm()">🚩 Report This Content</button>
+      <div class="report-form-wrap hidden" id="reportFormWrap">
+        <div class="report-form-inner">
+          <p class="report-form-title">Help us improve by flagging AI content issues.</p>
+          <div class="form-group">
+            <label>Reason *</label>
+            <select id="reportReason" class="report-select">
+              <option value="">Select a reason...</option>
+              <option value="Inaccurate Information">Inaccurate Information</option>
+              <option value="Misleading Content">Misleading Content</option>
+              <option value="Inappropriate Content">Inappropriate Content</option>
+              <option value="Low Quality Output">Low Quality Output</option>
+              <option value="Other">Other</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Description <span class="optional">(optional)</span></label>
+            <textarea id="reportDesc" class="report-textarea" rows="3" placeholder="Describe the issue in detail..."></textarea>
+          </div>
+          <div class="report-form-btns">
+            <button class="btn-submit-report" onclick="submitReport()">Submit Report</button>
+            <button class="btn-cancel-report" onclick="toggleReportForm()">Cancel</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- History -->
+  <section class="card history-section">
+    <h2 class="section-title">📁 Recent Optimizations</h2>
+    <div id="historyList" class="history-list"><p class="empty-state">No optimizations yet.</p></div>
+  </section>
+</main>
+<script src="/static/optimizer/app.js"></script>
+</body>
+</html>

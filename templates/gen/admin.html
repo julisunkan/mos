@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>KDPGen Admin</title>
+<link rel="icon" href="/static/gen/icon.png" type="image/png">
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/static/gen/style.css">
+</head>
+<body>
+<nav class="navbar">
+  <a href="/gen/" class="nav-brand">🎨 <span>KDPGen</span></a>
+  <div class="nav-links">
+    <a href="/gen/">Generator</a>
+    {% if logged_in %}<a href="/gen/julisunkan/logout">Logout</a>{% endif %}
+  </div>
+</nav>
+<main class="main-container">
+{% if not logged_in %}
+  <div class="admin-login-wrap">
+    <div class="card admin-login">
+      <div class="login-icon">🔐</div>
+      <h2>Admin Access</h2>
+      <p>Enter the admin password to manage KDPGen settings.</p>
+      {% if error %}<div class="inline-error">{{ error }}</div>{% endif %}
+      <form method="POST" action="/gen/julisunkan">
+        <div class="form-group">
+          <label>Password</label>
+          <input type="password" name="password" placeholder="Enter admin password" required autofocus>
+        </div>
+        <button type="submit" class="btn-primary full-width">Access Admin Panel</button>
+      </form>
+      <div class="login-hint">Default password: <code>admin123</code></div>
+    </div>
+  </div>
+{% else %}
+  <header class="page-header">
+    <h1>⚙️ KDPGen Admin</h1>
+    <p>Manage your API keys and view generation statistics.</p>
+  </header>
+  <div class="stats-grid">
+    <div class="stat-card"><div class="stat-number">{{ stats.total }}</div><div class="stat-label">Total Generations</div></div>
+    <div class="stat-card"><div class="stat-number">{{ stats.interiors }}</div><div class="stat-label">Interiors</div></div>
+    <div class="stat-card"><div class="stat-number">{{ stats.covers }}</div><div class="stat-label">Covers</div></div>
+  </div>
+  <div class="card settings-card">
+    <h2 class="section-title">⚙️ Settings</h2>
+    {% if error %}<div class="inline-error">{{ error }}</div>{% endif %}
+    <form method="POST" action="/gen/julisunkan/save">
+      <div class="form-group">
+        <label>Groq API Key</label>
+        <input type="password" name="groq_api_key" value="{{ settings.groq_api_key }}" placeholder="gsk_...">
+        <span class="hint">Get your key at <a href="https://console.groq.com" target="_blank">console.groq.com</a></span>
+      </div>
+      <div class="form-group">
+        <label>Change Admin Password</label>
+        <input type="password" name="admin_password" placeholder="Leave blank to keep current">
+      </div>
+      <button type="submit" class="btn-primary">Save Settings</button>
+    </form>
+  </div>
+{% endif %}
+</main>
+</body>
+</html>

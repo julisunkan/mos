@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>KDPBulk Admin</title>
+<link rel="icon" href="/static/bulk/icon.png" type="image/png">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/static/bulk/style.css">
+</head>
+<body>
+<nav class="navbar">
+  <a href="/bulk/" class="nav-brand">📚 <span>KDPBulk</span></a>
+  <div class="nav-links">
+    <a href="/bulk/">Creator</a>
+    {% if logged_in %}<a href="/bulk/julisunkan/logout">Logout</a>{% endif %}
+  </div>
+</nav>
+<main class="main-container">
+{% if not logged_in %}
+  <div class="admin-login-wrap">
+    <div class="card admin-login">
+      <div class="login-icon">🔐</div>
+      <h2>Admin Access</h2>
+      {% if error %}<div class="inline-error">{{ error }}</div>{% endif %}
+      <form method="POST" action="/bulk/julisunkan">
+        <div class="form-group">
+          <label>Password</label>
+          <input type="password" name="password" placeholder="Enter admin password" required autofocus>
+        </div>
+        <button type="submit" class="btn-primary full-width">Access Admin Panel</button>
+      </form>
+      <div class="login-hint">Default password: <code>admin123</code></div>
+    </div>
+  </div>
+{% else %}
+  <header class="page-header">
+    <h1>⚙️ KDPBulk Admin</h1>
+  </header>
+  <div class="stats-grid">
+    <div class="stat-card"><div class="stat-number">{{ stats.batches }}</div><div class="stat-label">Total Batches</div></div>
+    <div class="stat-card"><div class="stat-number">{{ stats.books }}</div><div class="stat-label">Total Books</div></div>
+  </div>
+  <div class="card settings-card">
+    <h2 class="section-title">⚙️ Settings</h2>
+    {% if error %}<div class="inline-error">{{ error }}</div>{% endif %}
+    <form method="POST" action="/bulk/julisunkan/save">
+      <div class="form-group">
+        <label>Groq API Key</label>
+        <input type="password" name="groq_api_key" value="{{ settings.groq_api_key }}" placeholder="gsk_...">
+        <span class="hint">Get your key at <a href="https://console.groq.com" target="_blank">console.groq.com</a></span>
+      </div>
+      <div class="form-group">
+        <label>Default Page Count</label>
+        <input type="number" name="default_pages" value="{{ settings.default_pages }}" min="60" max="500">
+      </div>
+      <div class="form-group">
+        <label>Change Admin Password</label>
+        <input type="password" name="admin_password" placeholder="Leave blank to keep current">
+      </div>
+      <button type="submit" class="btn-primary">Save Settings</button>
+    </form>
+  </div>
+{% endif %}
+</main>
+</body>
+</html>

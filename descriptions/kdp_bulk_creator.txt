@@ -1,0 +1,107 @@
+================================================================================
+  KDP BULK BOOK CREATOR — Full Description, Features & Keywords
+================================================================================
+
+APP NAME:       KDP Bulk Book Creator
+SHORT NAME:     KDPBulk
+URL PREFIX:     /bulk/
+ADMIN PANEL:    /bulk/julisunkan  (default password: admin123)
+THEME:          Dark Green (#0a2e1a) & Lime (#84cc16)
+
+────────────────────────────────────────────────────────────────────────────────
+DESCRIPTION
+────────────────────────────────────────────────────────────────────────────────
+
+KDP Bulk Book Creator is a high-output metadata automation tool for Amazon KDP
+publishers who want to scale their catalogue quickly and efficiently. Instead of
+spending hours writing individual titles, descriptions, and keywords for each
+book, users enter a single niche topic and a desired book count (up to 50) and
+the AI generates a complete, ready-to-use metadata set for every book in
+seconds.
+
+Each generated book is unique — the AI creates distinct titles, subtitles,
+descriptions, keyword sets, category paths, page counts, pricing suggestions,
+and target audiences. Books within the same batch are deliberately differentiated
+by angle, tone, and sub-audience to avoid cannibalising each other's sales.
+
+After generation, users can review and edit each book individually through the
+inline editing interface before exporting. The entire batch exports as a
+single CSV file that can be imported directly into spreadsheet tools or used as
+a reference for uploading to KDP one book at a time.
+
+Batches are saved to the database permanently, so users can return at any time
+to review, edit, or re-export past work.
+
+────────────────────────────────────────────────────────────────────────────────
+FEATURES
+────────────────────────────────────────────────────────────────────────────────
+
+  1. Batch generation — create metadata for 1 to 50 unique books in a single
+     AI request, all within the same niche.
+
+  2. Unique angles per book — the AI deliberately creates different sub-audiences,
+     hooks, and angles for each book so titles do not compete with each other.
+
+  3. Full metadata per book including:
+       - Title and subtitle (max 200 characters)
+       - 300–500 word compelling description
+       - 7 optimised KDP keywords
+       - Primary and secondary KDP category paths
+       - Language selection
+       - Suggested page count
+       - Suggested USD price
+       - Target audience description
+       - Unique selling angle
+
+  4. Inline book editor — edit any field (title, subtitle, description, keywords,
+     categories, pages, language) for any book in the batch directly in the UI.
+
+  5. CSV export — download the full batch as a CSV file with all metadata fields,
+     ready for spreadsheet use. Keywords are joined as a comma-separated string.
+
+  6. Batch dashboard — view all previous batches with book count and status.
+
+  7. 12 supported languages — English, Spanish, French, German, Italian,
+     Portuguese, Dutch, Japanese, Chinese, Korean, Arabic, Russian.
+
+  8. Extra notes field — provide additional creative direction to influence
+     the AI's output (e.g., "make all books suitable for beginners").
+
+  9. Admin panel — track total batches and total books generated, configure
+     Groq API key, admin password, and default page count.
+
+ 10. User report system — flag content issues; admins review and respond.
+
+ 11. PWA support — installable as a Progressive Web App.
+
+────────────────────────────────────────────────────────────────────────────────
+KEYWORDS
+────────────────────────────────────────────────────────────────────────────────
+
+  KDP bulk book creator
+  Amazon KDP batch metadata
+  bulk book metadata generator
+  KDP catalogue builder
+  self-publishing automation tool
+  KDP niche book creator
+  bulk KDP publishing tool
+  Amazon book batch generator
+  AI book metadata tool
+  KDP book series generator
+  low content book batch creator
+  Amazon publishing automation
+  KDP CSV export tool
+  bulk book title generator
+  self-publishing scale tool
+  KDP keyword batch tool
+  Amazon book catalogue creator
+  niche book metadata AI
+  KDP book launch automation
+  bulk description writer AI
+  KDP book builder tool
+  Amazon passive income book tool
+  self-publisher productivity tool
+  KDP book idea generator
+  bulk publishing assistant AI
+
+================================================================================

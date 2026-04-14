@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>KDP Bulk Book Creator</title>
+<link rel="manifest" href="/bulk/manifest.json">
+<link rel="icon" href="/static/bulk/icon.png" type="image/png">
+<meta name="theme-color" content="#84cc16">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/static/bulk/style.css">
+</head>
+<body>
+<nav class="navbar">
+  <a href="/bulk/" class="nav-brand">📚 <span>KDPBulk</span></a>
+  <div class="nav-links">
+    <a href="/bulk/" class="active">Creator</a>
+  </div>
+</nav>
+
+<div id="notification" class="notification hidden"></div>
+
+<main class="main-container">
+  <header class="page-header">
+    <h1>KDP Bulk Book Creator</h1>
+    <p>Generate metadata for up to 50 books at once. Edit inline, then export a KDP-ready CSV.</p>
+  </header>
+
+  <!-- Generator Form -->
+  <section class="card generator-form">
+    <h2 class="section-title">⚡ Generate Book Batch</h2>
+    <div class="form-row">
+      <div class="form-group">
+        <label>Niche / Topic *</label>
+        <input type="text" id="nicheInput" placeholder="e.g. Self-Care Journals for Women">
+      </div>
+      <div class="form-group">
+        <label>Batch Name</label>
+        <input type="text" id="batchName" placeholder="e.g. Q1 Self-Care Launch">
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>Number of Books</label>
+        <div class="count-control">
+          <button onclick="adjustCount(-5)">−5</button>
+          <input type="number" id="bookCount" value="5" min="1" max="50">
+          <button onclick="adjustCount(5)">+5</button>
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Extra Notes <span class="optional">(optional)</span></label>
+        <input type="text" id="extraNotes" placeholder="e.g. Focus on gift market, holiday themed">
+      </div>
+    </div>
+    <button class="btn-generate" onclick="generateBatch()" id="generateBtn">
+      ⚡ Generate {{ '{count}' }} Books
+    </button>
+  </section>
+
+  <!-- Loading -->
+  <div id="loadingState" class="loading-card hidden">
+    <div class="spinner-bulk"></div>
+    <p>Generating book metadata with AI...</p>
+    <span class="loading-sub">Creating unique titles, descriptions and keywords for each book</span>
+  </div>
+
+  <!-- Results Table -->
+  <div id="batchResults" class="hidden">
+    <div class="batch-header">
+      <div>
+        <h2 class="section-title">📋 Generated Books</h2>
+        <span id="batchMeta" class="batch-meta"></span>
+      </div>
+      <div class="batch-actions">
+        <button class="btn-export" onclick="exportCSV()" id="exportBtn">⬇ Export CSV</button>
+        <button class="btn-outline" onclick="resetBatch()">🔄 New Batch</button>
+      </div>
+    </div>
+    <div class="table-wrap">
+      <table class="books-table" id="booksTable">
+        <thead>
+          <tr>
+            <th>#</th><th>Title</th><th>Subtitle</th><th>Keywords</th>
+            <th>Category</th><th>Pages</th><th>Actions</th>
+          </tr>
+        </thead>
+        <tbody id="booksTableBody"></tbody>
+      </table>
+    </div>
+
+    <!-- Inline Report -->
+    <div class="report-section" id="reportSection">
+      <button class="btn-report" id="reportToggleBtn" onclick="toggleReportForm()">🚩 Report This Content</button>
+      <div class="report-form-wrap hidden" id="reportFormWrap">
+        <div class="report-form-inner">
+          <p class="report-form-title">Help us improve by flagging AI content issues.</p>
+          <div class="form-group">
+            <label>Reason *</label>
+            <select id="reportReason" class="report-select">
+              <option value="">Select a reason...</option>
+              <option value="Inaccurate Information">Inaccurate Information</option>
+              <option value="Misleading Content">Misleading Content</option>
+              <option value="Inappropriate Content">Inappropriate Content</option>
+              <option value="Low Quality Output">Low Quality Output</option>
+              <option value="Other">Other</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Description <span class="optional">(optional)</span></label>
+            <textarea id="reportDesc" class="report-textarea" rows="3" placeholder="Describe the issue in detail..."></textarea>
+          </div>
+          <div class="report-form-btns">
+            <button class="btn-submit-report" onclick="submitReport()">Submit Report</button>
+            <button class="btn-cancel-report" onclick="toggleReportForm()">Cancel</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Edit Modal (inline drawer) -->
+  <div id="editDrawer" class="edit-drawer hidden">
+    <div class="drawer-header">
+      <h3>Edit Book</h3>
+      <button onclick="closeDrawer()" class="drawer-close">✕</button>
+    </div>
+    <div class="drawer-body">
+      <input type="hidden" id="editBookId">
+      <div class="form-group"><label>Title</label><input type="text" id="editTitle"></div>
+      <div class="form-group"><label>Subtitle</label><input type="text" id="editSubtitle"></div>
+      <div class="form-group"><label>Description</label><textarea id="editDesc" rows="5"></textarea></div>
+      <div class="form-group"><label>Keywords (comma separated)</label><input type="text" id="editKeywords"></div>
+      <div class="form-group"><label>Primary Category</label><input type="text" id="editPrimary"></div>
+      <div class="form-group"><label>Secondary Category</label><input type="text" id="editSecondary"></div>
+      <div class="form-row">
+        <div class="form-group"><label>Pages</label><input type="number" id="editPages"></div>
+        <div class="form-group"><label>Language</label>
+          <select id="editLanguage">
+            {% for lang in languages %}
+            <option value="{{ lang }}">{{ lang }}</option>
+            {% endfor %}
+          </select>
+        </div>
+      </div>
+      <button class="btn-generate" onclick="saveBook()">💾 Save Changes</button>
+    </div>
+  </div>
+
+  <!-- Recent Batches -->
+  <section class="card history-section">
+    <h2 class="section-title">📁 Recent Batches</h2>
+    <div id="batchesList" class="history-list">
+      {% if batches %}
+        {% for b in batches %}
+        <div class="history-item" onclick="loadBatch('{{ b.id }}')">
+          <div>
+            <strong>{{ b.name }}</strong>
+            <span class="history-meta">{{ b.book_count }} books · {{ b.niche }}</span>
+          </div>
+          <span class="history-date">{{ b.created_at[:10] }}</span>
+        </div>
+        {% endfor %}
+      {% else %}
+        <p class="empty-state">No batches created yet.</p>
+      {% endif %}
+    </div>
+  </section>
+</main>
+<script src="/static/bulk/app.js"></script>
+</body>
+</html>

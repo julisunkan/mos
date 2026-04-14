@@ -1,0 +1,118 @@
+================================================================================
+  KDP GENERATOR — Full Description, Features & Keywords
+================================================================================
+
+APP NAME:       KDP Generator
+SHORT NAME:     KDPGen
+URL PREFIX:     /gen/
+ADMIN PANEL:    /gen/julisunkan  (default password: admin123)
+THEME:          Deep Purple (#2d1b69) & Amber
+
+────────────────────────────────────────────────────────────────────────────────
+DESCRIPTION
+────────────────────────────────────────────────────────────────────────────────
+
+KDP Generator is a professional PDF creation tool built specifically for Amazon
+Kindle Direct Publishing (KDP) self-publishers. It allows anyone — from first-time
+creators to seasoned publishers — to produce print-ready book interiors and front
+covers in seconds, entirely in the browser, without any design software.
+
+For book interiors, users choose from 20 carefully designed templates ranging
+from everyday essentials (wide-ruled lined, dot grid, graph paper) to specialised
+planners (daily planner, weekly planner, meal planner, habit tracker, budget
+tracker) to creative tools (storyboard, music staff, Cornell notes, bullet
+journal) and personal journals (gratitude journal, prayer journal, recipe book,
+goal tracker, password log). The user selects paper size (6×9, 8.5×11, 5×8,
+7×10), sets the number of pages (1–500), and downloads a fully formatted PDF
+instantly.
+
+For book covers, users pick from 10 distinct visual themes, provide the title,
+subtitle, and author name, and get back a KDP-compatible 6×9 PDF cover with
+background colour, accent stripes, and cleanly typeset text — ready to upload
+to KDP or hand off to a designer for refinement.
+
+An optional AI prompt enhancement tool (powered by Groq) lets users paste a
+rough book idea and receive an improved description, suggested title and
+subtitle, target audience analysis, and publishing tips.
+
+────────────────────────────────────────────────────────────────────────────────
+FEATURES
+────────────────────────────────────────────────────────────────────────────────
+
+  1. 20 interior templates including:
+       - Wide-Ruled Lined, College-Ruled Lined, Narrow-Ruled Lined
+       - Blank Pages
+       - Dot Grid, Graph / Grid
+       - Cornell Notes
+       - Daily Planner (time slots 6 AM–10 PM)
+       - Weekly Planner (7-column layout)
+       - Habit Tracker (31-day grid, 20 habits)
+       - Budget Tracker (category / budgeted / actual / difference)
+       - Gratitude Journal (5 guided prompts)
+       - Prayer Journal (prayer requests, praises, scripture, reflection)
+       - Meal Planner (7-day × 4-meal grid)
+       - Password Log (website / username / hint / notes)
+       - Recipe Template (ingredients + step-by-step instructions)
+       - Goal Tracker (why / action steps / obstacles / milestones / notes)
+       - Storyboard (2×3 scene frames with captions)
+       - Music Staff (6 stave groups)
+       - Bullet Journal (dot-grid with grid overlay)
+
+  2. 10 cover themes:
+       Minimal Classic, Bold & Modern, Elegant Dark, Vibrant Gradient,
+       Rustic Texture, Academic Blue, Playful Color, Monochrome,
+       Nature Green, Sunset Warm.
+
+  3. 4 paper sizes: 6×9 (standard), 8.5×11 (letter), 5×8, 7×10.
+
+  4. Page count control — generate 1 to 500 pages per PDF.
+
+  5. Instant PDF download — generated files stored on server and downloadable
+     with a single click.
+
+  6. AI prompt enhancer — paste a rough book idea and receive:
+       - An enhanced description
+       - Suggested title and subtitle
+       - Target audience analysis
+       - 3 actionable publishing tips
+
+  7. Project history — last 30 generated projects visible in the admin dashboard.
+
+  8. Admin panel — view total projects, interiors vs covers count, configure
+     Groq API key and admin password.
+
+  9. User report system — users can flag content issues; admins review reports.
+
+ 10. PWA support — installable as a Progressive Web App.
+
+────────────────────────────────────────────────────────────────────────────────
+KEYWORDS
+────────────────────────────────────────────────────────────────────────────────
+
+  KDP interior generator
+  Amazon KDP PDF maker
+  low content book creator
+  KDP notebook generator
+  KDP journal maker
+  printable planner PDF
+  lined paper PDF generator
+  dot grid notebook maker
+  KDP cover generator
+  book interior design tool
+  self-publishing PDF tool
+  KDP book creator online
+  habit tracker PDF
+  daily planner PDF
+  Cornell notes template PDF
+  music staff paper generator
+  bullet journal PDF maker
+  gratitude journal template
+  KDP print-ready PDF
+  no-content book generator
+  KDP activity book creator
+  book cover design tool
+  Amazon self-publishing tools
+  meal planner PDF generator
+  goal tracker printable
+
+================================================================================

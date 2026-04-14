@@ -1,0 +1,107 @@
+================================================================================
+  LEGAL RISK CHECKER — Full Description, Features & Keywords
+================================================================================
+
+APP NAME:       Legal Risk Checker
+SHORT NAME:     LegalCheck
+URL PREFIX:     /legal/
+ADMIN PANEL:    /legal/julisunkan  (default password: admin123)
+THEME:          Navy Blue (#1a2744) & Gold (#c9a84c)
+
+────────────────────────────────────────────────────────────────────────────────
+DESCRIPTION
+────────────────────────────────────────────────────────────────────────────────
+
+Legal Risk Checker is an AI-powered document analysis tool that helps
+individuals, freelancers, small business owners, and legal professionals
+instantly identify dangerous, unfair, or potentially harmful clauses inside
+contracts, agreements, and legal documents — without needing a lawyer.
+
+Users upload a PDF, DOCX, DOC, or TXT file and the system extracts the full
+text, sends it to a large language model (Llama 3.3 70B via Groq), and receives
+a structured risk analysis broken down by clause. Every flagged clause is
+categorised by risk level (HIGH / MEDIUM / LOW), risk type (Liability,
+Termination, Non-Compete, Arbitration, IP Rights, Penalty, etc.), a detailed
+explanation of why it is dangerous, and a concrete, actionable recommendation
+for how to address it.
+
+The overall document receives a top-level risk rating and a plain-English
+executive summary. Results can be downloaded as a professionally formatted PDF
+report suitable for sharing with lawyers, clients, or business partners.
+
+The app keeps a searchable history of all documents analysed and allows
+administrators to configure the Groq API key, file size limits, and admin
+password through a protected settings panel.
+
+────────────────────────────────────────────────────────────────────────────────
+FEATURES
+────────────────────────────────────────────────────────────────────────────────
+
+  1. Multi-format upload — supports PDF, DOCX, DOC, and TXT files (up to
+     configurable MB limit, default 10 MB).
+
+  2. AI-powered clause detection — uses Groq's Llama 3.3 70B model to scan up
+     to 12,000 characters of document text and return a structured JSON analysis.
+
+  3. Risk level classification — each flagged clause is rated HIGH, MEDIUM, or
+     LOW with colour-coded indicators.
+
+  4. Risk type categorisation — clauses are tagged with types such as:
+     Liability, Termination, Penalty, IP Rights, Non-Compete, Arbitration,
+     Indemnification, Confidentiality, Jurisdiction, Auto-Renewal, and more.
+
+  5. Detailed explanations — for every risky clause the AI explains why it is
+     problematic in plain English.
+
+  6. Actionable recommendations — specific guidance on how to negotiate, remove,
+     or modify each clause.
+
+  7. Overall risk rating — document-level rating (HIGH / MEDIUM / LOW) plus a
+     2–3 sentence executive summary.
+
+  8. Downloadable PDF report — professionally formatted report with colour-coded
+     risk indicators, ready for sharing or filing.
+
+  9. Document history — last 20 analysed documents shown on the dashboard with
+     status (pending / analysed) and overall risk.
+
+ 10. Admin dashboard — view total documents, analysed count, and high-risk count.
+     Configure Groq API key, admin password, and max file size.
+
+ 11. User report system — users can flag content issues; admins can review and
+     approve or decline reports.
+
+ 12. PWA support — installable as a Progressive Web App with standalone display
+     and custom icon.
+
+────────────────────────────────────────────────────────────────────────────────
+KEYWORDS
+────────────────────────────────────────────────────────────────────────────────
+
+  legal risk checker
+  AI contract analyzer
+  contract risk analysis
+  legal document scanner
+  risky clause detector
+  contract review tool
+  AI legal assistant
+  PDF contract analysis
+  legal clause identifier
+  document risk assessment
+  contract danger checker
+  legal risk report generator
+  non-compete clause checker
+  arbitration clause detector
+  liability clause scanner
+  freelance contract checker
+  business contract analyzer
+  legal AI tool
+  contract red flag finder
+  DOCX contract review
+  legal risk rating
+  clause-by-clause analysis
+  contract compliance tool
+  AI-powered legal review
+  legal document AI
+
+================================================================================

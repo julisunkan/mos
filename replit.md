@@ -1,92 +1,100 @@
-# Cloud POS Inventory System
+# KDP Platform Suite
 
-## Project Overview
-A comprehensive Point of Sale (POS) and inventory management system built with Flask, PostgreSQL, and modern web technologies. Successfully migrated from Replit Agent to standard Replit environment.
+## Overview
+A 5-app KDP/Legal mega platform built with Flask. Each app has a unique URL prefix, theme, font, and completely isolated logic.
+
+## Apps
+| App | URL | Theme | Font | Purpose |
+|-----|-----|-------|------|---------|
+| Legal Risk Checker | /legal/ | Navy #1a2744 + Gold #c9a84c | Crimson Pro | Upload & analyze legal documents for risky clauses |
+| KDP Generator | /gen/ | Purple #2d1b69 + Coral #ff6b6b | Poppins | Generate book interiors (20 templates) & covers (10 templates) |
+| KDP Optimizer | /optimizer/ | Teal #0d3340 + Amber #f59e0b | Montserrat | Optimize titles, descriptions, keywords for KDP |
+| KDP Bulk Creator | /bulk/ | Forest #0a2e1a + Lime #84cc16 | Inter | Create up to 50 books at once with AI metadata |
+| KDP Finder | /finder/ | Crimson #1a0a0a + Gold #ffd700 | Raleway | Find profitable niches and keywords for KDP |
+
+## Admin Pages
+Each app has an admin page at `/<app>/julisunkan`:
+- Default password: `admin123`
+- Configure Groq API key per app
+- View usage statistics
+- Change admin password
 
 ## Architecture
-- **Backend**: Flask with SQLAlchemy ORM
-- **Database**: PostgreSQL with proper security configurations
-- **Frontend**: Bootstrap with custom CSS styling
-- **Authentication**: Flask-Login with role-based access control
-- **Security**: CSRF protection, secure session management
+- **Framework**: Flask with blueprints
+- **Database**: SQLite (`database.db`) with separate tables per app (prefixed by app name)
+- **AI**: Groq API (`llama-3.3-70b-versatile`) — configured per app in admin
+- **PDF Generation**: reportlab (interiors + covers)
+- **Document Parsing**: pypdf (PDF), python-docx (DOCX)
+- **PWA**: Each app has its own manifest.json and sw.js served as routes
+- **File Storage**: `uploads/<app>/` for uploads, `generated/<app>/` for outputs
 
-## Key Features
-- Multi-store inventory management
-- Point of Sale interface
-- Customer management
-- Sales reporting and analytics
-- User role management (Admin, Manager, Cashier)
-- Returns processing
-- Real-time dashboard
+## File Structure
+```
+app.py          - Flask app, blueprint registration, home route
+main.py         - Entry point
+db.py           - SQLite init, helpers
+apps/
+  legal/routes.py
+  gen/routes.py
+  optimizer/routes.py
+  bulk/routes.py
+  finder/routes.py
+templates/
+  home.html
+  legal/index.html, admin.html
+  gen/index.html, admin.html
+  optimizer/index.html, admin.html
+  bulk/index.html, admin.html
+  finder/index.html, admin.html
+static/
+  legal/style.css, app.js, icon.png
+  gen/style.css, app.js, icon.png
+  optimizer/style.css, app.js, icon.png
+  bulk/style.css, app.js, icon.png
+  finder/style.css, app.js, icon.png
+uploads/legal/   - uploaded documents
+generated/*/     - generated PDFs and CSVs
+```
 
-## User Preferences
-- Background styling: Title text and icons should have transparent backgrounds
-- UI theme: Light theme with professional appearance
+## Gen App Templates (20 Interior + 10 Cover)
+Interior: Wide-ruled, College-ruled, Narrow-ruled, Blank, Dot Grid, Graph, Cornell Notes, Daily Planner, Weekly Planner, Habit Tracker, Budget Tracker, Gratitude Journal, Prayer Journal, Meal Planner, Password Log, Recipe, Goal Tracker, Storyboard, Music Staff, Bullet Journal
 
-## Recent Changes
-- **2025-08-13**: Fixed Fly.io deployment error and completed migration to Replit
-  - Modified Dockerfile to use pyproject.toml instead of requirements.txt
-  - Updated fly.toml app name to match user's deployment target "mos"
-  - Ensured all deployment configurations are compatible with Replit environment
-- **2025-08-13**: Successfully prepared app for Fly.io deployment with PostgreSQL
-  - Created production-ready Dockerfile and fly.toml configuration
-  - Built production_app.py with PostgreSQL-first architecture
-  - Added comprehensive deployment documentation and automation scripts
-  - Configured proper environment variables and secrets management
-  - Created deployment checklist and troubleshooting guides
-  - Set up production database connection handling
-- **2025-08-13**: Successfully migrated project from Replit Agent to Replit
-  - Updated database configuration with PostgreSQL preference and SQLite fallback
-  - Fixed SESSION_SECRET environment variable configuration
-  - Implemented robust database connection handling
-  - App now runs consistently with proper error handling
-- **2025-08-12**: Successfully migrated project from Replit Agent to Replit
-  - Configured PostgreSQL database with proper environment variables
-  - Set up Flask application with security best practices
-  - Fixed CSS styling to make title text and icon backgrounds transparent
-  - Removed purple overlay from all navigation icons
-  - Implemented subtle active state indicators (blue tint, enlarged icons, bold text)
-  - Added professional footer with brand, version, tagline, and user welcome
-  - Created default users and sample data for immediate use
-  - All workflows properly configured and running
-  - **Route scan completed**: All 43 routes across 10 blueprints verified working
-  - **Security check**: All protected routes properly redirect to authentication
-  - **Added favicon.ico** to eliminate 404 errors
-  - **Form message handling**: Implemented comprehensive success/error message system
-    - All forms now display proper success/error messages when submitted
-    - Created reusable message component template
-    - Updated inventory, customers, admin, and auth blueprints with consistent messaging
-    - Both flash messages and direct template messages supported
-  - **POS System Enhancements**: Added Amount Tendered and Change fields
-    - Fields appear only for cash payments with real-time change calculation
-    - Amount validation ensures sufficient payment before processing
-    - Backend properly saves tendered amount and change to database
-    - Stock levels automatically update after sales (both global and store-specific)
-    - Fixed close button (X) styling to be red instead of black
-    - Resolved all stock availability issues across all stores (100+ units each)
-  - **Database Migration**: Migrated from PostgreSQL to MySQL for PythonAnywhere hosting
-    - Updated dependencies: replaced psycopg2-binary with PyMySQL
-    - Modified database configuration to support MySQL connection strings
-    - Fixed model compatibility issues (barcode field nullable)
-    - Created MySQL-specific setup script (mysql_setup.py)
-    - Added PythonAnywhere configuration (pythonanywhere_config.py)
-    - Created comprehensive migration guide (MYSQL_MIGRATION_GUIDE.md)
-    - Maintained all existing functionality during migration
+Cover: Minimal, Bold, Elegant Dark, Vibrant, Rustic, Academic, Playful, Monochrome, Nature, Sunset
 
-## Default Login Credentials
-- Super Admin: username 'superadmin', password 'super123'
-- Admin: username 'admin', password 'admin123'
-- Cashier (Main): username 'casava', password 'cashier123'
-- Cashier (Fashion): username 'julisunkan', password 'cashier123'
-- Manager: username 'manager1', password 'manager123'
+## Descriptions
+Full descriptions, features, and keywords for all 5 apps are in the `descriptions/` folder:
+- `descriptions/legal_risk_checker.txt`
+- `descriptions/kdp_generator.txt`
+- `descriptions/kdp_optimizer.txt`
+- `descriptions/kdp_bulk_creator.txt`
+- `descriptions/kdp_niche_finder.txt`
 
-## Environment Configuration
-- DATABASE_URL: Configured for PostgreSQL
-- SESSION_SECRET: Secure session key for Flask
-- All packages properly installed via uv package manager
+## Dependencies (requirements.txt)
+```
+flask==3.1.1
+gunicorn==23.0.0
+groq==1.1.1
+pypdf==5.4.0
+python-docx==1.1.2
+reportlab==4.4.1
+Pillow==11.2.1
+```
 
-## Security Notes
-- Change default passwords in production
-- CSRF protection enabled
-- Secure session management implemented
-- Database credentials managed through environment variables
+## Running (local)
+```
+python3 -m gunicorn --bind 0.0.0.0:5000 --reuse-port --reload main:app
+```
+
+## Deploying to Render
+A `render.yaml` blueprint is included for one-click deployment.
+
+Steps:
+1. Push this repo to GitHub.
+2. In Render, click **New → Blueprint** and connect the repo.
+3. Render will auto-detect `render.yaml` and configure the service.
+4. Set any required environment variables (e.g. Groq API keys) in the Render dashboard.
+
+**Note:** Render's free tier uses ephemeral disk storage — the SQLite `database.db`
+and any files in `uploads/` and `generated/` will be wiped on each redeploy.
+For persistent storage, upgrade to a paid Render plan and attach a persistent disk,
+or migrate to a hosted database (e.g. PostgreSQL via Render's managed DB).

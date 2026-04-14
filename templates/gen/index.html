@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>KDP Interior & Cover Generator</title>
+<link rel="manifest" href="/gen/manifest.json">
+<link rel="icon" href="/static/gen/icon.png" type="image/png">
+<meta name="theme-color" content="#ff6b6b">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/static/gen/style.css">
+</head>
+<body>
+<nav class="navbar">
+  <a href="/gen/" class="nav-brand">🎨 <span>KDPGen</span></a>
+  <div class="nav-links">
+    <a href="/gen/" class="active">Generator</a>
+  </div>
+</nav>
+
+<div id="notification" class="notification hidden"></div>
+
+<main class="main-container">
+  <header class="page-header">
+    <h1>KDP Interior & Cover Generator</h1>
+    <p>Create professional book interiors and covers ready for Amazon KDP upload.</p>
+  </header>
+
+  <!-- Type Toggle -->
+  <div class="type-toggle">
+    <button class="toggle-btn active" id="btnInterior" onclick="setType('interior')">📄 Interior Pages</button>
+    <button class="toggle-btn" id="btnCover" onclick="setType('cover')">🖼 Book Cover</button>
+  </div>
+
+  <!-- Interior Panel -->
+  <div id="interiorPanel" class="card gen-panel">
+    <h2 class="section-title">Select Interior Template</h2>
+    <div class="templates-grid" id="templateGrid">
+      {% for t in interior_templates %}
+      <div class="template-card" data-id="{{ t.id }}" onclick="selectTemplate('{{ t.id }}', this)">
+        <div class="tpl-icon">{{ t.icon }}</div>
+        <div class="tpl-name">{{ t.name }}</div>
+      </div>
+      {% endfor %}
+    </div>
+
+    <div class="gen-options">
+      <div class="form-row">
+        <div class="form-group">
+          <label>Paper Size</label>
+          <select id="paperSize">
+            {% for s in paper_sizes %}
+            <option value="{{ s }}" {% if s=='6x9' %}selected{% endif %}>{{ s }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Page Count</label>
+          <input type="number" id="pageCount" value="120" min="10" max="500">
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label>Prompt / Notes <span class="optional">(optional — AI enhance)</span></label>
+        <textarea id="promptInput" rows="2" placeholder="Describe your book e.g. 'Mindfulness journal for busy moms'"></textarea>
+        <button class="btn-enhance" onclick="enhancePrompt()">✨ AI Enhance</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Cover Panel -->
+  <div id="coverPanel" class="card gen-panel hidden">
+    <h2 class="section-title">Book Cover Settings</h2>
+    <div class="form-row">
+      <div class="form-group">
+        <label>Book Title *</label>
+        <input type="text" id="coverTitle" placeholder="e.g. The Daily Gratitude Journal">
+      </div>
+      <div class="form-group">
+        <label>Subtitle</label>
+        <input type="text" id="coverSubtitle" placeholder="e.g. 365 Days of Reflection">
+      </div>
+    </div>
+    <div class="form-group">
+      <label>Author Name</label>
+      <input type="text" id="coverAuthor" placeholder="e.g. Jane Smith">
+    </div>
+    <h3 class="section-title-sm">Choose Cover Template</h3>
+    <div class="cover-templates-grid" id="coverTemplateGrid">
+      {% for t in cover_templates %}
+      <div class="cover-card" data-id="{{ t.id }}" onclick="selectCoverTemplate('{{ t.id }}', this)">{{ t.name }}</div>
+      {% endfor %}
+    </div>
+    <div class="form-group" style="margin-top:16px">
+      <label>Design Prompt <span class="optional">(optional)</span></label>
+      <textarea id="coverPrompt" rows="2" placeholder="Describe your cover vision..."></textarea>
+      <button class="btn-enhance" onclick="enhanceCoverPrompt()">✨ AI Enhance</button>
+    </div>
+  </div>
+
+  <!-- AI Suggestions Panel -->
+  <div id="suggestionsPanel" class="card suggestions-panel hidden">
+    <h3>✨ AI Suggestions</h3>
+    <div id="suggestionsContent"></div>
+  </div>
+
+  <!-- Generate Button -->
+  <button class="btn-generate" onclick="generatePDF()" id="generateBtn">
+    <span>🚀 Generate PDF</span>
+  </button>
+
+  <!-- Loading -->
+  <div id="loadingState" class="loading-card hidden">
+    <div class="spinner-gen"></div>
+    <p>Generating your PDF...</p>
+  </div>
+
+  <!-- Result -->
+  <div id="resultCard" class="card result-card hidden">
+    <div class="result-icon">✅</div>
+    <h3>PDF Generated Successfully!</h3>
+    <p id="resultDesc"></p>
+    <button class="btn-download" id="downloadBtn">⬇ Download PDF</button>
+    <button class="btn-outline" onclick="resetGen()">Generate Another</button>
+
+    <!-- Inline Report -->
+    <div class="report-section" id="reportSection">
+      <button class="btn-report" id="reportToggleBtn" onclick="toggleReportForm()">🚩 Report This Content</button>
+      <div class="report-form-wrap hidden" id="reportFormWrap">
+        <div class="report-form-inner">
+          <p class="report-form-title">Help us improve by flagging AI content issues.</p>
+          <div class="form-group">
+            <label>Reason *</label>
+            <select id="reportReason" class="report-select">
+              <option value="">Select a reason...</option>
+              <option value="Inaccurate Information">Inaccurate Information</option>
+              <option value="Misleading Content">Misleading Content</option>
+              <option value="Inappropriate Content">Inappropriate Content</option>
+              <option value="Low Quality Output">Low Quality Output</option>
+              <option value="Other">Other</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Description <span class="optional">(optional)</span></label>
+            <textarea id="reportDesc" class="report-textarea" rows="3" placeholder="Describe the issue in detail..."></textarea>
+          </div>
+          <div class="report-form-btns">
+            <button class="btn-submit-report" onclick="submitReport()">Submit Report</button>
+            <button class="btn-cancel-report" onclick="toggleReportForm()">Cancel</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- History -->
+  <section class="card history-section">
+    <h2 class="section-title">📁 Recent Generations</h2>
+    <div id="historyList" class="history-list"><p class="empty-state">No generations yet.</p></div>
+  </section>
+</main>
+<script src="/static/gen/app.js"></script>
+</body>
+</html>

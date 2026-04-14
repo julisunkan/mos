@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>KDP Niche & Keyword Finder</title>
+<link rel="manifest" href="/finder/manifest.json">
+<link rel="icon" href="/static/finder/icon.png" type="image/png">
+<meta name="theme-color" content="#ffd700">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Raleway:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/static/finder/style.css">
+</head>
+<body>
+<nav class="navbar">
+  <a href="/finder/" class="nav-brand">🔍 <span>KDPFinder</span></a>
+  <div class="nav-links">
+    <a href="/finder/" class="active">Research</a>
+  </div>
+</nav>
+
+<div id="notification" class="notification hidden"></div>
+
+<main class="main-container">
+  <header class="page-header">
+    <h1>KDP Niche & Keyword Finder</h1>
+    <p>Discover profitable niches, high-opportunity keywords, and market insights to dominate Amazon KDP.</p>
+  </header>
+
+  <!-- Search Section -->
+  <section class="card search-section">
+    <h2 class="section-title">🔍 Market Research</h2>
+    <div class="search-bar">
+      <input type="text" id="topicInput" placeholder="Enter a topic e.g. 'anxiety journals for teens'" class="search-input">
+      <button class="btn-search" onclick="doSearch()" id="searchBtn">
+        🔍 Research Market
+      </button>
+    </div>
+    <div class="search-examples">
+      <span>Try:</span>
+      <button class="example-pill" onclick="setTopic('gratitude journals')">gratitude journals</button>
+      <button class="example-pill" onclick="setTopic('ADHD planners')">ADHD planners</button>
+      <button class="example-pill" onclick="setTopic('fitness tracking')">fitness tracking</button>
+      <button class="example-pill" onclick="setTopic('kids coloring books')">kids coloring books</button>
+    </div>
+  </section>
+
+  <!-- Loading -->
+  <div id="loadingState" class="loading-card hidden">
+    <div class="spinner-finder"></div>
+    <p>Researching the KDP market...</p>
+    <span class="loading-sub">Analyzing niches, keywords, and competition levels</span>
+  </div>
+
+  <!-- Results -->
+  <div id="resultsArea" class="hidden">
+    <div class="results-toolbar">
+      <div>
+        <h2 class="section-title">📊 Research Results</h2>
+        <p id="topicDisplay" class="topic-display"></p>
+      </div>
+      <div class="toolbar-actions">
+        <span class="opportunity-badge" id="opportunityBadge"></span>
+        <button class="btn-outline" onclick="exportResults()">⬇ Export CSV</button>
+        <button class="btn-outline" onclick="resetSearch()">🔄 New Search</button>
+      </div>
+    </div>
+
+    <p id="marketSummary" class="market-summary"></p>
+
+    <!-- Niches Grid -->
+    <h3 class="sub-heading">🏷 Profitable Niches</h3>
+    <div id="nichesGrid" class="niches-grid"></div>
+
+    <!-- Keywords Table -->
+    <section class="card kw-section">
+      <h3 class="card-title">🔑 Top Keywords</h3>
+      <div class="table-wrap">
+        <table class="kw-table">
+          <thead>
+            <tr><th>Keyword</th><th>Est. Searches</th><th>Competition</th><th>Score</th><th>Avg Price</th><th>Use In</th></tr>
+          </thead>
+          <tbody id="kwTableBody"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- Quick Wins -->
+    <section class="card quick-wins-section">
+      <h3 class="card-title">⚡ Quick Wins</h3>
+      <div id="quickWinsList" class="quick-wins-list"></div>
+    </section>
+
+    <!-- Seasonal + Avoid -->
+    <div class="two-col">
+      <section class="card">
+        <h3 class="card-title">📅 Seasonal Trends</h3>
+        <p id="seasonalText" class="body-text"></p>
+      </section>
+      <section class="card">
+        <h3 class="card-title">⚠️ Books to Avoid</h3>
+        <div id="avoidList" class="avoid-list"></div>
+      </section>
+    </div>
+
+    <!-- Inline Report -->
+    <div class="report-section" id="reportSection">
+      <button class="btn-report" id="reportToggleBtn" onclick="toggleReportForm()">🚩 Report This Content</button>
+      <div class="report-form-wrap hidden" id="reportFormWrap">
+        <div class="report-form-inner">
+          <p class="report-form-title">Help us improve by flagging AI content issues.</p>
+          <div class="form-group">
+            <label>Reason *</label>
+            <select id="reportReason" class="report-select">
+              <option value="">Select a reason...</option>
+              <option value="Inaccurate Information">Inaccurate Information</option>
+              <option value="Misleading Content">Misleading Content</option>
+              <option value="Inappropriate Content">Inappropriate Content</option>
+              <option value="Low Quality Output">Low Quality Output</option>
+              <option value="Other">Other</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Description <span class="optional">(optional)</span></label>
+            <textarea id="reportDesc" class="report-textarea" rows="3" placeholder="Describe the issue in detail..."></textarea>
+          </div>
+          <div class="report-form-btns">
+            <button class="btn-submit-report" onclick="submitReport()">Submit Report</button>
+            <button class="btn-cancel-report" onclick="toggleReportForm()">Cancel</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- History -->
+  <section class="card history-section">
+    <h2 class="section-title">📁 Recent Searches</h2>
+    <div id="historyList" class="history-list">
+      {% if recent %}
+        {% for r in recent %}
+        <div class="history-item" onclick="loadResult('{{ r.id }}')">
+          <strong>{{ r.seed_topic }}</strong>
+          <span class="history-date">{{ r.created_at[:10] }}</span>
+        </div>
+        {% endfor %}
+      {% else %}
+        <p class="empty-state">No searches yet.</p>
+      {% endif %}
+    </div>
+  </section>
+</main>
+<script src="/static/finder/app.js"></script>
+</body>
+</html>

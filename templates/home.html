@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>KDP Platform Suite</title>
+<link rel="icon" href="/static/legal/icon.png" type="image/png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{--bg:#060b18;--card:#0d1526;--border:#1e2d4a;--text:#e8f0fe;--muted:#8899bb}
+body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;overflow-x:hidden}
+.hero{text-align:center;padding:80px 24px 40px;background:radial-gradient(ellipse at 50% 0%,#1a3a6b33 0%,transparent 70%)}
+.hero h1{font-size:clamp(2.2rem,5vw,3.5rem);font-weight:800;letter-spacing:-1px;background:linear-gradient(135deg,#60a5fa,#a78bfa,#f472b6);-webkit-background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:16px}
+.hero p{color:var(--muted);font-size:1.1rem;max-width:560px;margin:0 auto 40px;line-height:1.6}
+.apps-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:20px;max-width:1200px;margin:0 auto;padding:0 24px 80px}
+.app-card{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:28px;text-decoration:none;color:var(--text);transition:transform .25s,border-color .25s,box-shadow .25s;position:relative;overflow:hidden}
+.app-card::before{content:'';position:absolute;inset:0;opacity:0;transition:opacity .25s}
+.app-card:hover{transform:translateY(-4px);box-shadow:0 20px 60px rgba(0,0,0,.5)}
+.app-card:hover::before{opacity:1}
+.card-legal::before{background:linear-gradient(135deg,#1a274420,#c9a84c15)}
+.card-legal:hover{border-color:#c9a84c}
+.card-gen::before{background:linear-gradient(135deg,#2d1b6920,#ff6b6b15)}
+.card-gen:hover{border-color:#ff6b6b}
+.card-optimizer::before{background:linear-gradient(135deg,#0d334020,#f59e0b15)}
+.card-optimizer:hover{border-color:#f59e0b}
+.card-bulk::before{background:linear-gradient(135deg,#0a2e1a20,#84cc1615)}
+.card-bulk:hover{border-color:#84cc16}
+.card-finder::before{background:linear-gradient(135deg,#1a0a0a20,#ffd70015)}
+.card-finder:hover{border-color:#ffd700}
+.app-icon{font-size:2.4rem;margin-bottom:16px;display:block}
+.app-tag{display:inline-block;padding:3px 10px;border-radius:20px;font-size:.72rem;font-weight:700;letter-spacing:.06em;margin-bottom:12px;text-transform:uppercase}
+.tag-legal{background:#c9a84c22;color:#c9a84c}
+.tag-gen{background:#ff6b6b22;color:#ff6b6b}
+.tag-optimizer{background:#f59e0b22;color:#f59e0b}
+.tag-bulk{background:#84cc1622;color:#84cc16}
+.tag-finder{background:#ffd70022;color:#ffd700}
+.app-card h2{font-size:1.15rem;font-weight:700;margin-bottom:8px}
+.app-card p{color:var(--muted);font-size:.875rem;line-height:1.5;margin-bottom:16px}
+.app-url{font-size:.78rem;color:var(--muted);font-family:monospace;border-top:1px solid var(--border);padding-top:12px;margin-top:auto}
+.footer{text-align:center;padding:24px;color:var(--muted);font-size:.82rem;border-top:1px solid var(--border)}
+</style>
+</head>
+<body>
+<div class="hero">
+  <h1>KDP Platform Suite</h1>
+  <p>Five powerful AI-driven tools for Amazon KDP publishers — from legal document review to bulk book creation.</p>
+</div>
+<div class="apps-grid">
+  <a href="/legal/" class="app-card card-legal">
+    <span class="app-icon">⚖️</span>
+    <span class="app-tag tag-legal">Legal</span>
+    <h2>Legal Document Risk Checker</h2>
+    <p>Upload contracts and legal documents. AI flags dangerous clauses, explains risks, and provides actionable recommendations.</p>
+    <div class="app-url">→ /legal/</div>
+  </a>
+  <a href="/gen/" class="app-card card-gen">
+    <span class="app-icon">🎨</span>
+    <span class="app-tag tag-gen">Generator</span>
+    <h2>KDP Interior & Cover Generator</h2>
+    <p>Generate professional book interiors and covers from 20 pre-built templates. Ready to upload to KDP instantly.</p>
+    <div class="app-url">→ /gen/</div>
+  </a>
+  <a href="/optimizer/" class="app-card card-optimizer">
+    <span class="app-icon">🚀</span>
+    <span class="app-tag tag-optimizer">Optimizer</span>
+    <h2>KDP Title & Description Optimizer</h2>
+    <p>AI-powered metadata optimization. Get 5 title variations, full descriptions, 7 keywords, and A+ content bullets.</p>
+    <div class="app-url">→ /optimizer/</div>
+  </a>
+  <a href="/bulk/" class="app-card card-bulk">
+    <span class="app-icon">📚</span>
+    <span class="app-tag tag-bulk">Bulk</span>
+    <h2>KDP Bulk Book Creator</h2>
+    <p>Create up to 50 books at once with auto-generated metadata. Edit inline and export as CSV for KDP upload.</p>
+    <div class="app-url">→ /bulk/</div>
+  </a>
+  <a href="/finder/" class="app-card card-finder">
+    <span class="app-icon">🔍</span>
+    <span class="app-tag tag-finder">Finder</span>
+    <h2>KDP Niche & Keyword Finder</h2>
+    <p>Discover profitable niches and high-opportunity keywords. Get competition analysis and market insights.</p>
+    <div class="app-url">→ /finder/</div>
+  </a>
+</div>
+<div class="footer">KDP Platform Suite · All tools powered by Groq AI</div>
+</body>
+</html>

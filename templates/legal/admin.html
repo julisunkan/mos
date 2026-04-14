@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>LegalGuard Admin</title>
+<link rel="icon" href="/static/legal/icon.png" type="image/png">
+<link href="https://fonts.googleapis.com/css2?family=Crimson+Pro:wght@400;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/static/legal/style.css">
+</head>
+<body>
+<nav class="navbar">
+  <a href="/legal/" class="nav-brand">⚖️ <span>LegalGuard</span></a>
+  <div class="nav-links">
+    <a href="/legal/">Analyzer</a>
+    {% if logged_in %}<a href="/legal/julisunkan/logout">Logout</a>{% endif %}
+  </div>
+</nav>
+
+<div id="notification" class="notification hidden"></div>
+
+<main class="main-container">
+{% if not logged_in %}
+  <div class="admin-login-wrap">
+    <div class="card admin-login">
+      <div class="login-icon">🔐</div>
+      <h2>Admin Access</h2>
+      <p>Enter the admin password to manage LegalGuard settings.</p>
+      {% if error %}<div class="inline-error">{{ error }}</div>{% endif %}
+      <form method="POST" action="/legal/julisunkan">
+        <div class="form-group">
+          <label>Password</label>
+          <input type="password" name="password" placeholder="Enter admin password" required autofocus>
+        </div>
+        <button type="submit" class="btn-primary full-width">Access Admin Panel</button>
+      </form>
+      <div class="login-hint">Default password: <code>admin123</code></div>
+    </div>
+  </div>
+{% else %}
+  <header class="page-header">
+    <h1>⚙️ LegalGuard Admin</h1>
+    <p>Manage your API keys, settings, and view analytics.</p>
+  </header>
+
+  <!-- Stats -->
+  <div class="stats-grid">
+    <div class="stat-card">
+      <div class="stat-number">{{ stats.total_docs }}</div>
+      <div class="stat-label">Total Documents</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-number">{{ stats.analysed }}</div>
+      <div class="stat-label">Analysed</div>
+    </div>
+    <div class="stat-card stat-danger">
+      <div class="stat-number">{{ stats.high_risk }}</div>
+      <div class="stat-label">High Risk Reports</div>
+    </div>
+  </div>
+
+  <!-- Settings Form -->
+  <div class="card settings-card">
+    <h2 class="section-title">⚙️ Settings</h2>
+    {% if error %}<div class="inline-error">{{ error }}</div>{% endif %}
+    <form method="POST" action="/legal/julisunkan/save">
+      <div class="form-group">
+        <label>Groq API Key</label>
+        <input type="password" name="groq_api_key" value="{{ settings.groq_api_key }}" placeholder="gsk_...">
+        <span class="hint">Get your key at <a href="https://console.groq.com" target="_blank">console.groq.com</a></span>
+      </div>
+      <div class="form-group">
+        <label>Max Upload Size (MB)</label>
+        <input type="number" name="max_file_mb" value="{{ settings.max_file_mb }}" min="1" max="50">
+      </div>
+      <div class="form-group">
+        <label>Change Admin Password</label>
+        <input type="password" name="admin_password" placeholder="Leave blank to keep current">
+      </div>
+      <button type="submit" class="btn-primary">Save Settings</button>
+    </form>
+  </div>
+
+  <!-- Documents Management -->
+  <div class="card reports-card">
+    <div class="reports-header-row">
+      <h2 class="section-title">📁 Uploaded Documents</h2>
+      <button class="filter-btn" onclick="_purgeExpired()" style="background:#7f1d1d;border-color:#991b1b;color:#fca5a5">🗑 Purge Expired</button>
+    </div>
+    {% if docs %}
+    <div class="reports-list" id="adminDocsList">
+      {% for doc in docs %}
+      <div class="report-item" id="adoc-{{ doc.id }}">
+        <div class="report-item-top">
+          <span class="report-reason-tag">{{ doc.file_type | upper }}</span>
+          <span class="report-date">{{ doc.created_at[:16] }}</span>
+        </div>
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:6px">
+          <div>
+            <strong style="font-size:13px">{{ doc.original_name }}</strong>
+            <span style="margin-left:10px;font-size:12px;opacity:.7">{{ doc.status }}</span>
+            {% if doc.overall_risk %}
+              <span class="report-reason-tag" style="margin-left:6px;background:{% if doc.overall_risk=='HIGH' %}#7f1d1d{% elif doc.overall_risk=='MEDIUM' %}#78350f{% else %}#14532d{% endif %}">{{ doc.overall_risk }}</span>
+            {% endif %}
+          </div>
+          <div style="display:flex;gap:6px;flex-shrink:0">
+            {% if doc.overall_risk %}
+            <a href="/legal/report/{{ doc.id }}" class="btn-approve" style="text-decoration:none;font-size:12px">⬇ PDF</a>
+            {% endif %}
+            <button class="btn-decline" style="font-size:12px" onclick="_adminDeleteDoc('{{ doc.id }}')">🗑 Delete</button>
+          </div>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+    {% else %}
+    <p class="empty-state">No documents uploaded yet.</p>
+    {% endif %}
+  </div>
+
+  <!-- Reports Panel -->
+  <div class="card reports-card">
+    <div class="reports-header-row">
+      <h2 class="section-title">🚩 Content Reports</h2>
+      <div class="report-filter-btns">
+        <button class="filter-btn active" id="filterPending" onclick="filterReports('pending')">Pending <span class="filter-count" id="pendingCount">0</span></button>
+        <button class="filter-btn" id="filterApproved" onclick="filterReports('approved')">Approved</button>
+        <button class="filter-btn" id="filterDeclined" onclick="filterReports('declined')">Declined</button>
+      </div>
+    </div>
+    <div id="reportsList" class="reports-list"><p class="empty-state">Loading reports...</p></div>
+  </div>
+
+  <script>
+  async function _adminDeleteDoc(docId) {
+    if (!confirm('Delete this document and its analysis permanently?')) return;
+    const r = await fetch(`/legal/julisunkan/documents/${docId}/delete`, { method: 'POST' });
+    if (r.ok) {
+      const el = document.getElementById('adoc-' + docId);
+      if (el) el.remove();
+      const n = document.getElementById('notification');
+      n.textContent = 'Document deleted.'; n.className = 'notification success';
+      setTimeout(() => n.className = 'notification hidden', 3000);
+    }
+  }
+  async function _purgeExpired() {
+    if (!confirm('Purge all documents older than 1 hour?')) return;
+    const r = await fetch('/legal/julisunkan/purge-expired', { method: 'POST' });
+    if (r.ok) { location.reload(); }
+  }
+  let _reports = [], _rFilter = 'pending';
+  async function _loadReports() {
+    try {
+      const r = await fetch('/legal/julisunkan/reports');
+      if (!r.ok) { document.getElementById('reportsList').innerHTML='<p class="empty-state">Could not load reports.</p>'; return; }
+      _reports = await r.json();
+      document.getElementById('pendingCount').textContent = _reports.filter(x=>x.status==='pending').length;
+      _renderReports(_rFilter);
+    } catch(e) { document.getElementById('reportsList').innerHTML='<p class="empty-state">Error loading reports.</p>'; }
+  }
+  function filterReports(s) {
+    _rFilter = s;
+    document.querySelectorAll('.filter-btn').forEach(b=>b.classList.remove('active'));
+    document.getElementById('filter'+s.charAt(0).toUpperCase()+s.slice(1)).classList.add('active');
+    _renderReports(s);
+  }
+  function _renderReports(s) {
+    const filtered = _reports.filter(r=>r.status===s);
+    const el = document.getElementById('reportsList');
+    if (!filtered.length) { el.innerHTML='<p class="empty-state">No '+s+' reports.</p>'; return; }
+    el.innerHTML = filtered.map(r=>`
+      <div class="report-item" id="ri-${r.id}">
+        <div class="report-item-top">
+          <span class="report-reason-tag">${r.reason||''}</span>
+          <span class="report-date">${(r.created_at||'').slice(0,10)}</span>
+        </div>
+        ${r.content_id?`<div class="report-cid">ID: <code>${r.content_id.slice(0,30)}</code></div>`:''}
+        ${r.description?`<p class="report-desc-text">${r.description}</p>`:''}
+        ${r.admin_note?`<p class="report-admin-note"><strong>Note:</strong> ${r.admin_note}</p>`:''}
+        ${s==='pending'?`
+          <div class="report-review-row">
+            <input type="text" id="note-${r.id}" placeholder="Optional admin note..." class="report-note-inp">
+            <button class="btn-approve" onclick="_reviewReport('${r.id}','approved')">✓ Approve</button>
+            <button class="btn-decline" onclick="_reviewReport('${r.id}','declined')">✗ Decline</button>
+          </div>`:`<div class="report-status-chip status-${s}">${s.toUpperCase()}</div>`}
+      </div>`).join('');
+  }
+  async function _reviewReport(id, action) {
+    const note = (document.getElementById('note-'+id)||{}).value||'';
+    const r = await fetch('/legal/julisunkan/reports/'+id+'/review', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({action, note})
+    });
+    if (r.ok) {
+      const item = _reports.find(x=>x.id===id);
+      if (item) { item.status=action; item.admin_note=note; }
+      document.getElementById('pendingCount').textContent = _reports.filter(x=>x.status==='pending').length;
+      _renderReports(_rFilter);
+      const n=document.getElementById('notification'); n.textContent='Report '+action; n.className='notification success'; setTimeout(()=>n.className='notification hidden',3000);
+    }
+  }
+  _loadReports();
+  </script>
+{% endif %}
+</main>
+</body>
+</html>

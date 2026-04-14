@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Legal Document Risk Checker</title>
+<link rel="manifest" href="/legal/manifest.json">
+<link rel="icon" href="/static/legal/icon.png" type="image/png">
+<meta name="theme-color" content="#c9a84c">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Crimson+Pro:ital,wght@0,300;0,400;0,600;0,700;1,400&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/static/legal/style.css">
+</head>
+<body>
+<nav class="navbar">
+  <a href="/legal/" class="nav-brand">⚖️ <span>LegalGuard</span></a>
+  <div class="nav-links">
+    <a href="/legal/" class="active">Analyzer</a>
+  </div>
+</nav>
+
+<div id="notification" class="notification hidden"></div>
+
+<main class="main-container">
+  <header class="page-header">
+    <h1>Legal Document Risk Checker</h1>
+    <p>Upload any contract or legal document. Our AI identifies dangerous clauses and explains the risks in plain language.</p>
+  </header>
+
+  <!-- Upload Zone -->
+  <section class="card upload-section" id="uploadSection">
+    <h2 class="section-title">📄 Upload Document</h2>
+    <div class="drop-zone" id="dropZone">
+      <div class="drop-icon">📋</div>
+      <p class="drop-title">Drop your document here</p>
+      <p class="drop-sub">Supports PDF, DOCX, DOC, TXT · Max 10MB</p>
+      <button class="btn-primary" onclick="document.getElementById('fileInput').click()">Choose File</button>
+      <input type="file" id="fileInput" accept=".pdf,.docx,.doc,.txt" style="display:none">
+    </div>
+    <div id="fileInfo" class="file-info hidden">
+      <div class="file-badge">
+        <span class="file-icon">📄</span>
+        <span id="fileName"></span>
+        <button class="remove-btn" onclick="removeFile()">✕</button>
+      </div>
+      <button class="btn-analyze" id="analyzeBtn" onclick="analyzeDocument()">
+        <span class="btn-icon">🔍</span> Analyze for Risks
+      </button>
+    </div>
+  </section>
+
+  <!-- Loading State -->
+  <div id="loadingState" class="loading-card hidden">
+    <div class="spinner-legal"></div>
+    <p>Analyzing document with AI...</p>
+    <span class="loading-sub">This may take 15-30 seconds</span>
+  </div>
+
+  <!-- Results Section -->
+  <section id="resultsSection" class="hidden">
+    <div class="results-header">
+      <div class="risk-badge" id="overallRiskBadge"></div>
+      <div class="results-meta">
+        <span id="docNameDisplay"></span>
+        <span id="clauseCountDisplay"></span>
+      </div>
+      <div class="results-actions">
+        <button class="btn-outline" onclick="downloadReport()">⬇ Download PDF Report</button>
+        <button class="btn-outline" onclick="resetAnalysis()">🔄 New Document</button>
+      </div>
+    </div>
+    <p id="summaryText" class="summary-text"></p>
+
+    <div id="clausesList" class="clauses-list"></div>
+
+    <!-- Inline Report -->
+    <div class="report-section" id="reportSection">
+      <button class="btn-report" id="reportToggleBtn" onclick="toggleReportForm()">🚩 Report This Content</button>
+      <div class="report-form-wrap hidden" id="reportFormWrap">
+        <div class="report-form-inner">
+          <p class="report-form-title">Help us improve by flagging AI content issues.</p>
+          <div class="form-group">
+            <label>Reason *</label>
+            <select id="reportReason" class="report-select">
+              <option value="">Select a reason...</option>
+              <option value="Inaccurate Information">Inaccurate Information</option>
+              <option value="Misleading Content">Misleading Content</option>
+              <option value="Inappropriate Content">Inappropriate Content</option>
+              <option value="Low Quality Output">Low Quality Output</option>
+              <option value="Other">Other</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Description <span class="optional">(optional)</span></label>
+            <textarea id="reportDesc" class="report-textarea" rows="3" placeholder="Describe the issue in detail..."></textarea>
+          </div>
+          <div class="report-form-btns">
+            <button class="btn-submit-report" onclick="submitReport()">Submit Report</button>
+            <button class="btn-cancel-report" onclick="toggleReportForm()">Cancel</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- History -->
+  <section class="card history-section">
+    <h2 class="section-title">📁 Recent Documents</h2>
+    <div id="historyList" class="history-list">
+      <p class="empty-state">No documents analyzed yet.</p>
+    </div>
+  </section>
+</main>
+
+<script src="/static/legal/app.js"></script>
+</body>
+</html>
