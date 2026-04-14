@@ -6,7 +6,7 @@ import os
 from datetime import datetime, timedelta
 from db import get_db
 
-TTL_HOURS = 120
+TTL_HOURS = 1
 
 
 def _cutoff():
