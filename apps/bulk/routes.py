@@ -299,7 +299,7 @@ def admin_review_report(report_id):
 @bulk_bp.route("/manifest.json")
 def manifest():
     import json as _json
-    data = {"name":"KDP Bulk Book Creator","short_name":"KDPBulk","start_url":"/bulk/","display":"standalone","background_color":"#0a2e1a","theme_color":"#84cc16","icons":[{"src":"/static/bulk/icon.png","sizes":"192x192","type":"image/png","purpose":"any"},{"src":"/static/bulk/icon-maskable.png","sizes":"512x512","type":"image/png","purpose":"maskable"}]}
+    data = {"name":"KDP Bulk Book Creator","short_name":"KDP Bulk Book Creator","start_url":"/bulk/","display":"standalone","background_color":"#0a2e1a","theme_color":"#84cc16","icons":[{"src":"/static/bulk/icon.png","sizes":"192x192","type":"image/png","purpose":"any"},{"src":"/static/bulk/icon-maskable.png","sizes":"512x512","type":"image/png","purpose":"maskable"}]}
     return Response(_json.dumps(data), mimetype="application/manifest+json")
 
 @bulk_bp.route("/sw.js")
