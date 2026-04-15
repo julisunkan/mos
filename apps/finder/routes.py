@@ -264,7 +264,7 @@ def admin_review_report(report_id):
 @finder_bp.route("/manifest.json")
 def manifest():
     import json as _json
-    data = {"name":"KDP Niche & Keyword Finder","short_name":"KDPFinder","start_url":"/finder/","display":"standalone","background_color":"#1a0a0a","theme_color":"#ffd700","icons":[{"src":"/static/finder/icon.png","sizes":"192x192","type":"image/png","purpose":"any"},{"src":"/static/finder/icon-maskable.png","sizes":"512x512","type":"image/png","purpose":"maskable"}]}
+    data = {"name":"KDP Niche & Keyword Finder","short_name":"KDP Niche and Keyword Finder","start_url":"/finder/","display":"standalone","background_color":"#1a0a0a","theme_color":"#ffd700","icons":[{"src":"/static/finder/icon.png","sizes":"192x192","type":"image/png","purpose":"any"},{"src":"/static/finder/icon-maskable.png","sizes":"512x512","type":"image/png","purpose":"maskable"}]}
     return Response(_json.dumps(data), mimetype="application/manifest+json")
 
 @finder_bp.route("/sw.js")
